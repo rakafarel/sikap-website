@@ -1,0 +1,97 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --primary-color: #0f172a;
+    --accent-color: #2563eb;
+    --bg-body: #f8fafc;
+    --text-main: #334155;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-body);
+    color: var(--text-main);
+}
+
+/* Sidebar Layout dengan Flexbox */
+.sidebar {
+    width: 250px;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: #ffffff;
+    border-right: 1px solid var(--border-color);
+    padding: 1.5rem 1rem;
+    z-index: 100;
+    
+    /* Tambahkan ini agar sidebar menggunakan Flexbox */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* Navigasi Utama (Atas) */
+.sidebar-menu {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+/* Navigasi Bawah (Logout) */
+.sidebar-bottom {
+    margin-top: auto;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.main-content {
+    margin-left: 250px;
+    padding: 2rem;
+}
+
+.nav-link-custom {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    border-radius: 8px;
+    text-decoration: none;
+    margin-bottom: 0.25rem;
+    transition: all 0.2s ease;
+}
+
+.nav-link-custom:hover, .nav-link-custom.active {
+    background-color: #eff6ff;
+    color: var(--accent-color);
+}
+
+/* Card Styling */
+.card-custom {
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-custom:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+/* Status Badge Custom */
+.badge-status {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 20px;
+    text-transform: uppercase;
+}
+
+.badge-pending { background-color: #fef3c7; color: #d97706; }
+.badge-accepted { background-color: #d1fae5; color: #059669; }
+.badge-rejected { background-color: #fee2e2; color: #dc2626; }
+.badge-queue { background-color: #e0e7ff; color: #4338ca; }

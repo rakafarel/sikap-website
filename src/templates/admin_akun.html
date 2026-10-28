@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manajemen Akun - Admin SiKP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        .main-content { background-color: #f8fafc; min-height: 100vh; }
+        .card-modern {
+            border: none; border-radius: 1rem; background: #ffffff;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            transition: transform 0.2s ease-in-out;
+        }
+        .card-modern:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08); }
+        .icon-box { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 0.75rem; font-size: 1.25rem; }
+        .banner-admin {
+            background: linear-gradient(135deg, #334155 0%, #0f172a 100%);
+            border-radius: 1.25rem; position: relative; overflow: hidden;
+        }
+        .banner-bg-icon {
+            position: absolute; right: -10px; bottom: -40px; font-size: 10rem;
+            color: rgba(255, 255, 255, 0.05); transform: rotate(-15deg);
+        }
+        .modal-content { border-radius: 1rem; border: none; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+        .modal-header { border-bottom: 1px solid #f1f5f9; background-color: #f8fafc; border-radius: 1rem 1rem 0 0; }
+        .modal-backdrop { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Admin -->
+    <div class="sidebar shadow-sm">
+        <div>
+            <div class="d-flex align-items-center mb-5 px-3 mt-2">
+                <div class="bg-primary text-white rounded p-2 me-2 d-flex align-items-center justify-content-center">
+                    <i class="bi bi-shield-lock-fill fs-5"></i>
+                </div>
+                <span class="fw-bold fs-5 tracking-wide">SiKP <span class="text-primary">Admin</span></span>
+            </div>
+            <nav class="sidebar-menu px-2">
+                <a href="/dashboard/admin" class="nav-link-custom mb-2 rounded-3">
+                    <i class="bi bi-calendar-check me-3 fs-5"></i> Plotting Sidang
+                </a>
+                <a href="/admin/kuota_dosen" class="nav-link-custom mb-2 rounded-3">
+                    <i class="bi bi-person-lines-fill me-3 fs-5"></i> Kuota Dosen
+                </a>
+                <a href="/admin/mahasiswa" class="nav-link-custom mb-2 rounded-3">
+                    <i class="bi bi-people-fill me-3 fs-5"></i> Data Mahasiswa
+                </a>
+                <a href="/admin/akun" class="nav-link-custom active mb-2 rounded-3">
+                    <i class="bi bi-person-badge-fill me-3 fs-5"></i> Manajemen Akun
+                </a>
+            </nav>
+        </div>
+        <div class="sidebar-bottom px-2 mb-3">
+            <a href="/logout" class="nav-link-custom text-danger rounded-3 m-0">
+                <i class="bi bi-box-arrow-right me-3 fs-5"></i> Logout
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        
+        <!-- Banner Admin -->
+        <div class="banner-admin p-5 text-white mb-4 shadow-sm d-flex align-items-center justify-content-between">
+            <div class="position-relative" style="z-index: 2;">
+                <p class="text-white-50 fw-semibold mb-1 text-uppercase tracking-wider small">Portal Koordinator KP</p>
+                <h3 class="fw-bold mb-2">Manajemen Akun Pengguna</h3>
+                <p class="mb-0 opacity-75 small">Kelola data akun mahasiswa, dosen, admin, dan kaprodi dalam sistem.</p>
+            </div>
+            <i class="bi bi-person-bounding-box banner-bg-icon"></i>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} p-3 small border-0 shadow-sm rounded-4 mb-4">
+                        <i class="bi bi-info-circle-fill me-2"></i>{{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Tabel Manajemen Akun -->
+        <div class="card-modern p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h6 class="fw-bold mb-0 d-flex align-items-center">
+                    <div class="icon-box bg-primary bg-opacity-10 text-primary me-3"><i class="bi bi-people"></i></div> 
+                    Daftar Seluruh Akun Pengguna
+                </h6>
+                <button class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalTambahAkun">
+                    <i class="bi bi-person-plus-fill me-1"></i> Tambah Akun Baru
+                </button>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-hover align-middle small mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="text-secondary fw-semibold">Nama Lengkap</th>
+                            <th class="text-secondary fw-semibold">Username / NPM / NIDN</th>
+                            <th class="text-secondary fw-semibold">Role / Hak Akses</th>
+                            <th class="text-center text-secondary fw-semibold">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in users %}
+                        <tr>
+                            <td><strong class="text-dark">{{ u.nama }}</strong></td>
+                            <td class="text-muted">{{ u.username }}</td>
+                            <td>
+                                {% if u.role == 'mahasiswa' %}
+                                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-1 rounded-pill">Mahasiswa</span>
+                                {% elif u.role == 'dosen' %}
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-1 rounded-pill">Dosen</span>
+                                {% elif u.role == 'admin' %}
+                                    <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-3 py-1 rounded-pill">Admin</span>
+                                {% else %}
+                                    <span class="badge bg-dark bg-opacity-10 text-dark border border-dark border-opacity-25 px-3 py-1 rounded-pill">Kaprodi</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <button class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-semibold me-1 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalEditAkun{{ u.id }}">
+                                    <i class="bi bi-pencil-square"></i> Edit
+                                </button>
+                                <a href="/admin/akun/hapus/{{ u.id }}" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-semibold" onclick="return confirm('Apakah Anda yakin ingin menghapus akun ini?')">
+                                    <i class="bi bi-trash"></i> Hapus
+                                </a>
+                            </td>
+                        </tr>
+
+                        <!-- Modal Edit Akun -->
+                        <div class="modal fade" id="modalEditAkun{{ u.id }}" tabindex="-1">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h6 class="modal-title fw-bold text-dark"><i class="bi bi-pencil-square text-primary me-2"></i> Edit Akun Pengguna</h6>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body p-4 small">
+                                        <form action="/admin/akun/edit/{{ u.id }}" method="POST">
+                                            <div class="mb-3">
+                                                <label class="form-label fw-semibold text-secondary">Nama Lengkap</label>
+                                                <input type="text" name="nama" class="form-control" value="{{ u.nama }}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label fw-semibold text-secondary">Username / NPM / NIDN</label>
+                                                <input type="text" name="username" class="form-control" value="{{ u.username }}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label fw-semibold text-secondary">Role / Hak Akses</label>
+                                                <select name="role" class="form-select" required>
+                                                    <option value="mahasiswa" {% if u.role == 'mahasiswa' %}selected{% endif %}>Mahasiswa</option>
+                                                    <option value="dosen" {% if u.role == 'dosen' %}selected{% endif %}>Dosen</option>
+                                                    <option value="admin" {% if u.role == 'admin' %}selected{% endif %}>Admin</option>
+                                                    <option value="kaprodi" {% if u.role == 'kaprodi' %}selected{% endif %}>Kaprodi</option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-4">
+                                                <label class="form-label fw-semibold text-secondary">Password Baru (Opsional)</label>
+                                                <input type="password" name="password" class="form-control" placeholder="Kosongkan jika tidak ingin mengubah password">
+                                            </div>
+                                            <button type="submit" class="btn btn-primary w-100 fw-bold rounded-3 py-2">Simpan Perubahan</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <tr><td colspan="4" class="text-center text-muted py-5">Belum ada akun pengguna terdaftar.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Tambah Akun Baru -->
+    <div class="modal fade" id="modalTambahAkun" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title fw-bold text-dark"><i class="bi bi-person-plus-fill text-primary me-2"></i> Tambah Akun Baru</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 small">
+                    <form action="/admin/akun/tambah" method="POST">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary">Nama Lengkap</label>
+                            <input type="text" name="nama" class="form-control" placeholder="Contoh: Budi Santoso, M.Kom." required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary">Username / NPM / NIDN</label>
+                            <input type="text" name="username" class="form-control" placeholder="Contoh: 2024002 / dosen02" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary">Role / Hak Akses</label>
+                            <select name="role" class="form-select" required>
+                                <option value="" disabled selected>-- Pilih Role --</option>
+                                <option value="mahasiswa">Mahasiswa</option>
+                                <option value="dosen">Dosen</option>
+                                <option value="admin">Admin</option>
+                                <option value="kaprodi">Kaprodi</option>
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold text-secondary">Password Awal</label>
+                            <input type="password" name="password" class="form-control" placeholder="Masukkan password akun" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 fw-bold rounded-3 py-2">Tambah Akun</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

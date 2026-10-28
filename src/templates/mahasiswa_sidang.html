@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pendaftaran Sidang - SiKP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .main-content { background-color: #f8fafc; min-height: 100vh; }
+        .card-modern {
+            border: none; border-radius: 1rem; background: #ffffff;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            transition: transform 0.2s ease-in-out;
+        }
+        .card-modern:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08); }
+        .icon-box { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 0.75rem; font-size: 1.25rem; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar shadow-sm">
+        <div>
+            <div class="d-flex align-items-center mb-5 px-3 mt-2">
+                <div class="bg-primary text-white rounded p-2 me-2 d-flex align-items-center justify-content-center">
+                    <i class="bi bi-mortarboard-fill fs-5"></i>
+                </div>
+                <span class="fw-bold fs-5 tracking-wide">SiKP <span class="text-primary">& TA</span></span>
+            </div>
+            <nav class="sidebar-menu px-2">
+                <a href="/dashboard/mahasiswa" class="nav-link-custom mb-2 rounded-3">
+                    <i class="bi bi-house-door me-3 fs-5"></i> Dashboard
+                </a>
+                <a href="/mahasiswa/pengajuan" class="nav-link-custom mb-2 rounded-3">
+                    <i class="bi bi-person-badge me-3 fs-5"></i> Pengajuan KP
+                </a>
+                <a href="/mahasiswa/logbook" class="nav-link-custom mb-2 rounded-3">
+                    <i class="bi bi-journal-check me-3 fs-5"></i> Logbook KP
+                </a>
+                <a href="/mahasiswa/sidang" class="nav-link-custom active mb-2 rounded-3">
+                    <i class="bi bi-file-earmark-text me-3 fs-5"></i> Daftar Sidang KP
+                </a>
+                <hr class="text-muted opacity-25 my-3">
+                <a href="/mahasiswa/ta/pengajuan" class="nav-link-custom mb-2 rounded-3">
+                    <i class="bi bi-journal-richtext me-3 fs-5"></i> Pengajuan TA
+                </a>
+                <a href="/mahasiswa/ta/logbook" class="nav-link-custom rounded-3">
+                    <i class="bi bi-journal-check me-3 fs-5"></i> Logbook TA
+                </a>
+            </nav>
+        </div>
+        <div class="sidebar-bottom px-2 mb-3">
+            <a href="/logout" class="nav-link-custom text-danger rounded-3 m-0">
+                <i class="bi bi-box-arrow-right me-3 fs-5"></i> Logout
+            </a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="mb-4">
+            <h4 class="fw-bold mb-1">Pendaftaran Sidang Kerja Praktek</h4>
+            <p class="text-muted small mb-0">Unggah laporan final dan pantau jadwal sidang Anda.</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} p-3 small border-0 shadow-sm rounded-4 mb-4" role="alert"><i class="bi bi-info-circle-fill me-2"></i>{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% if sidang and sidang.nilai_akhir %}
+            <!-- Tampilan Jika Sudah Dinilai (Hasil Sidang Akhir) -->
+            <div class="card-modern p-0 overflow-hidden border-start border-5 border-success mb-4">
+                <div class="bg-success bg-opacity-10 p-4 border-bottom border-success border-opacity-25">
+                    <h5 class="fw-bold mb-0 text-success"><i class="bi bi-trophy-fill me-2"></i> Hasil Sidang & Nilai Akhir</h5>
+                </div>
+                <div class="p-4">
+                    <p class="mb-2 text-dark">Selamat! Anda telah menyelesaikan Sidang Kerja Praktek dengan Nilai Akhir:</p>
+                    <h1 class="fw-bold text-success mb-4 display-4">{{ sidang.nilai_akhir }}</h1>
+                    <div class="bg-light p-3 rounded-3 border">
+                        <p class="small fw-bold mb-1 text-dark"><i class="bi bi-chat-quote-fill text-muted me-1"></i> Catatan Revisi dari Penguji:</p>
+                        <p class="small mb-0 text-dark fst-italic">{{ sidang.catatan_revisi }}</p>
+                    </div>
+                </div>
+            </div>
+
+        {% elif sidang and sidang.status_verifikasi == 'verified' %}
+            <!-- Tiket Sidang Modern -->
+            <div class="card-modern p-0 overflow-hidden border-start border-5 border-primary mb-4">
+                <div class="bg-primary bg-opacity-10 p-4 border-bottom border-primary border-opacity-25">
+                    <h5 class="fw-bold mb-0 text-primary"><i class="bi bi-calendar2-check-fill me-2"></i> Jadwal Sidang Ditetapkan</h5>
+                </div>
+                <div class="p-4">
+                    <table class="table table-borderless small mb-0">
+                        <tr><td width="160" class="text-muted fw-semibold">Tanggal Sidang</td><td class="fw-bold text-dark">: {{ sidang.tanggal_sidang }}</td></tr>
+                        <tr><td class="text-muted fw-semibold">Waktu</td><td class="fw-bold text-dark">: {{ sidang.waktu_sidang }} WIB</td></tr>
+                        <tr><td class="text-muted fw-semibold">Ruangan</td><td class="fw-bold text-dark">: {{ sidang.ruangan }}</td></tr>
+                        <tr><td class="text-muted fw-semibold">Dosen Penguji</td><td class="fw-bold text-primary">: {{ sidang.nama_penguji }}</td></tr>
+                    </table>
+                    <div class="alert alert-warning mt-4 mb-0 small border-0 d-flex align-items-center rounded-3">
+                        <i class="bi bi-info-circle-fill me-2 fs-5"></i> Harap hadir 15 menit sebelum waktu sidang dimulai dan persiapkan materi dengan baik.
+                    </div>
+                </div>
+            </div>
+
+        {% elif sidang and sidang.status_verifikasi == 'pending' %}
+            <!-- Tampilan Menunggu Verifikasi -->
+            <div class="card-modern p-4">
+                <h6 class="fw-bold mb-3 d-flex align-items-center"><div class="icon-box bg-warning bg-opacity-10 text-warning me-3"><i class="bi bi-hourglass-split"></i></div> Status Pendaftaran Sidang</h6>
+                <div class="ms-1">
+                    <p class="mb-2 text-secondary fw-semibold small">Status: 
+                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-3 py-2 rounded-pill ms-2 text-uppercase">Sedang Diverifikasi</span>
+                    </p>
+                    <p class="text-muted small mb-0">Berkas Anda sedang diverifikasi oleh Admin/Koordinator KP. Jadwal sidang akan muncul di sini setelah berkas disetujui.</p>
+                </div>
+            </div>
+
+        {% else %}
+            <!-- Form Upload Pendaftaran Baru / Ditolak -->
+            {% if sidang and sidang.status_verifikasi == 'rejected' %}
+                <div class="alert alert-danger p-3 small border-0 shadow-sm rounded-4 mb-4">
+                    <i class="bi bi-x-circle-fill me-2"></i> <strong>Pendaftaran Ditolak:</strong> {{ sidang.catatan_admin }}<br>
+                    Silakan perbaiki berkas dan unggah ulang melalui formulir di bawah.
+                </div>
+            {% endif %}
+
+            <div class="card-modern p-4">
+                <h6 class="fw-bold mb-4 d-flex align-items-center"><div class="icon-box bg-primary bg-opacity-10 text-primary me-3"><i class="bi bi-cloud-upload"></i></div> Unggah Berkas Persyaratan (.PDF)</h6>
+                <form action="/mahasiswa/sidang" method="POST" enctype="multipart/form-data">
+                    <div class="mb-4">
+                        <label class="form-label small fw-semibold text-secondary">Laporan KP Final</label>
+                        <input type="file" name="file_laporan" class="form-control form-control-lg fs-6" accept=".pdf" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label small fw-semibold text-secondary">Transkrip Nilai Terakhir</label>
+                        <input type="file" name="file_transkrip" class="form-control form-control-lg fs-6" accept=".pdf" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label small fw-semibold text-secondary">KRS Semester Berjalan</label>
+                        <input type="file" name="file_krs" class="form-control form-control-lg fs-6" accept=".pdf" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg w-100 rounded-3 fs-6 fw-bold mt-2">Kirim Berkas Pendaftaran</button>
+                </form>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>
