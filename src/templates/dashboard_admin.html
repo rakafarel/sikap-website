@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin - SiKP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        .main-content { background-color: #f8fafc; min-height: 100vh; }
+        .card-modern {
+            border: none; border-radius: 1rem; background: #ffffff;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            transition: transform 0.2s ease-in-out;
+        }
+        .card-modern:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08); }
+        .icon-box { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 0.75rem; font-size: 1.25rem; }
+        .banner-admin {
+            background: linear-gradient(135deg, #334155 0%, #0f172a 100%);
+            border-radius: 1.25rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .banner-bg-icon {
+            position: absolute; right: -10px; bottom: -40px; font-size: 10rem;
+            color: rgba(255, 255, 255, 0.05); transform: rotate(-15deg);
+        }
+        /* Custom Modal Styling */
+        .modal-content { border-radius: 1rem; border: none; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+        .modal-header { border-bottom: 1px solid #f1f5f9; background-color: #f8fafc; border-radius: 1rem 1rem 0 0; }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Modern -->
+    <div class="sidebar shadow-sm">
+        <div>
+            <div class="d-flex align-items-center mb-5 px-3 mt-2">
+                <div class="bg-primary text-white rounded p-2 me-2 d-flex align-items-center justify-content-center">
+                    <i class="bi bi-shield-lock-fill fs-5"></i>
+                </div>
+                <span class="fw-bold fs-5 tracking-wide">SiKP <span class="text-primary">Admin</span></span>
+            </div>
+            <nav class="sidebar-menu px-2">
+                <a href="/dashboard/admin" class="nav-link-custom active mb-2 rounded-3">
+                    <i class="bi bi-calendar-check me-3 fs-5"></i> Plotting Sidang
+                </a>
+                <a href="/admin/kuota_dosen" class="nav-link-custom mb-2 rounded-3">
+                    <i class="bi bi-person-lines-fill me-3 fs-5"></i> Kuota Dosen
+                </a>
+                <a href="/admin/mahasiswa" class="nav-link-custom mb-2 rounded-3">
+                    <i class="bi bi-people-fill me-3 fs-5"></i> Data Mahasiswa
+                </a>
+                <a href="/admin/akun" class="nav-link-custom mb-2 rounded-3">
+                    <i class="bi bi-person-badge-fill me-3 fs-5"></i> Manajemen Akun
+                </a>
+            </nav>
+        </div>
+        <div class="sidebar-bottom px-2 mb-3">
+            <a href="/logout" class="nav-link-custom text-danger rounded-3 m-0">
+                <i class="bi bi-box-arrow-right me-3 fs-5"></i> Logout
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        
+        <!-- Banner Admin -->
+        <div class="banner-admin p-5 text-white mb-4 shadow-sm d-flex align-items-center justify-content-between">
+            <div class="position-relative" style="z-index: 2;">
+                <p class="text-white-50 fw-semibold mb-1 text-uppercase tracking-wider small">Portal Koordinator KP</p>
+                <h3 class="fw-bold mb-2">Verifikasi & Plotting Jadwal Sidang</h3>
+                <p class="mb-0 opacity-75 small">Kelola pendaftaran sidang, validasi berkas, dan tentukan dosen penguji.</p>
+            </div>
+            <i class="bi bi-shield-check banner-bg-icon"></i>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} p-3 small border-0 shadow-sm rounded-4 mb-4">
+                        <i class="bi bi-info-circle-fill me-2"></i>{{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Tabel Pendaftaran Sidang -->
+        <div class="card-modern p-4">
+            <h6 class="fw-bold mb-4 d-flex align-items-center">
+                <div class="icon-box bg-primary bg-opacity-10 text-primary me-3"><i class="bi bi-folder-check"></i></div> 
+                Daftar Pendaftaran Sidang Masuk
+            </h6>
+            
+            <div class="table-responsive">
+                <table class="table table-hover align-middle small mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="text-secondary fw-semibold">Mahasiswa</th>
+                            <th class="text-secondary fw-semibold">Judul KP</th>
+                            <th class="text-secondary fw-semibold">Berkas (.PDF)</th>
+                            <th class="text-secondary fw-semibold">Status Verifikasi</th>
+                            <th class="text-secondary fw-semibold">Jadwal & Penguji</th>
+                            <th class="text-center text-secondary fw-semibold">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ps in pendaftaran %}
+                        <tr>
+                            <td>
+                                <strong class="text-dark">{{ ps.nama_mahasiswa }}</strong><br>
+                                <span class="text-muted">{{ ps.npm }}</span>
+                            </td>
+                            <td class="text-truncate" style="max-width: 200px;" title="{{ ps.judul_kp }}">{{ ps.judul_kp }}</td>
+                            <td>
+                                <a href="/uploads/sidang/{{ ps.file_laporan_final }}" target="_blank" class="badge bg-light text-primary border text-decoration-none me-1"><i class="bi bi-file-pdf"></i> Laporan</a>
+                                <a href="/uploads/sidang/{{ ps.file_transkrip }}" target="_blank" class="badge bg-light text-primary border text-decoration-none"><i class="bi bi-file-pdf"></i> Transkrip</a>
+                            </td>
+                            <td>
+                                {% if ps.status_verifikasi == 'verified' %}
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1 rounded-pill"><i class="bi bi-check-circle-fill me-1"></i> Disetujui</span>
+                                {% elif ps.status_verifikasi == 'rejected' %}
+                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2 py-1 rounded-pill"><i class="bi bi-x-circle-fill me-1"></i> Ditolak</span>
+                                {% else %}
+                                    <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-2 py-1 rounded-pill"><i class="bi bi-clock-fill me-1"></i> Menunggu</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if ps.status_verifikasi == 'verified' %}
+                                    <span class="fw-semibold text-dark">{{ ps.tanggal_sidang }} ({{ ps.waktu_sidang }})</span><br>
+                                    <span class="text-muted">Ruang: {{ ps.ruangan }}</span><br>
+                                    <span class="text-primary fw-semibold"><i class="bi bi-person-fill me-1"></i>{{ ps.nama_penguji }}</span>
+                                {% else %}
+                                    <span class="text-muted fst-italic">Belum diplot</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if ps.status_verifikasi == 'pending' %}
+                                    <button class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalVerifikasi{{ ps.id_sidang }}">Proses Plotting</button>
+                                {% else %}
+                                    <span class="text-muted"><i class="bi bi-check2-all fs-5"></i></span>
+                                {% endif %}
+                            </td>
+                        </tr>
+
+                        <!-- Modal Proses Verifikasi & Jadwal -->
+                        <div class="modal fade" id="modalVerifikasi{{ ps.id_sidang }}" tabindex="-1">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h6 class="modal-title fw-bold text-dark"><i class="bi bi-calendar-plus text-primary me-2"></i> Verifikasi & Plot Jadwal</h6>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body p-4 small">
+                                        
+                                        <!-- Form Setujui & Plot -->
+                                        <div class="bg-primary bg-opacity-10 p-3 rounded-3 mb-4 border border-primary border-opacity-25">
+                                            <h6 class="fw-bold text-primary mb-3">Setujui Berkas & Atur Jadwal</h6>
+                                            <form action="/admin/verifikasi_sidang" method="POST">
+                                                <input type="hidden" name="id_sidang" value="{{ ps.id_sidang }}">
+                                                <input type="hidden" name="aksi" value="terima">
+                                                
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-semibold text-secondary">Pilih Dosen Penguji</label>
+                                                    <select name="id_penguji" class="form-select form-select-sm" required>
+                                                        <option value="" disabled selected>-- Pilih Penguji --</option>
+                                                        {% for d in dosen %}
+                                                            <option value="{{ d.id }}">{{ d.nama }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                                <div class="row mb-3">
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fw-semibold text-secondary">Tanggal Sidang</label>
+                                                        <input type="date" name="tanggal_sidang" class="form-control form-control-sm" required>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fw-semibold text-secondary">Waktu Sidang</label>
+                                                        <input type="time" name="waktu_sidang" class="form-control form-control-sm" required>
+                                                    </div>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-semibold text-secondary">Ruangan / Link Meet</label>
+                                                    <input type="text" name="ruangan" class="form-control form-control-sm" placeholder="Contoh: Lab Komputer 1" required>
+                                                </div>
+                                                
+                                                <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold rounded-3">Simpan Jadwal</button>
+                                            </form>
+                                        </div>
+                                        
+                                        <hr class="text-muted opacity-25">
+                                        
+                                        <!-- Form Tolak Berkas -->
+                                        <form action="/admin/verifikasi_sidang" method="POST">
+                                            <input type="hidden" name="id_sidang" value="{{ ps.id_sidang }}">
+                                            <input type="hidden" name="aksi" value="tolak">
+                                            <div class="mb-2">
+                                                <label class="form-label fw-semibold text-danger">Tolak Berkas (Revisi)</label>
+                                                <textarea name="catatan_admin" class="form-control form-control-sm" rows="2" placeholder="Alasan penolakan (misal: Transkrip buram, dsb)" required></textarea>
+                                            </div>
+                                            <button type="submit" class="btn btn-outline-danger btn-sm w-100 fw-bold rounded-3">Tolak Pendaftaran</button>
+                                        </form>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- End Modal -->
+                        
+                        {% else %}
+                        <tr><td colspan="6" class="text-center text-muted py-5">Belum ada pendaftaran sidang masuk dari mahasiswa.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

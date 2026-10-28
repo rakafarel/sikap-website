@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Persetujuan TA - SiKP Dosen</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .main-content { background-color: #f8fafc; min-height: 100vh; }
+        .card-modern {
+            border: none; border-radius: 1rem; background: #ffffff;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            transition: transform 0.2s ease-in-out;
+        }
+        .card-modern:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08); }
+        .icon-box { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 0.75rem; font-size: 1.25rem; }
+        .banner-dosen {
+            background: linear-gradient(135deg, #0f766e 0%, #042f2e 100%);
+            border-radius: 1.25rem; position: relative; overflow: hidden;
+        }
+        .banner-bg-icon {
+            position: absolute; right: -20px; bottom: -40px; font-size: 12rem;
+            color: rgba(255, 255, 255, 0.04); transform: rotate(-15deg);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar shadow-sm">
+        <div>
+            <div class="d-flex align-items-center mb-5 px-3 mt-2">
+                <div class="bg-success text-white rounded p-2 me-2 d-flex align-items-center justify-content-center">
+                    <i class="bi bi-person-workspace fs-5"></i>
+                </div>
+                <span class="fw-bold fs-5 tracking-wide">SiKP <span class="text-success">Dosen</span></span>
+            </div>
+            <nav class="sidebar-menu px-2">
+                <a href="/dashboard/dosen" class="nav-link-custom mb-2 rounded-3">
+                    <i class="bi bi-house-door me-3 fs-5"></i> Dashboard KP
+                </a>
+                <a href="/dosen/logbook" class="nav-link-custom mb-2 rounded-3">
+                    <i class="bi bi-journal-check me-3 fs-5"></i> Logbook KP
+                </a>
+                <a href="/dosen/jadwal_menguji" class="nav-link-custom mb-2 rounded-3">
+                    <i class="bi bi-calendar-check me-3 fs-5"></i> Jadwal Menguji
+                </a>
+                <hr class="text-muted opacity-25 my-3">
+                <a href="/dosen/ta" class="nav-link-custom active mb-2 rounded-3">
+                    <i class="bi bi-journal-richtext me-3 fs-5"></i> Pengajuan TA
+                </a>
+            </nav>
+        </div>
+        <div class="sidebar-bottom px-2 mb-3">
+            <a href="/logout" class="nav-link-custom text-danger rounded-3 m-0">
+                <i class="bi bi-box-arrow-right me-3 fs-5"></i> Logout
+            </a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <!-- Banner Dosen -->
+        <div class="banner-dosen p-5 text-white mb-4 shadow-sm d-flex align-items-center justify-content-between">
+            <div class="position-relative" style="z-index: 2;">
+                <p class="text-white-50 fw-semibold mb-1 text-uppercase tracking-wider small">Portal Dosen Pembimbing TA</p>
+                <h3 class="fw-bold mb-2">Persetujuan Pengajuan Tugas Akhir</h3>
+                <p class="mb-0 opacity-75 small">Tinjau proposal dan berikan keputusan status bimbingan Tugas Akhir mahasiswa.</p>
+            </div>
+            <i class="bi bi-journal-richtext banner-bg-icon"></i>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} p-3 small border-0 shadow-sm rounded-4 mb-4"><i class="bi bi-info-circle-fill me-2"></i>{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="card-modern p-4">
+            <h6 class="fw-bold mb-4 d-flex align-items-center"><div class="icon-box bg-success bg-opacity-10 text-success me-3"><i class="bi bi-list-check"></i></div> Daftar Pengajuan TA Mahasiswa</h6>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle small mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="text-secondary fw-semibold">Mahasiswa</th>
+                            <th class="text-secondary fw-semibold">Judul TA</th>
+                            <th class="text-secondary fw-semibold">Dospem 1 & 2</th>
+                            <th class="text-secondary fw-semibold">Proposal</th>
+                            <th class="text-secondary fw-semibold">Status Final</th>
+                            <th class="text-center text-secondary fw-semibold">Aksi Anda</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for t in pengajuan_ta %}
+                        <tr>
+                            <td><strong class="text-dark">{{ t.nama_mahasiswa }}</strong><br><span class="text-muted">{{ t.npm }}</span></td>
+                            <td class="text-truncate" style="max-width: 200px;" title="{{ t.judul_ta }}">{{ t.judul_ta }}</td>
+                            <td>
+                                <span class="d-block">P1: <strong>{{ t.nama_p1 }}</strong> <span class="badge bg-light text-dark border">{{ t.status_p1 }}</span></span>
+                                <span class="d-block mt-1">P2: <strong>{{ t.nama_p2 }}</strong> <span class="badge bg-light text-dark border">{{ t.status_p2 }}</span></span>
+                            </td>
+                            <td><a href="/uploads/proposal/{{ t.file_proposal_ta }}" target="_blank" class="badge bg-light text-success border text-decoration-none"><i class="bi bi-file-pdf"></i> Proposal</a></td>
+                            <td>
+                                {% if t.status_final == 'accepted' %}
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1 rounded-pill">Disetujui Full</span>
+                                {% elif t.status_final == 'unassigned' %}
+                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2 py-1 rounded-pill">Ditolak</span>
+                                {% else %}
+                                    <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-2 py-1 rounded-pill">Menunggu</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <a href="/dosen/ta/{{ t.id_pengajuan }}/terima" class="btn btn-success btn-sm rounded-pill px-3 fw-semibold shadow-sm me-1 mb-1">Terima</a>
+                                <a href="/dosen/ta/{{ t.id_pengajuan }}/tolak" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-semibold mb-1">Tolak</a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="6" class="text-center text-muted py-5">Belum ada pengajuan Tugas Akhir dari mahasiswa.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
