@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Logbook Tugas Akhir - SiKP</title>
+    <title>Logbook TA - SiKP & TA</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
@@ -13,6 +13,14 @@
             border: none; border-radius: 1rem; background: #ffffff;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
         }
+        .banner-ta {
+            background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+            border-radius: 1.25rem; position: relative; overflow: hidden;
+        }
+        .banner-bg-icon {
+            position: absolute; right: -20px; bottom: -40px; font-size: 12rem;
+            color: rgba(255, 255, 255, 0.05); transform: rotate(-15deg);
+        }
     </style>
 </head>
 <body>
@@ -20,43 +28,34 @@
     <div class="sidebar shadow-sm">
         <div>
             <div class="d-flex align-items-center mb-5 px-3 mt-2">
-                <div class="bg-primary text-white rounded p-2 me-2 d-flex align-items-center justify-content-center">
-                    <i class="bi bi-mortarboard-fill fs-5"></i>
-                </div>
+                <div class="bg-primary text-white rounded p-2 me-2 d-flex align-items-center justify-content-center"><i class="bi bi-mortarboard-fill fs-5"></i></div>
                 <span class="fw-bold fs-5 tracking-wide">SiKP <span class="text-primary">& TA</span></span>
             </div>
             <nav class="sidebar-menu px-2">
-                <a href="/dashboard/mahasiswa" class="nav-link-custom mb-2 rounded-3">
-                    <i class="bi bi-house-door me-3 fs-5"></i> Dashboard
-                </a>
-                <a href="/mahasiswa/pengajuan" class="nav-link-custom mb-2 rounded-3">
-                    <i class="bi bi-person-badge me-3 fs-5"></i> Pengajuan KP
-                </a>
-                <a href="/mahasiswa/logbook" class="nav-link-custom mb-2 rounded-3">
-                    <i class="bi bi-journal-check me-3 fs-5"></i> Logbook KP
-                </a>
-                <a href="/mahasiswa/sidang" class="nav-link-custom mb-2 rounded-3">
-                    <i class="bi bi-file-earmark-text me-3 fs-5"></i> Daftar Sidang KP
-                </a>
+                <a href="/dashboard/mahasiswa" class="nav-link-custom mb-2 rounded-3"><i class="bi bi-house-door me-3 fs-5"></i> Dashboard</a>
+                <a href="/mahasiswa/pengajuan" class="nav-link-custom mb-2 rounded-3"><i class="bi bi-person-badge me-3 fs-5"></i> Pengajuan KP</a>
+                <a href="/mahasiswa/logbook" class="nav-link-custom mb-2 rounded-3"><i class="bi bi-journal-check me-3 fs-5"></i> Logbook KP</a>
+                <a href="/mahasiswa/sidang" class="nav-link-custom mb-2 rounded-3"><i class="bi bi-file-earmark-text me-3 fs-5"></i> Daftar Sidang KP</a>
                 <hr class="text-muted opacity-25 my-3">
-                <a href="/mahasiswa/ta/pengajuan" class="nav-link-custom mb-2 rounded-3">
-                    <i class="bi bi-journal-richtext me-3 fs-5"></i> Pengajuan TA
-                </a>
-                <a href="/mahasiswa/ta/logbook" class="nav-link-custom active rounded-3">
-                    <i class="bi bi-journal-check me-3 fs-5"></i> Logbook TA
-                </a>
+                <a href="/mahasiswa/ta/pengajuan" class="nav-link-custom mb-2 rounded-3"><i class="bi bi-journal-richtext me-3 fs-5"></i> Pengajuan TA</a>
+                <a href="/mahasiswa/ta/logbook" class="nav-link-custom active rounded-3"><i class="bi bi-journal-check me-3 fs-5"></i> Logbook TA</a>
             </nav>
         </div>
         <div class="sidebar-bottom px-2 mb-3">
-            <a href="/logout" class="nav-link-custom text-danger rounded-3 m-0">
-                <i class="bi bi-box-arrow-right me-3 fs-5"></i> Logout
-            </a>
+            <a href="/logout" class="nav-link-custom text-danger rounded-3 m-0"><i class="bi bi-box-arrow-right me-3 fs-5"></i> Logout</a>
         </div>
     </div>
 
     <div class="main-content p-4">
-        <h4 class="fw-bold mb-1">Logbook Bimbingan Tugas Akhir (TA)</h4>
-        <p class="text-muted small mb-4">Catat setiap hasil diskusi dan bimbingan bersama Dosen Pembimbing TA.</p>
+        <!-- Banner -->
+        <div class="banner-ta p-5 text-white mb-4 shadow-sm d-flex align-items-center justify-content-between">
+            <div class="position-relative" style="z-index: 2;">
+                <p class="text-white-50 fw-semibold mb-1 text-uppercase tracking-wider small">Portal Mahasiswa</p>
+                <h3 class="fw-bold mb-2">Logbook Bimbingan Tugas Akhir</h3>
+                <p class="mb-0 opacity-75 small">Catat dan dokumentasikan seluruh riwayat bimbingan Tugas Akhir Anda secara berkala.</p>
+            </div>
+            <i class="bi bi-journal-check banner-bg-icon"></i>
+        </div>
 
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
@@ -66,64 +65,72 @@
             {% endif %}
         {% endwith %}
 
-        <!-- Form Tambah Logbook -->
-        <div class="card-modern p-4 mb-4">
-            <h6 class="fw-bold mb-3"><i class="bi bi-plus-circle text-primary me-2"></i> Tambah Catatan Bimbingan Baru</h6>
-            <form action="/mahasiswa/ta/logbook" method="POST" enctype="multipart/form-data">
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label class="form-label small fw-semibold text-secondary">Tanggal Bimbingan</label>
-                        <input type="date" name="tanggal_bimbingan" class="form-control" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label small fw-semibold text-secondary">File Draf / Progress (.PDF)</label>
-                        <input type="file" name="file_progress" class="form-control" accept=".pdf">
-                    </div>
+        <div class="row g-4">
+            <!-- Form Input Logbook -->
+            <div class="col-md-5">
+                <div class="card-modern p-4">
+                    <h6 class="fw-bold mb-3"><i class="bi bi-plus-circle text-primary me-2"></i> Tambah Catatan Bimbingan</h6>
+                    <form action="/mahasiswa/ta/logbook" method="POST" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-secondary">Tanggal Bimbingan</label>
+                            <input type="date" name="tanggal_bimbingan" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-secondary">Topik Pembahasan / Catatan Dosen</label>
+                            <textarea name="topik_pembahasan" class="form-control" rows="4" placeholder="Tuliskan poin-poin revisi atau saran dari dosen pembimbing..." required></textarea>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label small fw-semibold text-secondary">File Progres / Draft (.PDF - Opsional)</label>
+                            <input type="file" name="file_progress" class="form-control" accept=".pdf">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm px-4 fw-bold rounded-pill shadow-sm w-100">Simpan Logbook TA</button>
+                    </form>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label small fw-semibold text-secondary">Topik Pembahasan / Catatan Bimbingan</label>
-                    <textarea name="topik_pembahasan" class="form-control" rows="3" placeholder="Tuliskan hasil diskusi atau revisi dari dosen..." required></textarea>
-                </div>
-                <button type="submit" class="btn btn-primary btn-sm px-4 fw-bold rounded-pill">Kirim Catatan</button>
-            </form>
-        </div>
+            </div>
 
-        <!-- Tabel Riwayat Logbook -->
-        <div class="card-modern p-4">
-            <h6 class="fw-bold mb-3"><i class="bi bi-list-task text-primary me-2"></i> Riwayat Logbook Bimbingan TA</h6>
-            <div class="table-responsive">
-                <table class="table table-hover align-middle small mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Tanggal</th>
-                            <th>Topik Pembahasan</th>
-                            <th>File Draf</th>
-                            <th>Status ACC</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for l in logbook %}
-                        <tr>
-                            <td class="fw-semibold">{{ l.tanggal_bimbingan }}</td>
-                            <td>{{ l.topik_pembahasan }}</td>
-                            <td>
-                                {% if l.file_progress %}
-                                    <a href="/uploads/logbook/{{ l.file_progress }}" target="_blank" class="badge bg-light text-primary border text-decoration-none"><i class="bi bi-file-pdf"></i> Lihat</a>
-                                {% else %}<span class="text-muted">-</span>{% endif %}
-                            </td>
-                            <td>
-                                {% if l.status_acc == 'approved' %}
-                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1 rounded-pill">Disetujui</span>
+            <!-- Tabel Riwayat Logbook -->
+            <div class="col-md-7">
+                <div class="card-modern p-4">
+                    <h6 class="fw-bold mb-3"><i class="bi bi-clock-history text-primary me-2"></i> Riwayat Bimbingan TA</h6>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle small mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="text-secondary fw-semibold">Tanggal</th>
+                                    <th class="text-secondary fw-semibold">Topik Pembahasan</th>
+                                    <th class="text-secondary fw-semibold">File Draft</th>
+                                    <th class="text-center text-secondary fw-semibold">Status ACC</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for l in logbook %}
+                                <tr>
+                                    <td class="text-nowrap fw-semibold text-dark">{{ l.tanggal_bimbingan }}</td>
+                                    <td>{{ l.topik_pembahasan }}</td>
+                                    <td>
+                                        {% if l.file_progress %}
+                                            <a href="/uploads/logbook/{{ l.file_progress }}" target="_blank" class="badge bg-light text-primary border text-decoration-none"><i class="bi bi-file-pdf"></i> PDF</a>
+                                        {% else %}
+                                            <span class="text-muted small">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if l.status_acc == 'approved' %}
+                                            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1 rounded-pill">ACC</span>
+                                        {% else %}
+                                            <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-2 py-1 rounded-pill">Pending</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
                                 {% else %}
-                                    <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-2 py-1 rounded-pill">Menunggu</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% else %}
-                        <tr><td colspan="4" class="text-center text-muted py-4">Belum ada catatan logbook TA.</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-4">Belum ada catatan bimbingan Tugas Akhir.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
