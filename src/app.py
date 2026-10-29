@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 import pymysql
 from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash, check_password_hash
 
 load_dotenv()  # baca file .env
 
@@ -39,6 +40,18 @@ def get_db_connection():
         cursorclass=pymysql.cursors.DictCursor
     )
 
+# --- FUNGSI BANTUAN: Cek Kelulusan Sidang KP ---
+def cek_sudah_lulus_kp(user_id):
+    conn = get_db_connection()
+    with conn.cursor() as cursor:
+        cursor.execute("""
+            SELECT nilai_akhir FROM pendaftaran_sidang 
+            WHERE id_mahasiswa = %s AND nilai_akhir IS NOT NULL
+        """, (user_id,))
+        sidang = cursor.fetchone()
+    conn.close()
+    return sidang is not None
+
 # --- ROUTE UTAMA & AUTENTIKASI ---
 
 @app.route('/')
@@ -55,11 +68,11 @@ def login():
 
         conn = get_db_connection()
         with conn.cursor() as cursor:
-            cursor.execute("SELECT * FROM users WHERE username = %s AND password = %s", (username, password))
+            cursor.execute("SELECT * FROM users WHERE username = %s", (username,))
             user = cursor.fetchone()
         conn.close()
 
-        if user:
+        if user and check_password_hash(user['password'], password):
             session['user_id'] = user['id']
             session['username'] = user['username']
             session['nama'] = user['nama']
@@ -80,6 +93,8 @@ def register():
         password = request.form['password']
         role = request.form['role']
 
+        hashed_password = generate_password_hash(password)
+
         conn = get_db_connection()
         with conn.cursor() as cursor:
             cursor.execute("SELECT * FROM users WHERE username = %s", (username,))
@@ -92,7 +107,7 @@ def register():
 
             cursor.execute(
                 "INSERT INTO users (username, password, nama, role) VALUES (%s, %s, %s, %s)",
-                (username, password, nama, role)
+                (username, hashed_password, nama, role)
             )
             user_id = cursor.lastrowid
 
@@ -118,7 +133,6 @@ def logout():
 
 # --- ROUTE DASHBOARD MULTI-ROLE ---
 
-# --- ROUTE DASHBOARD UTAMA MAHASISWA (OVERVIEW ONLY) ---
 @app.route('/dashboard/mahasiswa')
 def dashboard_mahasiswa():
     if 'role' not in session or session['role'] != 'mahasiswa':
@@ -128,7 +142,6 @@ def dashboard_mahasiswa():
     conn = get_db_connection()
     
     with conn.cursor() as cursor:
-        # Ambil ringkasan status pengajuan
         cursor.execute("""
             SELECT p.*, u1.nama AS nama_p1, u2.nama AS nama_p2 
             FROM pengajuan_pembimbing p
@@ -139,16 +152,24 @@ def dashboard_mahasiswa():
         """, (user_id,))
         pengajuan = cursor.fetchone()
 
-        # Ambil total logbook yang sudah di-ACC
         cursor.execute("SELECT COUNT(*) AS total_acc FROM logbook WHERE id_mahasiswa = %s AND status_acc = 'approved'", (user_id,))
         logbook_stat = cursor.fetchone()
 
+        cursor.execute("""
+            SELECT p.*, d1.nama AS nama_p1, d2.nama AS nama_p2, d3.nama AS nama_p3 
+            FROM pengajuan_ta p
+            JOIN users d1 ON p.id_dosen_p1 = d1.id
+            JOIN users d2 ON p.id_dosen_p2 = d2.id
+            JOIN users d3 ON p.id_dosen_p3 = d3.id
+            WHERE p.id_mahasiswa = %s
+            ORDER BY p.id_pengajuan DESC LIMIT 1
+        """, (user_id,))
+        pengajuan_ta = cursor.fetchone()
+
     conn.close()
 
-    return render_template('dashboard_mahasiswa.html', pengajuan=pengajuan, logbook_stat=logbook_stat)
+    return render_template('dashboard_mahasiswa.html', pengajuan=pengajuan, pengajuan_ta=pengajuan_ta, logbook_stat=logbook_stat)
 
-
-# --- ROUTE KHUSUS FORM PENGAJUAN DOSEN PEMBIMBING ---
 @app.route('/mahasiswa/pengajuan', methods=['GET', 'POST'])
 def mahasiswa_pengajuan():
     if 'role' not in session or session['role'] != 'mahasiswa':
@@ -209,7 +230,6 @@ def mahasiswa_pengajuan():
 
     return render_template('mahasiswa_pengajuan.html', daftar_dosen=daftar_dosen, pengajuan=pengajuan_saya)
 
-# --- ROUTE DASHBOARD ADMIN (VERIFIKASI & JADWAL) ---
 @app.route('/dashboard/admin')
 def dashboard_admin():
     if 'role' not in session or session['role'] != 'admin':
@@ -217,7 +237,6 @@ def dashboard_admin():
 
     conn = get_db_connection()
     with conn.cursor() as cursor:
-        # Ambil daftar pendaftaran sidang (Menunggu Verifikasi & Sudah Diverifikasi)
         cursor.execute("""
             SELECT ps.*, u.nama AS nama_mahasiswa, u.username AS npm,
                    p.judul_kp, u_penguji.nama AS nama_penguji
@@ -229,7 +248,6 @@ def dashboard_admin():
         """)
         daftar_sidang = cursor.fetchall()
 
-        # Ambil daftar dosen untuk pilihan Dosen Penguji
         cursor.execute("SELECT id, nama FROM users WHERE role = 'dosen'")
         daftar_dosen = cursor.fetchall()
     conn.close()
@@ -242,7 +260,7 @@ def admin_verifikasi_sidang():
         return redirect(url_for('login'))
 
     id_sidang = request.form['id_sidang']
-    aksi = request.form['aksi'] # 'terima' atau 'tolak'
+    aksi = request.form['aksi']
     
     conn = get_db_connection()
     with conn.cursor() as cursor:
@@ -266,14 +284,13 @@ def admin_verifikasi_sidang():
                 SET status_verifikasi = 'rejected', catatan_admin = %s
                 WHERE id_sidang = %s
             """, (catatan, id_sidang))
-            flash("Pendaftaran sidang ditolak. Menunggu perbaikan mahasiswa.", "warning")
+            flash("Pendaftaran sidang ditolak.", "warning")
 
         conn.commit()
     conn.close()
 
     return redirect(url_for('dashboard_admin'))
 
-# --- ROUTE DASHBOARD KAPRODI (EXECUTIVE SUMMARY) ---
 @app.route('/dashboard/kaprodi')
 def dashboard_kaprodi():
     if 'role' not in session or session['role'] != 'kaprodi':
@@ -281,15 +298,12 @@ def dashboard_kaprodi():
 
     conn = get_db_connection()
     with conn.cursor() as cursor:
-        # 1. Statistik Total Mahasiswa KP (Yang sudah daftar)
         cursor.execute("SELECT COUNT(*) AS total FROM users WHERE role = 'mahasiswa'")
         stat_mhs = cursor.fetchone()['total']
 
-        # 2. Statistik Mahasiswa Lulus Sidang (Sudah ada nilai akhir)
         cursor.execute("SELECT COUNT(*) AS total FROM pendaftaran_sidang WHERE nilai_akhir IS NOT NULL")
         stat_lulus = cursor.fetchone()['total']
 
-        # 3. Rekap Beban Kuota Dosen Pembimbing
         cursor.execute("""
             SELECT u.nama, d.kuota_terpakai, d.max_kuota 
             FROM dosen d 
@@ -298,7 +312,6 @@ def dashboard_kaprodi():
         """)
         beban_dosen = cursor.fetchall()
 
-        # 4. Rekapitulasi Nilai Akhir Mahasiswa
         cursor.execute("""
             SELECT ps.nilai_akhir, u.nama AS nama_mahasiswa, u.username AS npm, p.judul_kp
             FROM pendaftaran_sidang ps
@@ -315,7 +328,6 @@ def dashboard_kaprodi():
                            beban_dosen=beban_dosen, 
                            rekap=rekap_nilai)
 
-# --- ROUTE LOGBOOK BIMBINGAN MAHASISWA ---
 @app.route('/mahasiswa/logbook', methods=['GET', 'POST'])
 def mahasiswa_logbook():
     if 'role' not in session or session['role'] != 'mahasiswa':
@@ -341,7 +353,7 @@ def mahasiswa_logbook():
             """, (user_id, tanggal, topik, filename))
             conn.commit()
 
-        flash("Catatan logbook bimbingan berhasil ditambahkan!", "success")
+        flash("Catatan logbook berhasil ditambahkan!", "success")
         return redirect(url_for('mahasiswa_logbook'))
 
     with conn.cursor() as cursor:
@@ -351,7 +363,6 @@ def mahasiswa_logbook():
 
     return render_template('mahasiswa_logbook.html', logbook=daftar_logbook)
 
-# --- ROUTE DASHBOARD DOSEN ---
 @app.route('/dashboard/dosen')
 def dashboard_dosen():
     if 'role' not in session or session['role'] != 'dosen':
@@ -361,11 +372,9 @@ def dashboard_dosen():
     conn = get_db_connection()
 
     with conn.cursor() as cursor:
-        # Ambil data kuota dosen
         cursor.execute("SELECT * FROM dosen WHERE id_dosen = %s", (user_id,))
         data_dosen = cursor.fetchone()
 
-        # Daftar Pengajuan Masuk (Prioritas 1 & Status Pending)
         cursor.execute("""
             SELECT p.*, u.nama AS nama_mahasiswa, u.username AS npm
             FROM pengajuan_pembimbing p
@@ -375,7 +384,6 @@ def dashboard_dosen():
         """, (user_id, user_id))
         pengajuan_masuk = cursor.fetchall()
 
-        # Daftar Mahasiswa Bimbingan yang Disetujui
         cursor.execute("""
             SELECT p.*, u.nama AS nama_mahasiswa, u.username AS npm
             FROM pengajuan_pembimbing p
@@ -389,8 +397,6 @@ def dashboard_dosen():
 
     return render_template('dashboard_dosen.html', dosen=data_dosen, pengajuan=pengajuan_masuk, bimbingan=mahasiswa_bimbingan)
 
-
-# --- ROUTE AKSI TERIMA / TOLAK PENGAJUAN ---
 @app.route('/dosen/pengajuan/<int:id_pengajuan>/<string:aksi>')
 def dosen_aksi_pengajuan(id_pengajuan, aksi):
     if 'role' not in session or session['role'] != 'dosen':
@@ -400,7 +406,6 @@ def dosen_aksi_pengajuan(id_pengajuan, aksi):
     conn = get_db_connection()
 
     with conn.cursor() as cursor:
-        # Cek kuota dosen terlebih dahulu
         cursor.execute("SELECT * FROM dosen WHERE id_dosen = %s", (user_id,))
         data_dosen = cursor.fetchone()
 
@@ -415,14 +420,10 @@ def dosen_aksi_pengajuan(id_pengajuan, aksi):
         is_p1 = (pengajuan['id_dosen_p1'] == user_id)
 
         if aksi == 'terima':
-            # Validasi Kuota
             if data_dosen['kuota_terpakai'] >= data_dosen['max_kuota']:
-                flash("Gagal menerima! Kuota bimbingan Anda sudah penuh (Maksimal 2).", "danger")
+                flash("Gagal menerima! Kuota bimbingan Anda sudah penuh.", "danger")
             else:
-                # Update Kuota Dosen (+1)
                 cursor.execute("UPDATE dosen SET kuota_terpakai = kuota_terpakai + 1 WHERE id_dosen = %s", (user_id,))
-                
-                # Update Status Pengajuan
                 if is_p1:
                     cursor.execute("""
                         UPDATE pengajuan_pembimbing 
@@ -440,14 +441,12 @@ def dosen_aksi_pengajuan(id_pengajuan, aksi):
 
         elif aksi == 'tolak':
             if is_p1:
-                # Tolak di P1, alihkan ke P2 (status_p2 berubah dari 'in_queue' jadi 'pending')
                 cursor.execute("""
                     UPDATE pengajuan_pembimbing 
                     SET status_p1 = 'rejected', status_p2 = 'pending' 
                     WHERE id_pengajuan = %s
                 """, (id_pengajuan,))
             else:
-                # Tolak di P2, status final jadi 'unassigned'
                 cursor.execute("""
                     UPDATE pengajuan_pembimbing 
                     SET status_p2 = 'rejected', status_final = 'unassigned' 
@@ -461,7 +460,6 @@ def dosen_aksi_pengajuan(id_pengajuan, aksi):
 
     return redirect(url_for('dashboard_dosen'))
 
-# --- ROUTE LOGBOOK DOSEN ---
 @app.route('/dosen/logbook')
 def dosen_logbook():
     if 'role' not in session or session['role'] != 'dosen':
@@ -471,7 +469,6 @@ def dosen_logbook():
     conn = get_db_connection()
 
     with conn.cursor() as cursor:
-        # Ambil daftar catatan logbook dari mahasiswa bimbingan yang sudah disetujui (Accepted)
         cursor.execute("""
             SELECT l.*, u.nama AS nama_mahasiswa, u.username AS npm
             FROM logbook l
@@ -502,7 +499,6 @@ def dosen_aksi_logbook(id_logbook, aksi):
     flash(f"Status logbook berhasil diubah menjadi {status}.", "success")
     return redirect(url_for('dosen_logbook'))
 
-# --- ROUTE PENDAFTARAN SIDANG MAHASISWA ---
 @app.route('/mahasiswa/sidang', methods=['GET', 'POST'])
 def mahasiswa_sidang():
     if 'role' not in session or session['role'] != 'mahasiswa':
@@ -526,10 +522,7 @@ def mahasiswa_sidang():
             f_krs.save(os.path.join(app.config['UPLOAD_SIDANG'], fn_krs))
 
             with conn.cursor() as cursor:
-                # Gunakan REPLACE INTO atau cek dulu apakah sudah ada agar bisa re-upload jika ditolak
-                cursor.execute("""
-                    SELECT id_sidang FROM pendaftaran_sidang WHERE id_mahasiswa = %s
-                """, (user_id,))
+                cursor.execute("SELECT id_sidang FROM pendaftaran_sidang WHERE id_mahasiswa = %s", (user_id,))
                 cek_sidang = cursor.fetchone()
 
                 if cek_sidang:
@@ -549,7 +542,6 @@ def mahasiswa_sidang():
             return redirect(url_for('mahasiswa_sidang'))
 
     with conn.cursor() as cursor:
-        # Ambil data sidang beserta nama dosen penguji
         cursor.execute("""
             SELECT ps.*, u_penguji.nama AS nama_penguji 
             FROM pendaftaran_sidang ps
@@ -562,7 +554,6 @@ def mahasiswa_sidang():
 
     return render_template('mahasiswa_sidang.html', sidang=data_sidang)
 
-# --- ROUTE JADWAL MENGUJI DOSEN (INPUT NILAI) ---
 @app.route('/dosen/jadwal_menguji', methods=['GET', 'POST'])
 def dosen_jadwal_menguji():
     if 'role' not in session or session['role'] != 'dosen':
@@ -571,7 +562,6 @@ def dosen_jadwal_menguji():
     user_id = session['user_id']
     conn = get_db_connection()
 
-    # Jika dosen submit form nilai
     if request.method == 'POST':
         id_sidang = request.form['id_sidang']
         nilai = request.form['nilai_akhir']
@@ -588,7 +578,6 @@ def dosen_jadwal_menguji():
         flash("Nilai dan catatan revisi berhasil disimpan!", "success")
         return redirect(url_for('dosen_jadwal_menguji'))
 
-    # Ambil data sidang di mana dosen ini menjadi penguji
     with conn.cursor() as cursor:
         cursor.execute("""
             SELECT ps.*, u.nama AS nama_mahasiswa, u.username AS npm, p.judul_kp 
@@ -603,22 +592,18 @@ def dosen_jadwal_menguji():
 
     return render_template('dosen_jadwal_menguji.html', jadwal=jadwal_menguji)
 
-# --- ROUTE MANAJEMEN KUOTA DOSEN (ADMIN) ---
 @app.route('/admin/kuota_dosen', methods=['GET', 'POST'])
 def admin_kuota_dosen():
     if 'role' not in session or session['role'] != 'admin':
         return redirect(url_for('login'))
 
     conn = get_db_connection()
-    
     if request.method == 'POST':
         id_dosen = request.form['id_dosen']
         max_kuota = request.form['max_kuota']
 
         with conn.cursor() as cursor:
-            cursor.execute("""
-                UPDATE dosen SET max_kuota = %s WHERE id_dosen = %s
-            """, (max_kuota, id_dosen))
+            cursor.execute("UPDATE dosen SET max_kuota = %s WHERE id_dosen = %s", (max_kuota, id_dosen))
             conn.commit()
         
         flash("Batas kuota dosen berhasil diperbarui!", "success")
@@ -636,7 +621,6 @@ def admin_kuota_dosen():
 
     return render_template('admin_kuota_dosen.html', dosen=daftar_dosen)
 
-# --- ROUTE DATA MASTER MAHASISWA (ADMIN) ---
 @app.route('/admin/mahasiswa')
 def admin_mahasiswa():
     if 'role' not in session or session['role'] != 'admin':
@@ -644,7 +628,6 @@ def admin_mahasiswa():
 
     conn = get_db_connection()
     with conn.cursor() as cursor:
-        # Ambil daftar seluruh mahasiswa beserta status pengajuan & sidang mereka
         cursor.execute("""
             SELECT u.id, u.nama, u.username AS npm,
                    p.status_final, p.judul_kp,
@@ -663,24 +646,28 @@ def admin_mahasiswa():
 
     return render_template('admin_mahasiswa.html', mahasiswa=daftar_mahasiswa)
 
-# --- ROUTE PENGAJUAN PEMBIMBING TUGAS AKHIR (MAHASISWA) ---
 @app.route('/mahasiswa/ta/pengajuan', methods=['GET', 'POST'])
 def mahasiswa_ta_pengajuan():
     if 'role' not in session or session['role'] != 'mahasiswa':
         return redirect(url_for('login'))
         
     user_id = session['user_id']
+    
+    if not cek_sudah_lulus_kp(user_id):
+        flash("Anda belum dapat mengakses Modul Tugas Akhir. Silakan selesaikan dan lulus Sidang Kerja Praktek (KP) terlebih dahulu.", "danger")
+        return redirect(url_for('dashboard_mahasiswa'))
+
     conn = get_db_connection()
 
     if request.method == 'POST':
         id_p1 = request.form['id_dosen_p1']
         id_p2 = request.form['id_dosen_p2']
+        id_p3 = request.form['id_dosen_p3']
         judul = request.form['judul_ta']
         topik = request.form['topik_ta']
         
-        # Validasi agar P1 dan P2 tidak boleh dosen yang sama
-        if id_p1 == id_p2:
-            flash("Dosen Pembimbing 1 dan Pembimbing 2 tidak boleh orang yang sama!", "danger")
+        if id_p1 == id_p2 or id_p1 == id_p3 or id_p2 == id_p3:
+            flash("Pilihan Dosen Pembimbing 1, 2, dan 3 tidak boleh ada yang sama!", "danger")
             return redirect(url_for('mahasiswa_ta_pengajuan'))
 
         file_prop = request.files['file_proposal_ta']
@@ -692,34 +679,48 @@ def mahasiswa_ta_pengajuan():
 
             with conn.cursor() as cursor:
                 cursor.execute("""
-                    INSERT INTO pengajuan_ta (id_mahasiswa, id_dosen_p1, id_dosen_p2, judul_ta, topik_ta, file_proposal_ta)
-                    VALUES (%s, %s, %s, %s, %s, %s)
-                """, (user_id, id_p1, id_p2, judul, topik, filename))
+                    INSERT INTO pengajuan_ta (id_mahasiswa, id_dosen_p1, id_dosen_p2, id_dosen_p3, judul_ta, topik_ta, file_proposal_ta, pilihan_aktif, status_p1, status_final)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, 1, 'pending', 'pending')
+                """, (user_id, id_p1, id_p2, id_p3, judul, topik, filename))
                 conn.commit()
             
-            flash("Pengajuan Dosen Pembimbing Tugas Akhir berhasil dikirim!", "success")
+            flash("Pengajuan Dosen Pembimbing Tugas Akhir dengan 3 pilihan berhasil dikirim!", "success")
             return redirect(url_for('mahasiswa_ta_pengajuan'))
 
-    # Ambil data pengajuan TA mahasiswa jika sudah pernah mengajukan
     with conn.cursor() as cursor:
         cursor.execute("""
             SELECT p.*, 
-                   d1.nama AS nama_p1, d2.nama AS nama_p2 
+                   d1.nama AS nama_p1, d2.nama AS nama_p2, d3.nama AS nama_p3 
             FROM pengajuan_ta p
             JOIN users d1 ON p.id_dosen_p1 = d1.id
             JOIN users d2 ON p.id_dosen_p2 = d2.id
+            JOIN users d3 ON p.id_dosen_p3 = d3.id
             WHERE p.id_mahasiswa = %s
+            ORDER BY p.id_pengajuan DESC LIMIT 1
         """, (user_id,))
         pengajuan = cursor.fetchone()
 
-        # Ambil daftar dosen untuk pilihan P1 dan P2
         cursor.execute("SELECT u.id, u.nama FROM users u JOIN dosen d ON u.id = d.id_dosen ORDER BY u.nama ASC")
         daftar_dosen = cursor.fetchall()
     conn.close()
 
     return render_template('mahasiswa_ta_pengajuan.html', pengajuan=pengajuan, daftar_dosen=daftar_dosen)
 
-# --- ROUTE MANAJEMEN AKUN (ADMIN) ---
+@app.route('/mahasiswa/ta/reset_pengajuan')
+def mahasiswa_ta_reset_pengajuan():
+    if 'role' not in session or session['role'] != 'mahasiswa':
+        return redirect(url_for('login'))
+        
+    user_id = session['user_id']
+    conn = get_db_connection()
+    with conn.cursor() as cursor:
+        cursor.execute("DELETE FROM pengajuan_ta WHERE id_mahasiswa = %s AND status_final = 'rejected'", (user_id,))
+        conn.commit()
+    conn.close()
+    
+    flash("Silakan ajukan kembali dosen pembimbing TA dengan pilihan yang berbeda.", "info")
+    return redirect(url_for('mahasiswa_ta_pengajuan'))
+
 @app.route('/admin/akun')
 def admin_akun():
     if 'role' not in session or session['role'] != 'admin':
@@ -733,7 +734,6 @@ def admin_akun():
 
     return render_template('admin_akun.html', users=users)
 
-# --- TAMBAH AKUN BARU ---
 @app.route('/admin/akun/tambah', methods=['POST'])
 def admin_tambah_akun():
     if 'role' not in session or session['role'] != 'admin':
@@ -741,8 +741,10 @@ def admin_tambah_akun():
 
     nama = request.form['nama']
     username = request.form['username']
-    password = request.form['password'] # Catatan: Untuk produksi gunakan hashing (bcrypt), ini disesuaikan dengan sistem Anda saat ini
+    password = request.form['password']
     role = request.form['role']
+
+    hashed_password = generate_password_hash(password)
 
     conn = get_db_connection()
     try:
@@ -750,9 +752,8 @@ def admin_tambah_akun():
             cursor.execute("""
                 INSERT INTO users (nama, username, password, role) 
                 VALUES (%s, %s, %s, %s)
-            """, (nama, username, password, role))
+            """, (nama, username, hashed_password, role))
             
-            # Jika role adalah dosen, otomatis buat juga record di tabel dosen
             if role == 'dosen':
                 user_id = cursor.lastrowid
                 cursor.execute("""
@@ -769,7 +770,6 @@ def admin_tambah_akun():
 
     return redirect(url_for('admin_akun'))
 
-# --- EDIT AKUN ---
 @app.route('/admin/akun/edit/<int:id_user>', methods=['POST'])
 def admin_edit_akun(id_user):
     if 'role' not in session or session['role'] != 'admin':
@@ -783,9 +783,10 @@ def admin_edit_akun(id_user):
     conn = get_db_connection()
     with conn.cursor() as cursor:
         if password:
+            hashed_password = generate_password_hash(password)
             cursor.execute("""
                 UPDATE users SET nama = %s, username = %s, role = %s, password = %s WHERE id = %s
-            """, (nama, username, role, password, id_user))
+            """, (nama, username, role, hashed_password, id_user))
         else:
             cursor.execute("""
                 UPDATE users SET nama = %s, username = %s, role = %s WHERE id = %s
@@ -796,7 +797,6 @@ def admin_edit_akun(id_user):
     flash("Data akun berhasil diperbarui!", "success")
     return redirect(url_for('admin_akun'))
 
-# --- HAPUS AKUN ---
 @app.route('/admin/akun/hapus/<int:id_user>')
 def admin_hapus_akun(id_user):
     if 'role' not in session or session['role'] != 'admin':
@@ -804,9 +804,7 @@ def admin_hapus_akun(id_user):
 
     conn = get_db_connection()
     with conn.cursor() as cursor:
-        # Hapus relasi jika dosen
         cursor.execute("DELETE FROM dosen WHERE id_dosen = %s", (id_user,))
-        # Hapus user
         cursor.execute("DELETE FROM users WHERE id = %s", (id_user,))
         conn.commit()
     conn.close()
@@ -814,7 +812,7 @@ def admin_hapus_akun(id_user):
     flash("Akun berhasil dihapus dari sistem.", "success")
     return redirect(url_for('admin_akun'))
 
-# --- ROUTE KELOLA PENGAJUAN TA (DOSEN) ---
+# --- ROUTE KELOLA PENGAJUAN TA (DOSEN) - DIPERBARUI UNTUK 3 PILIHAN ---
 @app.route('/dosen/ta')
 def dosen_ta():
     if 'role' not in session or session['role'] != 'dosen':
@@ -823,66 +821,77 @@ def dosen_ta():
     user_id = session['user_id']
     conn = get_db_connection()
     with conn.cursor() as cursor:
-        # Ambil pengajuan TA di mana dosen yang login bertindak sebagai P1 atau P2
         cursor.execute("""
             SELECT p.*, m.nama AS nama_mahasiswa, m.username AS npm,
-                   d1.nama AS nama_p1, d2.nama AS nama_p2
+                   d1.nama AS nama_p1, d2.nama AS nama_p2, d3.nama AS nama_p3
             FROM pengajuan_ta p
             JOIN users m ON p.id_mahasiswa = m.id
             JOIN users d1 ON p.id_dosen_p1 = d1.id
             JOIN users d2 ON p.id_dosen_p2 = d2.id
-            WHERE p.id_dosen_p1 = %s OR p.id_dosen_p2 = %s
-        """, (user_id, user_id))
+            JOIN users d3 ON p.id_dosen_p3 = d3.id
+            WHERE p.id_dosen_p1 = %s OR p.id_dosen_p2 = %s OR p.id_dosen_p3 = %s
+        """, (user_id, user_id, user_id))
         pengajuan_ta = cursor.fetchall()
     conn.close()
 
     return render_template('dosen_ta.html', pengajuan_ta=pengajuan_ta, user_id=user_id)
 
-
-# --- AKSI TERIMA / TOLAK PENGAJUAN TA ---
+# --- AKSI TERIMA / TOLAK PENGAJUAN TA (FALLBACK 3 PILIHAN) - NAMA FUNGSI UNIK ---
 @app.route('/dosen/ta/<int:id_pengajuan>/<aksi>')
-def dosen_aksi_ta(id_pengajuan, aksi):
+def dosen_aksi_ta_pengajuan(id_pengajuan, aksi):
     if 'role' not in session or session['role'] != 'dosen':
         return redirect(url_for('login'))
         
     user_id = session['user_id']
-    status_val = 'accepted' if aksi == 'terima' else 'rejected'
-    
     conn = get_db_connection()
     with conn.cursor() as cursor:
-        # Cek apakah dosen ini P1 atau P2
         cursor.execute("SELECT * FROM pengajuan_ta WHERE id_pengajuan = %s", (id_pengajuan,))
         p = cursor.fetchone()
         
         if p:
-            if p['id_dosen_p1'] == user_id:
-                cursor.execute("UPDATE pengajuan_ta SET status_p1 = %s WHERE id_pengajuan = %s", (status_val, id_pengajuan))
-            elif p['id_dosen_p2'] == user_id:
-                cursor.execute("UPDATE pengajuan_ta SET status_p2 = %s WHERE id_pengajuan = %s", (status_val, id_pengajuan))
+            aktif = p['pilihan_aktif']
             
-            # Perbarui status final: jika P1 & P2 keduanya 'accepted', maka final 'accepted'. 
-            # Jika salah satu 'rejected', maka final 'unassigned'.
-            cursor.execute("SELECT status_p1, status_p2 FROM pengajuan_ta WHERE id_pengajuan = %s", (id_pengajuan,))
-            updated = cursor.fetchone()
-            
-            if updated['status_p1'] == 'accepted' and updated['status_p2'] == 'accepted':
+            if aksi == 'terima':
                 cursor.execute("UPDATE pengajuan_ta SET status_final = 'accepted' WHERE id_pengajuan = %s", (id_pengajuan,))
-            elif updated['status_p1'] == 'rejected' or updated['status_p2'] == 'rejected':
-                cursor.execute("UPDATE pengajuan_ta SET status_final = 'unassigned' WHERE id_pengajuan = %s", (id_pengajuan,))
+                flash("Pengajuan Tugas Akhir berhasil diterima!", "success")
+            else:
+                if aktif == 1 and p['id_dosen_p1'] == user_id:
+                    cursor.execute("""
+                        UPDATE pengajuan_ta 
+                        SET status_p1 = 'rejected', pilihan_aktif = 2, status_p2 = 'pending' 
+                        WHERE id_pengajuan = %s
+                    """, (id_pengajuan,))
+                    flash("Pengajuan ditolak dan otomatis diteruskan ke Dosen Pilihan ke-2.", "warning")
+                elif aktif == 2 and p['id_dosen_p2'] == user_id:
+                    cursor.execute("""
+                        UPDATE pengajuan_ta 
+                        SET status_p2 = 'rejected', pilihan_aktif = 3, status_p3 = 'pending' 
+                        WHERE id_pengajuan = %s
+                    """, (id_pengajuan,))
+                    flash("Pengajuan ditolak dan otomatis diteruskan ke Dosen Pilihan ke-3.", "warning")
+                elif aktif == 3 and p['id_dosen_p3'] == user_id:
+                    cursor.execute("""
+                        UPDATE pengajuan_ta 
+                        SET status_p3 = 'rejected', status_final = 'rejected' 
+                        WHERE id_pengajuan = %s
+                    """, (id_pengajuan,))
+                    flash("Pengajuan ditolak oleh seluruh pilihan dosen.", "danger")
             
             conn.commit()
     conn.close()
-    
-    flash(f"Pengajuan Tugas Akhir berhasil di-{aksi}!", "success")
     return redirect(url_for('dosen_ta'))
 
-# --- ROUTE LOGBOOK TUGAS AKHIR (MAHASISWA) ---
 @app.route('/mahasiswa/ta/logbook', methods=['GET', 'POST'])
 def mahasiswa_ta_logbook():
     if 'role' not in session or session['role'] != 'mahasiswa':
         return redirect(url_for('login'))
         
     user_id = session['user_id']
+    
+    if not cek_sudah_lulus_kp(user_id):
+        flash("Anda belum dapat mengakses Logbook Tugas Akhir sebelum menyelesaikan Sidang Kerja Praktek (KP).", "danger")
+        return redirect(url_for('dashboard_mahasiswa'))
+
     conn = get_db_connection()
 
     if request.method == 'POST':
@@ -907,15 +916,12 @@ def mahasiswa_ta_logbook():
         return redirect(url_for('mahasiswa_ta_logbook'))
 
     with conn.cursor() as cursor:
-        cursor.execute("""
-            SELECT * FROM logbook_ta WHERE id_mahasiswa = %s ORDER BY tanggal_bimbingan DESC
-        """, (user_id,))
+        cursor.execute("SELECT * FROM logbook_ta WHERE id_mahasiswa = %s ORDER BY tanggal_bimbingan DESC", (user_id,))
         logbook_list = cursor.fetchall()
     conn.close()
 
     return render_template('mahasiswa_ta_logbook.html', logbook=logbook_list)
 
-# --- ROUTE LOGBOOK TA (DOSEN) ---
 @app.route('/dosen/ta/logbook')
 def dosen_ta_logbook():
     if 'role' not in session or session['role'] != 'dosen':
@@ -924,15 +930,14 @@ def dosen_ta_logbook():
     user_id = session['user_id']
     conn = get_db_connection()
     with conn.cursor() as cursor:
-        # Ambil logbook mahasiswa bimbingan TA di mana dosen login sebagai P1 atau P2
         cursor.execute("""
             SELECT l.*, m.nama AS nama_mahasiswa, m.username AS npm
             FROM logbook_ta l
             JOIN users m ON l.id_mahasiswa = m.id
             JOIN pengajuan_ta p ON m.id = p.id_mahasiswa
-            WHERE p.id_dosen_p1 = %s OR p.id_dosen_p2 = %s
+            WHERE p.id_dosen_p1 = %s OR p.id_dosen_p2 = %s OR p.id_dosen_p3 = %s
             ORDER BY l.tanggal_bimbingan DESC
-        """, (user_id, user_id))
+        """, (user_id, user_id, user_id))
         logbook_ta = cursor.fetchall()
     conn.close()
 
