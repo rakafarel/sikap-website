@@ -3,7 +3,7 @@ const titles = { login: "Masuk - SIKAP", register: "Daftar - SIKAP" };
 
 /* Satu tombol: ganti Masuk <-> Daftar dengan animasi lingkaran dari tengah layar */
 const html = document.documentElement;
-const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const reduced = false; // matchMedia("(prefers-reduced-motion: reduce)").matches;
 let busy = false;
 
 function applyMode(mode) {
@@ -81,19 +81,15 @@ addEventListener("pageshow", (e) => {
 /* Kalimat yang diketik di panel kiri */
 const words = ["mengajukan dosen pembimbing", "mencatat logbook bimbingan", "mendaftar sidang KP", "lanjut ke pengajuan TA"];
 const typed = document.getElementById("typed");
-if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
-  typed.textContent = words[0];
-} else {
-  let w = 0, c = 0, del = false;
-  (function tick() {
-    const t = words[w];
-    typed.textContent = t.slice(0, c);
-    if (!del && c === t.length) { del = true; return setTimeout(tick, 1600); }
-    if (del && c === 0) { del = false; w = (w + 1) % words.length; }
-    c += del ? -1 : 1;
-    setTimeout(tick, del ? 28 : 65);
-  })();
-}
+let w = 0, c = 0, del = false;
+(function tick() {
+  const t = words[w];
+  typed.textContent = t.slice(0, c);
+  if (!del && c === t.length) { del = true; return setTimeout(tick, 1600); }
+  if (del && c === 0) { del = false; w = (w + 1) % words.length; }
+  c += del ? -1 : 1;
+  setTimeout(tick, del ? 28 : 65);
+})();
 
 /* Cahaya mengikuti kursor di panel kiri */
 const brand = document.querySelector(".brand");
@@ -101,4 +97,17 @@ brand.addEventListener("pointermove", (e) => {
   const r = brand.getBoundingClientRect();
   brand.style.setProperty("--mx", e.clientX - r.left + "px");
   brand.style.setProperty("--my", e.clientY - r.top + "px");
+});
+
+/* Pesan flash (salah password, username sudah ada, dll.) hilang sendiri setelah 5 detik */
+document.querySelectorAll(".alert").forEach((el) => {
+  setTimeout(() => {
+    el.animate(
+      [
+        { opacity: 1, maxHeight: el.offsetHeight + "px" },
+        { opacity: 0, maxHeight: "0px", paddingTop: "0px", paddingBottom: "0px", marginBottom: "-12px" }
+      ],
+      { duration: 400, easing: "ease", fill: "forwards" }
+    ).finished.then(() => el.remove());
+  }, 5000);
 });
