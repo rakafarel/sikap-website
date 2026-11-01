@@ -95,3 +95,46 @@ body {
 .badge-accepted { background-color: #d1fae5; color: #059669; }
 .badge-rejected { background-color: #fee2e2; color: #dc2626; }
 .badge-queue { background-color: #e0e7ff; color: #4338ca; }
+
+/* ===== RESPONSIF (HP & tablet) ===== */
+.menu-toggle, .sidebar-backdrop { display: none; }
+
+@media (max-width: 991.98px) {
+    .sidebar {
+        height: 100vh; height: 100dvh;
+        overflow-y: auto;
+        transform: translateX(-100%);
+        transition: transform .3s ease, box-shadow .3s ease;
+    }
+    body.sidebar-open .sidebar { transform: none; box-shadow: 0 0 40px rgba(15, 23, 42, .25); }
+
+    .main-content { margin-left: 0; padding: 1rem; padding-top: 4.5rem; }
+
+    .menu-toggle {
+        display: flex; align-items: center; justify-content: center;
+        position: fixed; top: .75rem; left: .75rem; z-index: 90;
+        width: 44px; height: 44px; border: 1px solid var(--border-color); border-radius: 12px;
+        background: #fff; color: var(--primary-color); font-size: 1.4rem; cursor: pointer;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, .12);
+    }
+    body.sidebar-open .menu-toggle { display: none; }
+
+    .sidebar-backdrop {
+        display: block; position: fixed; inset: 0; z-index: 99;
+        background: rgba(15, 23, 42, .45); opacity: 0; visibility: hidden;
+        transition: opacity .3s ease, visibility 0s .3s;
+    }
+    body.sidebar-open .sidebar-backdrop { opacity: 1; visibility: visible; transition-delay: 0s; }
+    body.sidebar-open { overflow: hidden; }
+}
+
+@media (max-width: 575.98px) {
+    .main-content .p-5 { padding: 1.5rem !important; }
+    .main-content .p-4 { padding: 1rem !important; }
+    .main-content h4 { font-size: 1.15rem; }
+    .table-responsive .table th, .table-responsive .table td { white-space: nowrap; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sidebar, .sidebar-backdrop { transition: none; }
+}

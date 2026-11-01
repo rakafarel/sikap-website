@@ -19,8 +19,11 @@
     </style>
 </head>
 <body>
+    <button type="button" class="menu-toggle" id="menuToggle" aria-label="Buka menu" aria-controls="sidebar" aria-expanded="false"><i class="bi bi-list"></i></button>
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
-    <div class="sidebar shadow-sm">
+
+    <div id="sidebar" class="sidebar shadow-sm">
         <div>
             <div class="d-flex align-items-center mb-5 px-3 mt-2">
                 <div class="bg-primary text-white rounded p-2 me-2 d-flex align-items-center justify-content-center">
@@ -94,12 +97,12 @@
                     <h5 class="fw-bold mb-0 text-primary"><i class="bi bi-calendar2-check-fill me-2"></i> Jadwal Sidang Ditetapkan</h5>
                 </div>
                 <div class="p-4">
-                    <table class="table table-borderless small mb-0">
+                    <div class="table-responsive"><table class="table table-borderless small mb-0">
                         <tr><td width="160" class="text-muted fw-semibold">Tanggal Sidang</td><td class="fw-bold text-dark">: {{ sidang.tanggal_sidang }}</td></tr>
                         <tr><td class="text-muted fw-semibold">Waktu</td><td class="fw-bold text-dark">: {{ sidang.waktu_sidang }} WIB</td></tr>
                         <tr><td class="text-muted fw-semibold">Ruangan</td><td class="fw-bold text-dark">: {{ sidang.ruangan }}</td></tr>
                         <tr><td class="text-muted fw-semibold">Dosen Penguji</td><td class="fw-bold text-primary">: {{ sidang.nama_penguji }}</td></tr>
-                    </table>
+                    </table></div>
                     <div class="alert alert-warning mt-4 mb-0 small border-0 d-flex align-items-center rounded-3">
                         <i class="bi bi-info-circle-fill me-2 fs-5"></i> Harap hadir 15 menit sebelum waktu sidang dimulai dan persiapkan materi dengan baik.
                     </div>
@@ -147,5 +150,6 @@
             </div>
         {% endif %}
     </div>
+    <script src="{{ url_for('static', filename='js/layout.js') }}"></script>
 </body>
 </html>
