@@ -66,13 +66,7 @@
             <p class="text-muted small mb-0">Unggah laporan final dan pantau jadwal sidang Anda.</p>
         </div>
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} p-3 small border-0 shadow-sm rounded-4 mb-4" role="alert"><i class="bi bi-info-circle-fill me-2"></i>{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+        {% include '_flash.html' %}
 
         {% if sidang and sidang.nilai_akhir %}
             <!-- Tampilan Jika Sudah Dinilai (Hasil Sidang Akhir) -->
