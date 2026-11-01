@@ -1,0 +1,90 @@
+{%- set is_register = request.endpoint == 'register' -%}
+<!DOCTYPE html>
+<html lang="id" data-mode="{{ 'register' if is_register else 'login' }}">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% if request.endpoint == 'register' %}Daftar{% else %}Masuk{% endif %} - SIKAP</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}" />
+  </head>
+  <body>
+    {% set is_register = request.endpoint == 'register' %}
+    {% set msgs = get_flashed_messages(with_categories=true) %}
+
+    <div class="bg" aria-hidden="true"><i class="orb o1"></i><i class="orb o2"></i><i class="orb o3"></i></div>
+
+    <main class="card intro" data-mode="{{ 'register' if is_register else 'login' }}">
+
+      <!-- Sisi kiri: identitas SIKAP -->
+      <aside class="brand">
+        <div class="logo-wrap">
+          <img class="logo" src="{{ url_for('static', filename='img/sikap-logo-transparent.svg') }}" alt="Logo Universitas Muhammadiyah Indonesia Bekasi" />
+        </div>
+        <div class="who">
+          <h1 class="word" aria-label="SIKAP"><span style="--i:0">S</span><span style="--i:1">I</span><span style="--i:2">K</span><span style="--i:3">A</span><span style="--i:4">P</span></h1>
+          <p class="sub">Sistem Informasi Kerja Praktek &amp; Tugas Akhir<br>Program Studi Informatika</p>
+          <p class="pitch">Satu tempat untuk <b id="typed"></b><span class="caret"></span></p>
+        </div>
+        <ol class="flow" aria-label="Alur dari Kerja Praktek menuju Tugas Akhir">
+          <li>Daftar KP</li><li>Logbook</li><li>Sidang KP</li><li class="last">Ajukan TA</li>
+        </ol>
+        <small class="copy">© 2026 SIKAP</small>
+      </aside>
+
+      <!-- Sisi kanan: form -->
+      <section class="side">
+
+        <div class="stack">
+
+          <!-- FORM LOGIN -->
+          <form action="/login" method="POST" class="f f-login">
+            <div class="head"><h2>Masuk ke SIKAP</h2><p>Gunakan NPM atau NIDN Anda untuk mengelola Kerja Praktek (KP) dan Tugas Akhir (TA).</p></div>
+            {% if not is_register %}{% for category, message in msgs %}
+              <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}{% endif %}
+            <label class="field"><i class="fas fa-user"></i>
+              <input type="text" name="username" placeholder="NPM / NIDN / Username" autocomplete="username" required />
+            </label>
+            <label class="field"><i class="fas fa-lock"></i>
+              <input type="password" name="password" placeholder="Password" autocomplete="current-password" required />
+              <button type="button" class="eye" aria-label="Tampilkan password"><i class="fas fa-eye"></i></button>
+            </label>
+            <button type="submit" class="btn"><span data-label="Masuk">Masuk</span></button>
+          </form>
+
+          <!-- FORM REGISTER -->
+          <form action="/register" method="POST" class="f f-register">
+            <div class="head"><h2>Buat akun baru</h2><p>Pendaftaran untuk mahasiswa dan dosen. Akun Admin dan Kaprodi dibuat oleh prodi.</p></div>
+            {% if is_register %}{% for category, message in msgs %}
+              <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}{% endif %}
+            <label class="field"><i class="fas fa-id-card"></i>
+              <input type="text" name="username" placeholder="NPM / NIDN / Username" autocomplete="username" required />
+            </label>
+            <label class="field"><i class="fas fa-user"></i>
+              <input type="text" name="nama" placeholder="Nama Lengkap & Gelar" autocomplete="name" required />
+            </label>
+            <div class="seg">
+              <input type="radio" name="role" id="r-mhs" value="mahasiswa" required /><label for="r-mhs"><i class="fas fa-user-graduate"></i>Mahasiswa</label>
+              <input type="radio" name="role" id="r-dsn" value="dosen" /><label for="r-dsn"><i class="fas fa-chalkboard-user"></i>Dosen</label>
+            </div>
+            <label class="field"><i class="fas fa-lock"></i>
+              <input type="password" name="password" placeholder="Password" autocomplete="new-password" required />
+              <button type="button" class="eye" aria-label="Tampilkan password"><i class="fas fa-eye"></i></button>
+            </label>
+            <button type="submit" class="btn"><span data-label="Daftar">Daftar</span></button>
+          </form>
+
+        </div>
+      
+        <button type="button" class="switch" id="switch">
+          <span class="t-login">Belum punya akun? <b>Daftar</b></span>
+          <span class="t-register">Sudah punya akun? <b>Masuk</b></span>
+        </button>
+      </section>
+    </main>
+
+    <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+  </body>
+</html>

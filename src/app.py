@@ -83,7 +83,7 @@ def login():
         else:
             flash("Username atau password salah!", "danger")
 
-    return render_template('login.html')
+    return render_template('auth.html')
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -123,12 +123,12 @@ def register():
         flash("Registrasi berhasil! Silakan login dengan akun kamu.", "success")
         return redirect(url_for('login'))
 
-    return render_template('register.html')
+    return render_template('auth.html')
 
 @app.route('/logout')
 def logout():
     session.clear()
-    flash("Anda berhasil keluar dari sistem SiKP.", "info")
+    flash("Anda berhasil keluar dari SIKAP.", "info")
     return redirect(url_for('login'))
 
 # --- ROUTE DASHBOARD MULTI-ROLE ---
