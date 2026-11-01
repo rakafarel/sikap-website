@@ -1,18 +1,49 @@
 const card = document.querySelector(".card");
 const titles = { login: "Masuk - SIKAP", register: "Daftar - SIKAP" };
 
-/* Pindah tab Masuk <-> Daftar tanpa reload, URL ikut berubah */
-function setMode(mode) {
+/* Satu tombol: ganti Masuk <-> Daftar dengan animasi lingkaran dari tengah layar */
+const html = document.documentElement;
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+let busy = false;
+
+function applyMode(mode) {
   card.dataset.mode = mode;
+  html.dataset.mode = mode;
   document.title = titles[mode];
   history.replaceState(null, "", mode === "register" ? "/register" : "/login");
   setTimeout(() => {
     const first = card.querySelector(".f-" + mode + " input:not([type=radio])");
     if (first && matchMedia("(hover: hover)").matches) first.focus({ preventScroll: true });
-  }, 500);
+  }, 700);
 }
-document.querySelectorAll("[data-go]").forEach((b) =>
-  b.addEventListener("click", () => setMode(b.dataset.go))
+
+/* Cadangan untuk browser tanpa View Transitions: lingkaran menutup layar, lalu halaman diganti */
+function circleFallback(mode) {
+  const wipe = document.createElement("div");
+  wipe.className = "wipe " + mode;
+  document.body.appendChild(wipe);
+  wipe.animate(
+    [{ clipPath: "circle(0 at 50% 50%)" }, { clipPath: "circle(150vmax at 50% 50%)" }],
+    { duration: 700, easing: "cubic-bezier(.65,0,.25,1)", fill: "forwards" }
+  ).finished.then(() => {
+    applyMode(mode);
+    wipe.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 400, fill: "forwards" })
+      .finished.then(() => { wipe.remove(); busy = false; });
+  });
+}
+
+function setMode(mode) {
+  if (busy || card.dataset.mode === mode) return;
+  busy = true;
+  if (reduced) { applyMode(mode); busy = false; return; }
+  if (document.startViewTransition) {
+    document.startViewTransition(() => applyMode(mode)).finished.finally(() => { busy = false; });
+  } else {
+    circleFallback(mode);
+  }
+}
+document.getElementById("switch").addEventListener("click", () =>
+  setMode(card.dataset.mode === "login" ? "register" : "login")
 );
 setTimeout(() => card.classList.remove("intro"), 1800);
 

@@ -1,5 +1,6 @@
+{%- set is_register = request.endpoint == 'register' -%}
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-mode="{{ 'register' if is_register else 'login' }}">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -18,7 +19,7 @@
       <!-- Sisi kiri: identitas SIKAP -->
       <aside class="brand">
         <div class="logo-wrap">
-          <img class="logo" src="{{ url_for('static', filename='img/logo-um-id.png') }}" alt="Logo Universitas Muhammadiyah Indonesia Bekasi" />
+          <img class="logo" src="{{ url_for('static', filename='img/sikap-logo-transparent.svg') }}" alt="Logo Universitas Muhammadiyah Indonesia Bekasi" />
         </div>
         <div class="who">
           <h1 class="word" aria-label="SIKAP"><span style="--i:0">S</span><span style="--i:1">I</span><span style="--i:2">K</span><span style="--i:3">A</span><span style="--i:4">P</span></h1>
@@ -33,11 +34,6 @@
 
       <!-- Sisi kanan: form -->
       <section class="side">
-        <div class="tabs">
-          <span class="pill"></span>
-          <button type="button" data-go="login">Masuk</button>
-          <button type="button" data-go="register">Daftar</button>
-        </div>
 
         <div class="stack">
 
@@ -81,6 +77,11 @@
           </form>
 
         </div>
+      
+        <button type="button" class="switch" id="switch">
+          <span class="t-login">Belum punya akun? <b>Daftar</b></span>
+          <span class="t-register">Sudah punya akun? <b>Masuk</b></span>
+        </button>
       </section>
     </main>
 

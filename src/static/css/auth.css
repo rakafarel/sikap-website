@@ -98,11 +98,6 @@ body {
 
 /* ===== Panel kanan: form ===== */
 .side { padding: clamp(24px, 4vw, 52px); display: flex; flex-direction: column; justify-content: center; gap: 26px; background: linear-gradient(180deg, #fff, #f5f9ff); }
-.tabs { position: relative; display: grid; grid-template-columns: 1fr 1fr; padding: 5px; width: 100%; max-width: 320px; margin: 0 auto; border-radius: 999px; background: #e8f0fb; }
-.pill { position: absolute; top: 5px; bottom: 5px; left: 5px; width: calc(50% - 5px); border-radius: 999px; background: #fff; box-shadow: 0 6px 16px -4px rgba(15,91,185,.4); transition: transform .55s var(--ease); }
-.card[data-mode=register] .pill { transform: translateX(100%); }
-.tabs button { position: relative; z-index: 1; border: 0; background: none; padding: .7rem; border-radius: 999px; font: 600 .95rem "DM Sans", sans-serif; color: var(--mute); cursor: pointer; transition: color .3s; }
-.card[data-mode=login] [data-go=login], .card[data-mode=register] [data-go=register] { color: var(--blue); }
 .tabs button:focus-visible, .eye:focus-visible, .btn:focus-visible { outline: 3px solid rgba(15,91,185,.4); outline-offset: 2px; }
 
 .stack { display: grid; }
@@ -179,7 +174,59 @@ body {
   .btn { height: 50px; }
   .f { gap: 10px; }
 }
-@media (max-width: 860px) and (max-height: 700px) { .head p { display: none; } }
+@media (max-width: 860px) and (max-device-height: 700px) { .head p { display: none; } }
 @media (prefers-reduced-motion: reduce) {
   *, *:before, *:after { animation: none !important; transition-duration: .01ms !important; }
 }
+
+
+/* ===== STYLE 2: satu tombol + pergantian halaman lingkaran dari tengah ===== */
+.f { transition: none; }   /* pergeseran lama dimatikan, diganti animasi lingkaran */
+
+.switch {
+  width: 100%; max-width: 380px; height: 52px; margin: 0 auto; border: 1.5px solid var(--line); border-radius: 999px;
+  background: #fff; color: var(--mute); font: 500 .95rem "DM Sans", sans-serif; cursor: pointer;
+  transition: transform .3s var(--ease), box-shadow .3s, border-color .3s;
+}
+.switch b { color: var(--blue); font-weight: 700; margin-left: 4px; }
+.switch:hover { transform: translateY(-2px); border-color: var(--blue); box-shadow: 0 12px 24px -12px rgba(15,91,185,.5); }
+.switch:focus-visible { outline: 3px solid rgba(15,91,185,.4); outline-offset: 2px; }
+.switch .t-register, .card[data-mode=register] .switch .t-login { display: none; }
+.card[data-mode=register] .switch .t-register { display: inline; }
+
+/* Tema tiap halaman: Masuk = biru, Daftar = oranye (supaya perpindahannya terlihat jelas) */
+html[data-mode=register] .bg {
+  background:
+    radial-gradient(1100px 700px at 12% 8%, rgba(245,134,0,.85), transparent 60%),
+    radial-gradient(900px 600px at 92% 98%, rgba(15,91,185,.5), transparent 60%),
+    linear-gradient(160deg, #3a1b00, #8a4700);
+}
+.card[data-mode=register] .brand { background: linear-gradient(155deg, #ffa433 0%, #F58600 50%, #c96a00 100%); }
+.card[data-mode=register] .pitch b { color: #fff; }
+.card[data-mode=register] .caret { background: #fff; }
+.card[data-mode=register] .f-register .btn { background: linear-gradient(135deg, #2f86f0, var(--blue) 55%, #0a4a99); box-shadow: 0 14px 26px -10px rgba(15,91,185,.8); }
+.card[data-mode=register] .head h2 { color: #c96a00; }
+
+/* Lingkaran dari tengah layar (View Transitions) */
+::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+::view-transition-new(root) { animation: circle-in .95s cubic-bezier(.65, 0, .25, 1) both; }
+@keyframes circle-in { from { clip-path: circle(0 at 50% 50%); } to { clip-path: circle(150vmax at 50% 50%); } }
+.wipe { position: fixed; inset: 0; z-index: 50; background: #0F5BB9; }
+.wipe.register { background: #F58600; }
+
+@media (max-width: 860px) { .switch { height: 48px; } }
+@media (prefers-reduced-motion: reduce) { ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; } }
+
+/* ===== Penyesuaian warna (Style 2) ===== */
+/* cincin dan cahaya di sekitar logo jadi putih */
+.logo-wrap:before { background: conic-gradient(#fff, transparent 30%, rgba(255,255,255,.55), transparent 65%, #fff); }
+.logo-wrap:after { background: radial-gradient(circle, rgba(255,255,255,.3), transparent 65%); }
+
+/* gembok di alur KP -> TA jadi putih netral */
+.flow .last:before { background: #fff; border-color: #fff; color: var(--blue); animation: ring-white 2.4s infinite; }
+.card[data-mode=register] .flow .last:before { color: #c96a00; }
+@keyframes ring-white { 0% { box-shadow: 0 0 0 0 rgba(255,255,255,.6); } 70%, 100% { box-shadow: 0 0 0 12px rgba(255,255,255,0); } }
+
+/* halaman Daftar (latar oranye): teks yang diketik jadi biru tua supaya terbaca */
+.card[data-mode=register] .pitch b { color: #0A3F85; font-weight: 700; }
+.card[data-mode=register] .caret { background: #0A3F85; }
