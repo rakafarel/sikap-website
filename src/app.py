@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, send_from_directory, abort
 import pymysql
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -137,6 +137,21 @@ def logout():
     flash("Anda berhasil keluar dari SIKAP.", "info")
     return redirect(url_for('login'))
 
+# --- BUKA BERKAS UPLOAD (proposal, logbook, sidang) ---
+# Hanya pengguna yang sudah login yang boleh membuka berkas.
+@app.route('/uploads/<folder>/<path:filename>')
+def buka_berkas(folder, filename):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    folders = {
+        'proposal': UPLOAD_FOLDER,
+        'logbook': UPLOAD_LOGBOOK,
+        'sidang': UPLOAD_SIDANG,
+    }
+    if folder not in folders:
+        abort(404)
+    return send_from_directory(folders[folder], filename)
+
 # --- ROUTE DASHBOARD MULTI-ROLE ---
 
 @app.route('/dashboard/mahasiswa')
@@ -172,9 +187,16 @@ def dashboard_mahasiswa():
         """, (user_id,))
         pengajuan_ta = cursor.fetchone()
 
+        cursor.execute("""
+            SELECT status_verifikasi, nilai_akhir, tanggal_sidang, waktu_sidang
+            FROM pendaftaran_sidang WHERE id_mahasiswa = %s
+            ORDER BY id_sidang DESC LIMIT 1
+        """, (user_id,))
+        sidang = cursor.fetchone()
+
     conn.close()
 
-    return render_template('dashboard_mahasiswa.html', pengajuan=pengajuan, pengajuan_ta=pengajuan_ta, logbook_stat=logbook_stat)
+    return render_template('dashboard_mahasiswa.html', pengajuan=pengajuan, pengajuan_ta=pengajuan_ta, logbook_stat=logbook_stat, sidang=sidang)
 
 @app.route('/mahasiswa/pengajuan', methods=['GET', 'POST'])
 def mahasiswa_pengajuan():

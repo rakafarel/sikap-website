@@ -3,30 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manajemen Akun - Admin SiKP</title>
+    <title>Manajemen Akun - Admin SIKAP</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <style>
-        .main-content { background-color: #f8fafc; min-height: 100vh; }
-        .card-modern {
-            border: none; border-radius: 1rem; background: #ffffff;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-            transition: transform 0.2s ease-in-out;
-        }
-        .card-modern:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08); }
-        .icon-box { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 0.75rem; font-size: 1.25rem; }
-        .banner-admin {
-            background: linear-gradient(135deg, #334155 0%, #0f172a 100%);
-            border-radius: 1.25rem; position: relative; overflow: hidden;
-        }
-        .banner-bg-icon {
-            position: absolute; right: -10px; bottom: -40px; font-size: 10rem;
-            color: rgba(255, 255, 255, 0.05); transform: rotate(-15deg);
-        }
-        .modal-content { border-radius: 1rem; border: none; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
-        .modal-header { border-bottom: 1px solid #f1f5f9; background-color: #f8fafc; border-radius: 1rem 1rem 0 0; }
+        /* Mencegah layar gelap tersangkut setelah modal ditutup */
         .modal-backdrop { display: none !important; }
     </style>
 </head>
@@ -42,7 +25,7 @@
                 <div class="bg-primary text-white rounded p-2 me-2 d-flex align-items-center justify-content-center">
                     <i class="bi bi-shield-lock-fill fs-5"></i>
                 </div>
-                <span class="fw-bold fs-5 tracking-wide">SiKP <span class="text-primary">Admin</span></span>
+                <span class="fw-bold fs-5 tracking-wide">SIKAP <span class="text-primary">Admin</span></span>
             </div>
             <nav class="sidebar-menu px-2">
                 <a href="/dashboard/admin" class="nav-link-custom mb-2 rounded-3">
@@ -67,27 +50,17 @@
     </div>
 
     <!-- Main Content -->
-    <div class="main-content">
+    <div class="main-content"><div class="page">
         
-        <!-- Banner Admin -->
-        <div class="banner-admin p-5 text-white mb-4 shadow-sm d-flex align-items-center justify-content-between">
-            <div class="position-relative" style="z-index: 2;">
-                <p class="text-white-50 fw-semibold mb-1 text-uppercase tracking-wider small">Portal Koordinator KP</p>
-                <h3 class="fw-bold mb-2">Manajemen Akun Pengguna</h3>
-                <p class="mb-0 opacity-75 small">Kelola data akun mahasiswa, dosen, admin, dan kaprodi dalam sistem.</p>
+        <header class="dh">
+            <div>
+                <h1>Manajemen Akun Pengguna</h1>
+                <p>Kelola data akun mahasiswa, dosen, admin, dan kaprodi dalam sistem.</p>
+                <div class="chips"><span class="chip">Portal Koordinator KP</span></div>
             </div>
-            <i class="bi bi-person-bounding-box banner-bg-icon"></i>
-        </div>
+        </header>
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} p-3 small border-0 shadow-sm rounded-4 mb-4">
-                        <i class="bi bi-info-circle-fill me-2"></i>{{ message }}
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+        {% include '_flash.html' %}
 
         <!-- Tabel Manajemen Akun -->
         <div class="card-modern p-4">
@@ -220,6 +193,7 @@
                 </div>
             </div>
         </div>
+    </div>
     </div>
 
     <script src="{{ url_for('static', filename='js/layout.js') }}"></script>
