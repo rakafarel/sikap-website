@@ -19,8 +19,11 @@
     </style>
 </head>
 <body>
+    <button type="button" class="menu-toggle" id="menuToggle" aria-label="Buka menu" aria-controls="sidebar" aria-expanded="false"><i class="bi bi-list"></i></button>
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
-    <div class="sidebar shadow-sm">
+
+    <div id="sidebar" class="sidebar shadow-sm">
         <div>
             <div class="d-flex align-items-center mb-5 px-3 mt-2">
                 <div class="bg-primary text-white rounded p-2 me-2 d-flex align-items-center justify-content-center">
@@ -63,13 +66,7 @@
             <p class="text-muted small mb-0">Pilih dosen prioritas, deskripsikan topik KP, dan unggah proposal dalam format PDF.</p>
         </div>
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} p-3 small border-0 shadow-sm rounded-4 mb-4" role="alert"><i class="bi bi-info-circle-fill me-2"></i>{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+        {% include '_flash.html' %}
 
         {% if pengajuan %}
             <div class="row g-4 mb-4">
@@ -109,11 +106,11 @@
             
             <div class="card-modern p-4">
                 <h6 class="fw-bold mb-4 d-flex align-items-center"><div class="icon-box bg-primary bg-opacity-10 text-primary me-3"><i class="bi bi-file-earmark-text"></i></div> Detail Pengajuan Anda</h6>
-                <table class="table table-borderless small mb-0">
+                <div class="table-responsive"><table class="table table-borderless small mb-0">
                     <tr><td width="160" class="text-muted">Rencana Judul KP</td><td class="fw-semibold">: {{ pengajuan.judul_kp }}</td></tr>
                     <tr><td class="text-muted">Deskripsi Topik</td><td>: {{ pengajuan.topik_kp }}</td></tr>
                     <tr><td class="text-muted">Berkas Proposal</td><td>: <a href="/uploads/proposal/{{ pengajuan.file_proposal }}" class="badge bg-light text-dark text-decoration-none border px-2 py-1" target="_blank"><i class="bi bi-file-pdf text-danger me-1"></i> Lihat PDF</a></td></tr>
-                </table>
+                </table></div>
             </div>
 
         {% else %}
@@ -153,5 +150,6 @@
             </div>
         {% endif %}
     </div>
+    <script src="{{ url_for('static', filename='js/layout.js') }}"></script>
 </body>
 </html>

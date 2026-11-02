@@ -95,3 +95,83 @@ body {
 .badge-accepted { background-color: #d1fae5; color: #059669; }
 .badge-rejected { background-color: #fee2e2; color: #dc2626; }
 .badge-queue { background-color: #e0e7ff; color: #4338ca; }
+
+
+/* ===== RESPONSIF (HP & tablet) ===== */
+.menu-toggle, .sidebar-backdrop { display: none; }
+
+@media (max-width: 991.98px) {
+    /* Sidebar jadi menu geser yang tersembunyi */
+    .sidebar {
+        height: 100vh; height: 100dvh;
+        overflow-y: auto;
+        transform: translateX(-100%);
+        transition: transform .3s ease, box-shadow .3s ease;
+    }
+    body.sidebar-open .sidebar { transform: none; box-shadow: 0 0 40px rgba(15, 23, 42, .25); }
+
+    /* Konten memenuhi layar; ruang atas untuk tombol menu */
+    .main-content { margin-left: 0; padding: 1rem; padding-top: 4.5rem; }
+
+    /* Tombol hamburger */
+    .menu-toggle {
+        display: flex; align-items: center; justify-content: center;
+        position: fixed; top: .75rem; left: .75rem; z-index: 90;
+        width: 44px; height: 44px; border: 1px solid var(--border-color); border-radius: 12px;
+        background: #fff; color: var(--primary-color); font-size: 1.4rem; cursor: pointer;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, .12);
+    }
+    body.sidebar-open .menu-toggle { display: none; }
+
+    /* Lapisan gelap di belakang menu */
+    .sidebar-backdrop {
+        display: block; position: fixed; inset: 0; z-index: 99;
+        background: rgba(15, 23, 42, .45); opacity: 0; visibility: hidden;
+        transition: opacity .3s ease, visibility 0s .3s;
+    }
+    body.sidebar-open .sidebar-backdrop { opacity: 1; visibility: visible; transition-delay: 0s; }
+    body.sidebar-open { overflow: hidden; }
+}
+
+@media (max-width: 575.98px) {
+    /* Padding besar (p-5, p-4) dikecilkan di HP */
+    .main-content .p-5 { padding: 1.5rem !important; }
+    .main-content .p-4 { padding: 1rem !important; }
+    .main-content h4 { font-size: 1.15rem; }
+    /* Tabel lebih rapat supaya tidak terlalu lebar */
+    .table-responsive .table th, .table-responsive .table td { white-space: nowrap; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sidebar, .sidebar-backdrop { transition: none; }
+}
+
+
+/* ===== Toast / pop up notifikasi ===== */
+.toast-stack {
+    position: fixed; top: 1rem; right: 1rem; z-index: 2000;
+    display: flex; flex-direction: column; gap: .6rem;
+    width: min(380px, calc(100vw - 2rem)); pointer-events: none;
+}
+.toast-item {
+    pointer-events: auto; display: flex; align-items: flex-start; gap: .65rem;
+    padding: .85rem 1rem; border-radius: 14px; background: #fff;
+    border: 1px solid var(--border-color); border-left-width: 5px;
+    box-shadow: 0 12px 30px -8px rgba(15, 23, 42, .25);
+    font-size: .88rem; font-weight: 500; color: var(--text-main);
+    animation: toast-in .35s cubic-bezier(.22, 1, .36, 1) both;
+}
+.toast-item.out { animation: toast-out .3s ease forwards; }
+.toast-item .bi { font-size: 1.15rem; margin-top: 1px; }
+.toast-item .toast-text { flex: 1; }
+.toast-item button { border: 0; background: none; color: var(--text-muted); font-size: 1.2rem; line-height: 1; cursor: pointer; padding: 0; }
+.toast-success { border-left-color: #059669; } .toast-success .bi { color: #059669; }
+.toast-danger  { border-left-color: #dc2626; } .toast-danger  .bi { color: #dc2626; }
+.toast-warning { border-left-color: #d97706; } .toast-warning .bi { color: #d97706; }
+.toast-info    { border-left-color: #2563eb; } .toast-info    .bi { color: #2563eb; }
+@keyframes toast-in  { from { opacity: 0; transform: translateX(24px) scale(.96); } }
+@keyframes toast-out { to   { opacity: 0; transform: translateX(24px); } }
+
+@media (max-width: 991.98px) {
+    .toast-stack { top: 4.5rem; right: .75rem; left: .75rem; width: auto; }
+}

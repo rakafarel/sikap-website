@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 import pymysql
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -52,6 +52,13 @@ def cek_sudah_lulus_kp(user_id):
     conn.close()
     return sidang is not None
 
+
+@app.route('/api/status-kp')
+def api_status_kp():
+    if session.get('role') != 'mahasiswa':
+        return jsonify({'lulus': False}), 401
+    return jsonify({'lulus': cek_sudah_lulus_kp(session['user_id'])})
+
 # --- ROUTE UTAMA & AUTENTIKASI ---
 
 @app.route('/')
@@ -78,7 +85,6 @@ def login():
             session['nama'] = user['nama']
             session['role'] = user['role']
             
-            flash(f"Selamat datang, {user['nama']}!", "success")
             return redirect(url_for(f"dashboard_{user['role']}"))
         else:
             flash("Username atau password salah!", "danger")

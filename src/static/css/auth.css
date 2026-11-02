@@ -156,6 +156,7 @@ body {
 .alert-danger { background: #fee2e2; color: #991b1b; }
 .alert-info { background: #dbeafe; color: #0F5BB9; }
 .alert-warning { background: #ffedd5; color: #b45309; }
+.alert { padding: .65rem 1rem; border-radius: 14px; font-size: .88rem; font-weight: 500; overflow: hidden; }
 
 /* ===== Responsif ===== */
 @media (max-width: 860px) {
@@ -175,9 +176,9 @@ body {
   .f { gap: 10px; }
 }
 @media (max-width: 860px) and (max-device-height: 700px) { .head p { display: none; } }
-@media (prefers-reduced-motion: reduce) {
+/* @media (prefers-reduced-motion: reduce) {
   *, *:before, *:after { animation: none !important; transition-duration: .01ms !important; }
-}
+} */
 
 
 /* ===== STYLE 2: satu tombol + pergantian halaman lingkaran dari tengah ===== */
@@ -215,7 +216,7 @@ html[data-mode=register] .bg {
 .wipe.register { background: #F58600; }
 
 @media (max-width: 860px) { .switch { height: 48px; } }
-@media (prefers-reduced-motion: reduce) { ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; } }
+/* @media (prefers-reduced-motion: reduce) { ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; } } */
 
 /* ===== Penyesuaian warna (Style 2) ===== */
 /* cincin dan cahaya di sekitar logo jadi putih */
