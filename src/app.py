@@ -1,16 +1,37 @@
 import os
 from dotenv import load_dotenv
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 import pymysql
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 
+from fastapi import FastAPI, Request, Form, File, UploadFile, status
+from fastapi.responses import RedirectResponse, HTMLResponse, JSONResponse
+from fastapi.templating import Jinja2Templates
+from starlette.middleware.sessions import SessionMiddleware
+
 load_dotenv()  # baca file .env
 
-app = Flask(__name__)
-app.secret_key = os.getenv('SECRET_KEY')
+app = FastAPI()
 
-# --- Konfigurasi folder upload (src/uploads) ---
+# Menggunakan SessionMiddleware agar session tetap berbasis cookie
+SECRET_KEY = os.getenv('SECRET_KEY', 'super-secret-key')
+app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
+
+from fastapi.staticfiles import StaticFiles
+
+# --- Mount Static Folder ---
+app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
+# --- Konfigurasi Template Jinja2 yang Fleksibel ---
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+TEMPLATE_DIR = os.path.join(BASE_DIR, 'templates')
+if not os.path.exists(TEMPLATE_DIR):
+    TEMPLATE_DIR = os.path.join(BASE_DIR, '../templates')
+
+templates = Jinja2Templates(directory=TEMPLATE_DIR)
+
+# --- Konfigurasi Folder Upload ---
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 UPLOAD_ROOT = os.path.join(BASE_DIR, 'uploads')
 
@@ -19,12 +40,6 @@ UPLOAD_LOGBOOK = os.path.join(UPLOAD_ROOT, 'logbook')
 UPLOAD_SIDANG = os.path.join(UPLOAD_ROOT, 'sidang')
 ALLOWED_EXTENSIONS = {'pdf'}
 
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['UPLOAD_FOLDER_PROPOSAL'] = UPLOAD_FOLDER
-app.config['UPLOAD_LOGBOOK'] = UPLOAD_LOGBOOK
-app.config['UPLOAD_SIDANG'] = UPLOAD_SIDANG
-
-# Buat folder penyimpanan jika belum ada
 for folder in (UPLOAD_FOLDER, UPLOAD_LOGBOOK, UPLOAD_SIDANG):
     os.makedirs(folder, exist_ok=True)
 
@@ -52,99 +67,133 @@ def cek_sudah_lulus_kp(user_id):
     conn.close()
     return sidang is not None
 
+# Helper Flash Messages untuk FastAPI
+def flash(request: Request, message: str, category: str = "info"):
+    if "flash" not in request.session:
+        request.session["flash"] = []
+    flashes = list(request.session["flash"])
+    flashes.append({"message": message, "category": category})
+    request.session["flash"] = flashes
 
-@app.route('/api/status-kp')
-def api_status_kp():
-    if session.get('role') != 'mahasiswa':
-        return jsonify({'lulus': False}), 401
-    return jsonify({'lulus': cek_sudah_lulus_kp(session['user_id'])})
+def get_flashed_messages(request: Request):
+    messages = request.session.get("flash", [])
+    request.session["flash"] = []
+    return messages
+
+def render_template(request: Request, template_name: str, context: dict = None):
+    if context is None:
+        context = {}
+    
+    class CustomRequest:
+        def __init__(self, req):
+            self._req = req
+        def __getattr__(self, name):
+            return getattr(self._req, name)
+        def url_for(self, name, **path_params):
+            if 'filename' in path_params:
+                path_params['path'] = path_params.pop('filename')
+            return self._req.url_for(name, **path_params)
+
+    # Tambahkan 'session' ke dalam konteks template agar bisa diakses seperti di Flask
+    context.update({
+        "request": CustomRequest(request),
+        "session": request.session,  # <-- PENTING: Supaya {{ session[...] }} terbaca
+        "get_flashed_messages": lambda with_categories=False, **kwargs: [
+            (msg["category"], msg["message"]) if with_categories else msg["message"]
+            for msg in get_flashed_messages(request)
+        ]
+    })
+    return templates.TemplateResponse(template_name, context)
+
+@app.get('/api/status-kp')
+def api_status_kp(request: Request):
+    if request.session.get('role') != 'mahasiswa':
+        return JSONResponse({'lulus': False}, status_code=401)
+    return JSONResponse({'lulus': cek_sudah_lulus_kp(request.session['user_id'])})
 
 # --- ROUTE UTAMA & AUTENTIKASI ---
 
-@app.route('/')
-def home():
-    if 'user_id' in session:
-        return redirect(url_for(f"dashboard_{session['role']}"))
-    return redirect(url_for('login'))
+@app.get('/')
+def home(request: Request):
+    if 'user_id' in request.session:
+        role = request.session['role']
+        return RedirectResponse(url=f"/dashboard/{role}", status_code=303)
+    return RedirectResponse(url='/login', status_code=303)
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
+@app.get('/login', response_class=HTMLResponse)
+def login_get(request: Request):
+    return render_template(request, 'auth.html')
 
-        conn = get_db_connection()
-        with conn.cursor() as cursor:
-            cursor.execute("SELECT * FROM users WHERE username = %s", (username,))
-            user = cursor.fetchone()
-        conn.close()
+@app.post('/login', response_class=HTMLResponse)
+async def login_post(request: Request, username: str = Form(...), password: str = Form(...)):
+    conn = get_db_connection()
+    with conn.cursor() as cursor:
+        cursor.execute("SELECT * FROM users WHERE username = %s", (username,))
+        user = cursor.fetchone()
+    conn.close()
 
-        if user and check_password_hash(user['password'], password):
-            session['user_id'] = user['id']
-            session['username'] = user['username']
-            session['nama'] = user['nama']
-            session['role'] = user['role']
-            
-            return redirect(url_for(f"dashboard_{user['role']}"))
-        else:
-            flash("Username atau password salah!", "danger")
+    if user and check_password_hash(user['password'], password):
+        request.session['user_id'] = user['id']
+        request.session['username'] = user['username']
+        request.session['nama'] = user['nama']
+        request.session['role'] = user['role']
+        
+        return RedirectResponse(url=f"/dashboard/{user['role']}", status_code=303)
+    else:
+        flash(request, "Username atau password salah!", "danger")
 
-    return render_template('auth.html')
+    return render_template(request, 'auth.html')
 
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    if request.method == 'POST':
-        username = request.form['username']
-        nama = request.form['nama']
-        password = request.form['password']
-        role = request.form['role']
+@app.get('/register', response_class=HTMLResponse)
+def register_get(request: Request):
+    return render_template(request, 'auth.html')
 
-        hashed_password = generate_password_hash(password)
+@app.post('/register', response_class=HTMLResponse)
+async def register_post(request: Request, username: str = Form(...), nama: str = Form(...), password: str = Form(...), role: str = Form(...)):
+    hashed_password = generate_password_hash(password)
 
-        conn = get_db_connection()
-        with conn.cursor() as cursor:
-            cursor.execute("SELECT * FROM users WHERE username = %s", (username,))
-            existing_user = cursor.fetchone()
+    conn = get_db_connection()
+    with conn.cursor() as cursor:
+        cursor.execute("SELECT * FROM users WHERE username = %s", (username,))
+        existing_user = cursor.fetchone()
 
-            if existing_user:
-                flash("NPM / NIDN / Username sudah terdaftar!", "danger")
-                conn.close()
-                return redirect(url_for('register'))
+        if existing_user:
+            flash(request, "NPM / NIDN / Username sudah terdaftar!", "danger")
+            conn.close()
+            return RedirectResponse(url='/register', status_code=303)
 
+        cursor.execute(
+            "INSERT INTO users (username, password, nama, role) VALUES (%s, %s, %s, %s)",
+            (username, hashed_password, nama, role)
+        )
+        user_id = cursor.lastrowid
+
+        if role == 'dosen':
             cursor.execute(
-                "INSERT INTO users (username, password, nama, role) VALUES (%s, %s, %s, %s)",
-                (username, hashed_password, nama, role)
+                "INSERT INTO dosen (id_dosen, max_kuota, kuota_terpakai) VALUES (%s, 2, 0)",
+                (user_id,)
             )
-            user_id = cursor.lastrowid
 
-            if role == 'dosen':
-                cursor.execute(
-                    "INSERT INTO dosen (id_dosen, max_kuota, kuota_terpakai) VALUES (%s, 2, 0)",
-                    (user_id,)
-                )
+        conn.commit()
+    conn.close()
 
-            conn.commit()
-        conn.close()
+    flash(request, "Registrasi berhasil! Silakan login dengan akun kamu.", "success")
+    return RedirectResponse(url='/login', status_code=303)
 
-        flash("Registrasi berhasil! Silakan login dengan akun kamu.", "success")
-        return redirect(url_for('login'))
-
-    return render_template('auth.html')
-
-@app.route('/logout')
-def logout():
-    session.clear()
-    flash("Anda berhasil keluar dari SIKAP.", "info")
-    return redirect(url_for('login'))
+@app.get('/logout')
+def logout(request: Request):
+    request.session.clear()
+    flash(request, "Anda berhasil keluar dari SIKAP.", "info")
+    return RedirectResponse(url='/login', status_code=303)
 
 # --- ROUTE DASHBOARD MULTI-ROLE ---
 
-@app.route('/dashboard/mahasiswa')
-def dashboard_mahasiswa():
-    if 'role' not in session or session['role'] != 'mahasiswa':
-        return redirect(url_for('login'))
+@app.get('/dashboard/mahasiswa', response_class=HTMLResponse)
+def dashboard_mahasiswa(request: Request):
+    if request.session.get('role') != 'mahasiswa':
+        return RedirectResponse(url='/login', status_code=303)
 
-    user_id = session['user_id']
+    user_id = request.session['user_id']
     conn = get_db_connection()
     
     with conn.cursor() as cursor:
@@ -168,50 +217,21 @@ def dashboard_mahasiswa():
             JOIN users d2 ON p.id_dosen_p2 = d2.id
             JOIN users d3 ON p.id_dosen_p3 = d3.id
             WHERE p.id_mahasiswa = %s
-            ORDER BY p.id_pengajuan DESC LIMIT 1
+            ORDER BY p.id_pengajuan_ta DESC LIMIT 1
         """, (user_id,))
         pengajuan_ta = cursor.fetchone()
 
     conn.close()
 
-    return render_template('dashboard_mahasiswa.html', pengajuan=pengajuan, pengajuan_ta=pengajuan_ta, logbook_stat=logbook_stat)
+    return render_template(request, 'dashboard_mahasiswa.html', {'pengajuan': pengajuan, 'pengajuan_ta': pengajuan_ta, 'logbook_stat': logbook_stat})
 
-@app.route('/mahasiswa/pengajuan', methods=['GET', 'POST'])
-def mahasiswa_pengajuan():
-    if 'role' not in session or session['role'] != 'mahasiswa':
-        return redirect(url_for('login'))
+@app.get('/mahasiswa/pengajuan', response_class=HTMLResponse)
+def mahasiswa_pengajuan_get(request: Request):
+    if request.session.get('role') != 'mahasiswa':
+        return RedirectResponse(url='/login', status_code=303)
 
-    user_id = session['user_id']
+    user_id = request.session['user_id']
     conn = get_db_connection()
-
-    if request.method == 'POST':
-        id_dosen_p1 = request.form['id_dosen_p1']
-        id_dosen_p2 = request.form['id_dosen_p2']
-        judul_kp = request.form['judul_kp']
-        topik_kp = request.form['topik_kp']
-        file = request.files['file_proposal']
-
-        if id_dosen_p1 == id_dosen_p2:
-            flash("Dosen Prioritas 1 dan Prioritas 2 tidak boleh orang yang sama!", "danger")
-            return redirect(url_for('mahasiswa_pengajuan'))
-
-        if file and allowed_file(file.filename):
-            filename = secure_filename(f"{session['username']}_proposal.pdf")
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(file_path)
-
-            with conn.cursor() as cursor:
-                cursor.execute("""
-                    INSERT INTO pengajuan_pembimbing 
-                    (id_mahasiswa, id_dosen_p1, id_dosen_p2, judul_kp, topik_kp, file_proposal, status_p1, status_p2, status_final)
-                    VALUES (%s, %s, %s, %s, %s, %s, 'pending', 'in_queue', 'waiting')
-                """, (user_id, id_dosen_p1, id_dosen_p2, judul_kp, topik_kp, filename))
-                conn.commit()
-
-            flash("Pengajuan Dosen Pembimbing berhasil dikirim!", "success")
-            return redirect(url_for('mahasiswa_pengajuan'))
-        else:
-            flash("Format file proposal harus berupa file .PDF!", "danger")
 
     with conn.cursor() as cursor:
         cursor.execute("""
@@ -233,13 +253,55 @@ def mahasiswa_pengajuan():
         pengajuan_saya = cursor.fetchone()
 
     conn.close()
+    return render_template(request, 'mahasiswa_pengajuan.html', {'daftar_dosen': daftar_dosen, 'pengajuan': pengajuan_saya})
 
-    return render_template('mahasiswa_pengajuan.html', daftar_dosen=daftar_dosen, pengajuan=pengajuan_saya)
+@app.post('/mahasiswa/pengajuan', response_class=HTMLResponse)
+async def mahasiswa_pengajuan_post(
+    request: Request,
+    id_dosen_p1: str = Form(...),
+    id_dosen_p2: str = Form(...),
+    judul_kp: str = Form(...),
+    topik_kp: str = Form(...),
+    file_proposal: UploadFile = File(...)
+):
+    if request.session.get('role') != 'mahasiswa':
+        return RedirectResponse(url='/login', status_code=303)
 
-@app.route('/dashboard/admin')
-def dashboard_admin():
-    if 'role' not in session or session['role'] != 'admin':
-        return redirect(url_for('login'))
+    user_id = request.session['user_id']
+    conn = get_db_connection()
+
+    if id_dosen_p1 == id_dosen_p2:
+        flash(request, "Dosen Prioritas 1 dan Prioritas 2 tidak boleh orang yang sama!", "danger")
+        conn.close()
+        return RedirectResponse(url='/mahasiswa/pengajuan', status_code=303)
+
+    if file_proposal and allowed_file(file_proposal.filename):
+        filename = secure_filename(f"{request.session['username']}_proposal.pdf")
+        file_path = os.path.join(UPLOAD_FOLDER, filename)
+        
+        contents = await file_proposal.read()
+        with open(file_path, "wb") as f:
+            f.write(contents)
+
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO pengajuan_pembimbing 
+                (id_mahasiswa, id_dosen_p1, id_dosen_p2, judul_kp, topik_kp, file_proposal, status_p1, status_p2, status_final)
+                VALUES (%s, %s, %s, %s, %s, %s, 'pending', 'in_queue', 'waiting')
+            """, (user_id, id_dosen_p1, id_dosen_p2, judul_kp, topik_kp, filename))
+            conn.commit()
+
+        flash(request, "Pengajuan Dosen Pembimbing berhasil dikirim!", "success")
+    else:
+        flash(request, "Format file proposal harus berupa file .PDF!", "danger")
+
+    conn.close()
+    return RedirectResponse(url='/mahasiswa/pengajuan', status_code=303)
+
+@app.get('/dashboard/admin', response_class=HTMLResponse)
+def dashboard_admin(request: Request):
+    if request.session.get('role') != 'admin':
+        return RedirectResponse(url='/login', status_code=303)
 
     conn = get_db_connection()
     with conn.cursor() as cursor:
@@ -250,7 +312,7 @@ def dashboard_admin():
             JOIN users u ON ps.id_mahasiswa = u.id
             JOIN pengajuan_pembimbing p ON ps.id_mahasiswa = p.id_mahasiswa
             LEFT JOIN users u_penguji ON ps.id_penguji = u_penguji.id
-            ORDER BY ps.created_at DESC
+            ORDER BY ps.id_sidang DESC
         """)
         daftar_sidang = cursor.fetchall()
 
@@ -258,49 +320,49 @@ def dashboard_admin():
         daftar_dosen = cursor.fetchall()
     conn.close()
 
-    return render_template('dashboard_admin.html', pendaftaran=daftar_sidang, dosen=daftar_dosen)
+    return render_template(request, 'dashboard_admin.html', {'pendaftaran': daftar_sidang, 'dosen': daftar_dosen})
 
-@app.route('/admin/verifikasi_sidang', methods=['POST'])
-def admin_verifikasi_sidang():
-    if 'role' not in session or session['role'] != 'admin':
-        return redirect(url_for('login'))
+@app.post('/admin/verifikasi_sidang', response_class=HTMLResponse)
+async def admin_verifikasi_sidang(
+    request: Request,
+    id_sidang: str = Form(...),
+    aksi: str = Form(...),
+    tanggal_sidang: str = Form(None),
+    waktu_sidang: str = Form(None),
+    ruangan: str = Form(None),
+    id_penguji: str = Form(None),
+    catatan_admin: str = Form(None)
+):
+    if request.session.get('role') != 'admin':
+        return RedirectResponse(url='/login', status_code=303)
 
-    id_sidang = request.form['id_sidang']
-    aksi = request.form['aksi']
-    
     conn = get_db_connection()
     with conn.cursor() as cursor:
         if aksi == 'terima':
-            tanggal = request.form['tanggal_sidang']
-            waktu = request.form['waktu_sidang']
-            ruangan = request.form['ruangan']
-            id_penguji = request.form['id_penguji']
-
             cursor.execute("""
                 UPDATE pendaftaran_sidang 
                 SET status_verifikasi = 'verified', tanggal_sidang = %s, waktu_sidang = %s, ruangan = %s, id_penguji = %s
                 WHERE id_sidang = %s
-            """, (tanggal, waktu, ruangan, id_penguji, id_sidang))
-            flash("Berkas disetujui dan jadwal sidang berhasil diplot!", "success")
+            """, (tanggal_sidang, waktu_sidang, ruangan, id_penguji, id_sidang))
+            flash(request, "Berkas disetujui dan jadwal sidang berhasil diplot!", "success")
             
         elif aksi == 'tolak':
-            catatan = request.form['catatan_admin']
             cursor.execute("""
                 UPDATE pendaftaran_sidang 
                 SET status_verifikasi = 'rejected', catatan_admin = %s
                 WHERE id_sidang = %s
-            """, (catatan, id_sidang))
-            flash("Pendaftaran sidang ditolak.", "warning")
+            """, (catatan_admin, id_sidang))
+            flash(request, "Pendaftaran sidang ditolak.", "warning")
 
         conn.commit()
     conn.close()
 
-    return redirect(url_for('dashboard_admin'))
+    return RedirectResponse(url='/dashboard/admin', status_code=303)
 
-@app.route('/dashboard/kaprodi')
-def dashboard_kaprodi():
-    if 'role' not in session or session['role'] != 'kaprodi':
-        return redirect(url_for('login'))
+@app.get('/dashboard/kaprodi', response_class=HTMLResponse)
+def dashboard_kaprodi(request: Request):
+    if request.session.get('role') != 'kaprodi':
+        return RedirectResponse(url='/login', status_code=303)
 
     conn = get_db_connection()
     with conn.cursor() as cursor:
@@ -329,52 +391,65 @@ def dashboard_kaprodi():
         rekap_nilai = cursor.fetchall()
     conn.close()
 
-    return render_template('dashboard_kaprodi.html', 
-                           stat={'mhs': stat_mhs, 'lulus': stat_lulus}, 
-                           beban_dosen=beban_dosen, 
-                           rekap=rekap_nilai)
+    return render_template(request, 'dashboard_kaprodi.html', {
+        'stat': {'mhs': stat_mhs, 'lulus': stat_lulus}, 
+        'beban_dosen': beban_dosen, 
+        'rekap': rekap_nilai
+    })
 
-@app.route('/mahasiswa/logbook', methods=['GET', 'POST'])
-def mahasiswa_logbook():
-    if 'role' not in session or session['role'] != 'mahasiswa':
-        return redirect(url_for('login'))
+@app.get('/mahasiswa/logbook', response_class=HTMLResponse)
+def mahasiswa_logbook_get(request: Request):
+    if request.session.get('role') != 'mahasiswa':
+        return RedirectResponse(url='/login', status_code=303)
 
-    user_id = session['user_id']
+    user_id = request.session['user_id']
     conn = get_db_connection()
-
-    if request.method == 'POST':
-        tanggal = request.form['tanggal']
-        topik = request.form['topik']
-        file = request.files['file_progress']
-
-        filename = None
-        if file and allowed_file(file.filename):
-            filename = secure_filename(f"{session['username']}_log_{tanggal}.pdf")
-            file.save(os.path.join(app.config['UPLOAD_LOGBOOK'], filename))
-
-        with conn.cursor() as cursor:
-            cursor.execute("""
-                INSERT INTO logbook (id_mahasiswa, tanggal_bimbingan, topik_pembahasan, file_progress)
-                VALUES (%s, %s, %s, %s)
-            """, (user_id, tanggal, topik, filename))
-            conn.commit()
-
-        flash("Catatan logbook berhasil ditambahkan!", "success")
-        return redirect(url_for('mahasiswa_logbook'))
-
     with conn.cursor() as cursor:
         cursor.execute("SELECT * FROM logbook WHERE id_mahasiswa = %s ORDER BY tanggal_bimbingan DESC", (user_id,))
         daftar_logbook = cursor.fetchall()
     conn.close()
 
-    return render_template('mahasiswa_logbook.html', logbook=daftar_logbook)
+    return render_template(request, 'mahasiswa_logbook.html', {'logbook': daftar_logbook})
 
-@app.route('/dashboard/dosen')
-def dashboard_dosen():
-    if 'role' not in session or session['role'] != 'dosen':
-        return redirect(url_for('login'))
+@app.post('/mahasiswa/logbook', response_class=HTMLResponse)
+async def mahasiswa_logbook_post(
+    request: Request,
+    tanggal_bimbingan: str = Form(...),   # Sesuaikan dengan name di HTML
+    topik_pembahasan: str = Form(...),     # Sesuaikan dengan name di HTML
+    file_progress: UploadFile = File(None)
+):
+    if request.session.get('role') != 'mahasiswa':
+        return RedirectResponse(url='/login', status_code=303)
 
-    user_id = session['user_id']
+    user_id = request.session['user_id']
+    conn = get_db_connection()
+
+    filename = None
+    if file_progress and file_progress.filename != '':
+        if allowed_file(file_progress.filename):
+            filename = secure_filename(f"{request.session['username']}_log_{tanggal_bimbingan}.pdf")
+            file_path = os.path.join(UPLOAD_LOGBOOK, filename)
+            contents = await file_progress.read()
+            with open(file_path, "wb") as f:
+                f.write(contents)
+
+    with conn.cursor() as cursor:
+        cursor.execute("""
+            INSERT INTO logbook (id_mahasiswa, tanggal_bimbingan, topik_pembahasan, file_progress)
+            VALUES (%s, %s, %s, %s)
+        """, (user_id, tanggal_bimbingan, topik_pembahasan, filename))
+        conn.commit()
+    conn.close()
+
+    flash(request, "Catatan logbook berhasil ditambahkan!", "success")
+    return RedirectResponse(url='/mahasiswa/logbook', status_code=303)
+
+@app.get('/dashboard/dosen', response_class=HTMLResponse)
+def dashboard_dosen(request: Request):
+    if request.session.get('role') != 'dosen':
+        return RedirectResponse(url='/login', status_code=303)
+
+    user_id = request.session['user_id']
     conn = get_db_connection()
 
     with conn.cursor() as cursor:
@@ -401,14 +476,14 @@ def dashboard_dosen():
 
     conn.close()
 
-    return render_template('dashboard_dosen.html', dosen=data_dosen, pengajuan=pengajuan_masuk, bimbingan=mahasiswa_bimbingan)
+    return render_template(request, 'dashboard_dosen.html', {'dosen': data_dosen, 'pengajuan': pengajuan_masuk, 'bimbingan': mahasiswa_bimbingan})
 
-@app.route('/dosen/pengajuan/<int:id_pengajuan>/<string:aksi>')
-def dosen_aksi_pengajuan(id_pengajuan, aksi):
-    if 'role' not in session or session['role'] != 'dosen':
-        return redirect(url_for('login'))
+@app.get('/dosen/pengajuan/{id_pengajuan}/{aksi}')
+def dosen_aksi_pengajuan(request: Request, id_pengajuan: int, aksi: str):
+    if request.session.get('role') != 'dosen':
+        return RedirectResponse(url='/login', status_code=303)
 
-    user_id = session['user_id']
+    user_id = request.session['user_id']
     conn = get_db_connection()
 
     with conn.cursor() as cursor:
@@ -419,15 +494,15 @@ def dosen_aksi_pengajuan(id_pengajuan, aksi):
         pengajuan = cursor.fetchone()
 
         if not pengajuan:
-            flash("Data pengajuan tidak ditemukan!", "danger")
+            flash(request, "Data pengajuan tidak ditemukan!", "danger")
             conn.close()
-            return redirect(url_for('dashboard_dosen'))
+            return RedirectResponse(url='/dashboard/dosen', status_code=303)
 
         is_p1 = (pengajuan['id_dosen_p1'] == user_id)
 
         if aksi == 'terima':
             if data_dosen['kuota_terpakai'] >= data_dosen['max_kuota']:
-                flash("Gagal menerima! Kuota bimbingan Anda sudah penuh.", "danger")
+                flash(request, "Gagal menerima! Kuota bimbingan Anda sudah penuh.", "danger")
             else:
                 cursor.execute("UPDATE dosen SET kuota_terpakai = kuota_terpakai + 1 WHERE id_dosen = %s", (user_id,))
                 if is_p1:
@@ -443,7 +518,7 @@ def dosen_aksi_pengajuan(id_pengajuan, aksi):
                         WHERE id_pengajuan = %s
                     """, (id_pengajuan,))
 
-                flash("Pengajuan bimbingan berhasil disetujui!", "success")
+                flash(request, "Pengajuan bimbingan berhasil disetujui!", "success")
 
         elif aksi == 'tolak':
             if is_p1:
@@ -459,19 +534,19 @@ def dosen_aksi_pengajuan(id_pengajuan, aksi):
                     WHERE id_pengajuan = %s
                 """, (id_pengajuan,))
 
-            flash("Pengajuan bimbingan telah ditolak.", "warning")
+            flash(request, "Pengajuan bimbingan telah ditolak.", "warning")
 
         conn.commit()
     conn.close()
 
-    return redirect(url_for('dashboard_dosen'))
+    return RedirectResponse(url='/dashboard/dosen', status_code=303)
 
-@app.route('/dosen/logbook')
-def dosen_logbook():
-    if 'role' not in session or session['role'] != 'dosen':
-        return redirect(url_for('login'))
+@app.get('/dosen/logbook', response_class=HTMLResponse)
+def dosen_logbook(request: Request):
+    if request.session.get('role') != 'dosen':
+        return RedirectResponse(url='/login', status_code=303)
 
-    user_id = session['user_id']
+    user_id = request.session['user_id']
     conn = get_db_connection()
 
     with conn.cursor() as cursor:
@@ -487,12 +562,12 @@ def dosen_logbook():
         daftar_logbook = cursor.fetchall()
     conn.close()
 
-    return render_template('dosen_logbook.html', logbook=daftar_logbook)
+    return render_template(request, 'dosen_logbook.html', {'logbook': daftar_logbook})
 
-@app.route('/dosen/logbook/<int:id_logbook>/<string:aksi>')
-def dosen_aksi_logbook(id_logbook, aksi):
-    if 'role' not in session or session['role'] != 'dosen':
-        return redirect(url_for('login'))
+@app.get('/dosen/logbook/{id_logbook}/{aksi}')
+def dosen_aksi_logbook(request: Request, id_logbook: int, aksi: str):
+    if request.session.get('role') != 'dosen':
+        return RedirectResponse(url='/login', status_code=303)
 
     conn = get_db_connection()
     status = 'approved' if aksi == 'acc' else 'rejected'
@@ -502,51 +577,16 @@ def dosen_aksi_logbook(id_logbook, aksi):
         conn.commit()
     conn.close()
 
-    flash(f"Status logbook berhasil diubah menjadi {status}.", "success")
-    return redirect(url_for('dosen_logbook'))
+    flash(request, f"Status logbook berhasil diubah menjadi {status}.", "success")
+    return RedirectResponse(url='/dosen/logbook', status_code=303)
 
-@app.route('/mahasiswa/sidang', methods=['GET', 'POST'])
-def mahasiswa_sidang():
-    if 'role' not in session or session['role'] != 'mahasiswa':
-        return redirect(url_for('login'))
+@app.get('/mahasiswa/sidang', response_class=HTMLResponse)
+def mahasiswa_sidang_get(request: Request):
+    if request.session.get('role') != 'mahasiswa':
+        return RedirectResponse(url='/login', status_code=303)
 
-    user_id = session['user_id']
+    user_id = request.session['user_id']
     conn = get_db_connection()
-
-    if request.method == 'POST':
-        f_laporan = request.files['file_laporan']
-        f_transkrip = request.files['file_transkrip']
-        f_krs = request.files['file_krs']
-
-        if f_laporan and f_transkrip and f_krs:
-            fn_laporan = secure_filename(f"{session['username']}_laporan.pdf")
-            fn_transkrip = secure_filename(f"{session['username']}_transkrip.pdf")
-            fn_krs = secure_filename(f"{session['username']}_krs.pdf")
-
-            f_laporan.save(os.path.join(app.config['UPLOAD_SIDANG'], fn_laporan))
-            f_transkrip.save(os.path.join(app.config['UPLOAD_SIDANG'], fn_transkrip))
-            f_krs.save(os.path.join(app.config['UPLOAD_SIDANG'], fn_krs))
-
-            with conn.cursor() as cursor:
-                cursor.execute("SELECT id_sidang FROM pendaftaran_sidang WHERE id_mahasiswa = %s", (user_id,))
-                cek_sidang = cursor.fetchone()
-
-                if cek_sidang:
-                    cursor.execute("""
-                        UPDATE pendaftaran_sidang 
-                        SET file_laporan_final=%s, file_transkrip=%s, file_krs=%s, status_verifikasi='pending'
-                        WHERE id_mahasiswa=%s
-                    """, (fn_laporan, fn_transkrip, fn_krs, user_id))
-                else:
-                    cursor.execute("""
-                        INSERT INTO pendaftaran_sidang (id_mahasiswa, file_laporan_final, file_transkrip, file_krs)
-                        VALUES (%s, %s, %s, %s)
-                    """, (user_id, fn_laporan, fn_transkrip, fn_krs))
-                conn.commit()
-
-            flash("Berkas pendaftaran sidang berhasil dikirim!", "success")
-            return redirect(url_for('mahasiswa_sidang'))
-
     with conn.cursor() as cursor:
         cursor.execute("""
             SELECT ps.*, u_penguji.nama AS nama_penguji 
@@ -558,32 +598,61 @@ def mahasiswa_sidang():
         data_sidang = cursor.fetchone()
     conn.close()
 
-    return render_template('mahasiswa_sidang.html', sidang=data_sidang)
+    return render_template(request, 'mahasiswa_sidang.html', {'sidang': data_sidang})
 
-@app.route('/dosen/jadwal_menguji', methods=['GET', 'POST'])
-def dosen_jadwal_menguji():
-    if 'role' not in session or session['role'] != 'dosen':
-        return redirect(url_for('login'))
-        
-    user_id = session['user_id']
+@app.post('/mahasiswa/sidang', response_class=HTMLResponse)
+async def mahasiswa_sidang_post(
+    request: Request,
+    file_laporan: UploadFile = File(...),
+    file_transkrip: UploadFile = File(...),
+    file_krs: UploadFile = File(...)
+):
+    if request.session.get('role') != 'mahasiswa':
+        return RedirectResponse(url='/login', status_code=303)
+
+    user_id = request.session['user_id']
     conn = get_db_connection()
 
-    if request.method == 'POST':
-        id_sidang = request.form['id_sidang']
-        nilai = request.form['nilai_akhir']
-        revisi = request.form['catatan_revisi']
+    if file_laporan and file_transkrip and file_krs:
+        fn_laporan = secure_filename(f"{request.session['username']}_laporan.pdf")
+        fn_transkrip = secure_filename(f"{request.session['username']}_transkrip.pdf")
+        fn_krs = secure_filename(f"{request.session['username']}_krs.pdf")
+
+        for f_obj, fn in [(file_laporan, fn_laporan), (file_transkrip, fn_transkrip), (file_krs, fn_krs)]:
+            path = os.path.join(UPLOAD_SIDANG, fn)
+            contents = await f_obj.read()
+            with open(path, "wb") as out:
+                out.write(contents)
 
         with conn.cursor() as cursor:
-            cursor.execute("""
-                UPDATE pendaftaran_sidang 
-                SET nilai_akhir = %s, catatan_revisi = %s 
-                WHERE id_sidang = %s AND id_penguji = %s
-            """, (nilai, revisi, id_sidang, user_id))
-            conn.commit()
-            
-        flash("Nilai dan catatan revisi berhasil disimpan!", "success")
-        return redirect(url_for('dosen_jadwal_menguji'))
+            cursor.execute("SELECT id_sidang FROM pendaftaran_sidang WHERE id_mahasiswa = %s", (user_id,))
+            cek_sidang = cursor.fetchone()
 
+            if cek_sidang:
+                cursor.execute("""
+                    UPDATE pendaftaran_sidang 
+                    SET file_laporan_final=%s, file_transkrip=%s, file_krs=%s, status_verifikasi='pending'
+                    WHERE id_mahasiswa=%s
+                """, (fn_laporan, fn_transkrip, fn_krs, user_id))
+            else:
+                cursor.execute("""
+                    INSERT INTO pendaftaran_sidang (id_mahasiswa, file_laporan_final, file_transkrip, file_krs)
+                    VALUES (%s, %s, %s, %s)
+                """, (user_id, fn_laporan, fn_transkrip, fn_krs))
+            conn.commit()
+
+        flash(request, "Berkas pendaftaran sidang berhasil dikirim!", "success")
+
+    conn.close()
+    return RedirectResponse(url='/mahasiswa/sidang', status_code=303)
+
+@app.get('/dosen/jadwal_menguji', response_class=HTMLResponse)
+def dosen_jadwal_menguji_get(request: Request):
+    if request.session.get('role') != 'dosen':
+        return RedirectResponse(url='/login', status_code=303)
+        
+    user_id = request.session['user_id']
+    conn = get_db_connection()
     with conn.cursor() as cursor:
         cursor.execute("""
             SELECT ps.*, u.nama AS nama_mahasiswa, u.username AS npm, p.judul_kp 
@@ -596,25 +665,39 @@ def dosen_jadwal_menguji():
         jadwal_menguji = cursor.fetchall()
     conn.close()
 
-    return render_template('dosen_jadwal_menguji.html', jadwal=jadwal_menguji)
+    return render_template(request, 'dosen_jadwal_menguji.html', {'jadwal': jadwal_menguji})
 
-@app.route('/admin/kuota_dosen', methods=['GET', 'POST'])
-def admin_kuota_dosen():
-    if 'role' not in session or session['role'] != 'admin':
-        return redirect(url_for('login'))
+@app.post('/dosen/jadwal_menguji', response_class=HTMLResponse)
+async def dosen_jadwal_menguji_post(
+    request: Request,
+    id_sidang: str = Form(...),
+    nilai_akhir: str = Form(...),
+    catatan_revisi: str = Form(...)
+):
+    if request.session.get('role') != 'dosen':
+        return RedirectResponse(url='/login', status_code=303)
+        
+    user_id = request.session['user_id']
+    conn = get_db_connection()
+
+    with conn.cursor() as cursor:
+        cursor.execute("""
+            UPDATE pendaftaran_sidang 
+            SET nilai_akhir = %s, catatan_revisi = %s 
+            WHERE id_sidang = %s AND id_penguji = %s
+        """, (nilai_akhir, catatan_revisi, id_sidang, user_id))
+        conn.commit()
+        
+    conn.close()
+    flash(request, "Nilai dan catatan revisi berhasil disimpan!", "success")
+    return RedirectResponse(url='/dosen/jadwal_menguji', status_code=303)
+
+@app.get('/admin/kuota_dosen', response_class=HTMLResponse)
+def admin_kuota_dosen_get(request: Request):
+    if request.session.get('role') != 'admin':
+        return RedirectResponse(url='/login', status_code=303)
 
     conn = get_db_connection()
-    if request.method == 'POST':
-        id_dosen = request.form['id_dosen']
-        max_kuota = request.form['max_kuota']
-
-        with conn.cursor() as cursor:
-            cursor.execute("UPDATE dosen SET max_kuota = %s WHERE id_dosen = %s", (max_kuota, id_dosen))
-            conn.commit()
-        
-        flash("Batas kuota dosen berhasil diperbarui!", "success")
-        return redirect(url_for('admin_kuota_dosen'))
-
     with conn.cursor() as cursor:
         cursor.execute("""
             SELECT d.*, u.nama, u.username AS nidn 
@@ -625,12 +708,30 @@ def admin_kuota_dosen():
         daftar_dosen = cursor.fetchall()
     conn.close()
 
-    return render_template('admin_kuota_dosen.html', dosen=daftar_dosen)
+    return render_template(request, 'admin_kuota_dosen.html', {'dosen': daftar_dosen})
 
-@app.route('/admin/mahasiswa')
-def admin_mahasiswa():
-    if 'role' not in session or session['role'] != 'admin':
-        return redirect(url_for('login'))
+@app.post('/admin/kuota_dosen', response_class=HTMLResponse)
+async def admin_kuota_dosen_post(
+    request: Request,
+    id_dosen: str = Form(...),
+    max_kuota: str = Form(...)
+):
+    if request.session.get('role') != 'admin':
+        return RedirectResponse(url='/login', status_code=303)
+
+    conn = get_db_connection()
+    with conn.cursor() as cursor:
+        cursor.execute("UPDATE dosen SET max_kuota = %s WHERE id_dosen = %s", (max_kuota, id_dosen))
+        conn.commit()
+    conn.close()
+    
+    flash(request, "Batas kuota dosen berhasil diperbarui!", "success")
+    return RedirectResponse(url='/admin/kuota_dosen', status_code=303)
+
+@app.get('/admin/mahasiswa', response_class=HTMLResponse)
+def admin_mahasiswa(request: Request):
+    if request.session.get('role') != 'admin':
+        return RedirectResponse(url='/login', status_code=303)
 
     conn = get_db_connection()
     with conn.cursor() as cursor:
@@ -650,49 +751,19 @@ def admin_mahasiswa():
         daftar_mahasiswa = cursor.fetchall()
     conn.close()
 
-    return render_template('admin_mahasiswa.html', mahasiswa=daftar_mahasiswa)
+    return render_template(request, 'admin_mahasiswa.html', {'mahasiswa': daftar_mahasiswa})
 
-@app.route('/mahasiswa/ta/pengajuan', methods=['GET', 'POST'])
-def mahasiswa_ta_pengajuan():
-    if 'role' not in session or session['role'] != 'mahasiswa':
-        return redirect(url_for('login'))
+@app.get('/mahasiswa/ta/pengajuan', response_class=HTMLResponse)
+def mahasiswa_ta_pengajuan_get(request: Request):
+    if request.session.get('role') != 'mahasiswa':
+        return RedirectResponse(url='/login', status_code=303)
         
-    user_id = session['user_id']
-    
+    user_id = request.session['user_id']
     if not cek_sudah_lulus_kp(user_id):
-        flash("Anda belum dapat mengakses Modul Tugas Akhir. Silakan selesaikan dan lulus Sidang Kerja Praktek (KP) terlebih dahulu.", "danger")
-        return redirect(url_for('dashboard_mahasiswa'))
+        flash(request, "Anda belum dapat mengakses Modul Tugas Akhir. Silakan selesaikan dan lulus Sidang Kerja Praktek (KP) terlebih dahulu.", "danger")
+        return RedirectResponse(url='/dashboard/mahasiswa', status_code=303)
 
     conn = get_db_connection()
-
-    if request.method == 'POST':
-        id_p1 = request.form['id_dosen_p1']
-        id_p2 = request.form['id_dosen_p2']
-        id_p3 = request.form['id_dosen_p3']
-        judul = request.form['judul_ta']
-        topik = request.form['topik_ta']
-        
-        if id_p1 == id_p2 or id_p1 == id_p3 or id_p2 == id_p3:
-            flash("Pilihan Dosen Pembimbing 1, 2, dan 3 tidak boleh ada yang sama!", "danger")
-            return redirect(url_for('mahasiswa_ta_pengajuan'))
-
-        file_prop = request.files['file_proposal_ta']
-        
-        if file_prop and file_prop.filename != '':
-            filename = secure_filename(file_prop.filename)
-            file_path = os.path.join(app.config['UPLOAD_FOLDER_PROPOSAL'], filename)
-            file_prop.save(file_path)
-
-            with conn.cursor() as cursor:
-                cursor.execute("""
-                    INSERT INTO pengajuan_ta (id_mahasiswa, id_dosen_p1, id_dosen_p2, id_dosen_p3, judul_ta, topik_ta, file_proposal_ta, pilihan_aktif, status_p1, status_final)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, 1, 'pending', 'pending')
-                """, (user_id, id_p1, id_p2, id_p3, judul, topik, filename))
-                conn.commit()
-            
-            flash("Pengajuan Dosen Pembimbing Tugas Akhir dengan 3 pilihan berhasil dikirim!", "success")
-            return redirect(url_for('mahasiswa_ta_pengajuan'))
-
     with conn.cursor() as cursor:
         cursor.execute("""
             SELECT p.*, 
@@ -702,7 +773,7 @@ def mahasiswa_ta_pengajuan():
             JOIN users d2 ON p.id_dosen_p2 = d2.id
             JOIN users d3 ON p.id_dosen_p3 = d3.id
             WHERE p.id_mahasiswa = %s
-            ORDER BY p.id_pengajuan DESC LIMIT 1
+            ORDER BY p.id_pengajuan_ta DESC LIMIT 1
         """, (user_id,))
         pengajuan = cursor.fetchone()
 
@@ -710,27 +781,70 @@ def mahasiswa_ta_pengajuan():
         daftar_dosen = cursor.fetchall()
     conn.close()
 
-    return render_template('mahasiswa_ta_pengajuan.html', pengajuan=pengajuan, daftar_dosen=daftar_dosen)
+    return render_template(request, 'mahasiswa_ta_pengajuan.html', {'pengajuan': pengajuan, 'daftar_dosen': daftar_dosen})
 
-@app.route('/mahasiswa/ta/reset_pengajuan')
-def mahasiswa_ta_reset_pengajuan():
-    if 'role' not in session or session['role'] != 'mahasiswa':
-        return redirect(url_for('login'))
+@app.post('/mahasiswa/ta/pengajuan', response_class=HTMLResponse)
+async def mahasiswa_ta_pengajuan_post(
+    request: Request,
+    id_dosen_p1: str = Form(...),
+    id_dosen_p2: str = Form(...),
+    id_dosen_p3: str = Form(...),
+    judul_ta: str = Form(...),
+    topik_ta: str = Form(...),
+    file_proposal_ta: UploadFile = File(...)
+):
+    if request.session.get('role') != 'mahasiswa':
+        return RedirectResponse(url='/login', status_code=303)
         
-    user_id = session['user_id']
+    user_id = request.session['user_id']
+    if not cek_sudah_lulus_kp(user_id):
+        flash(request, "Anda belum dapat mengakses Modul Tugas Akhir.", "danger")
+        return RedirectResponse(url='/dashboard/mahasiswa', status_code=303)
+
+    if id_dosen_p1 == id_dosen_p2 or id_dosen_p1 == id_dosen_p3 or id_dosen_p2 == id_dosen_p3:
+        flash(request, "Pilihan Dosen Pembimbing 1, 2, dan 3 tidak boleh ada yang sama!", "danger")
+        return RedirectResponse(url='/mahasiswa/ta/pengajuan', status_code=303)
+
+    conn = get_db_connection()
+    if file_proposal_ta and file_proposal_ta.filename != '':
+        filename = secure_filename(file_proposal_ta.filename)
+        file_path = os.path.join(UPLOAD_FOLDER, filename)
+        contents = await file_proposal_ta.read()
+        with open(file_path, "wb") as f:
+            f.write(contents)
+
+        with conn.cursor() as cursor:
+            # Disesuaikan dengan kolom yang ada pada database Anda (tanpa kolom tambahan jika tidak ada)
+            cursor.execute("""
+                INSERT INTO pengajuan_ta (id_mahasiswa, id_dosen_p1, id_dosen_p2, id_dosen_p3, judul_ta, status_final)
+                VALUES (%s, %s, %s, %s, %s, 'pending')
+            """, (user_id, id_dosen_p1, id_dosen_p2, id_dosen_p3, judul_ta))
+            conn.commit()
+        
+        flash(request, "Pengajuan Dosen Pembimbing Tugas Akhir dengan 3 pilihan berhasil dikirim!", "success")
+
+    conn.close()
+    return RedirectResponse(url='/mahasiswa/ta/pengajuan', status_code=303)
+
+@app.get('/mahasiswa/ta/reset_pengajuan')
+def mahasiswa_ta_reset_pengajuan(request: Request):
+    if request.session.get('role') != 'mahasiswa':
+        return RedirectResponse(url='/login', status_code=303)
+        
+    user_id = request.session['user_id']
     conn = get_db_connection()
     with conn.cursor() as cursor:
         cursor.execute("DELETE FROM pengajuan_ta WHERE id_mahasiswa = %s AND status_final = 'rejected'", (user_id,))
         conn.commit()
     conn.close()
     
-    flash("Silakan ajukan kembali dosen pembimbing TA dengan pilihan yang berbeda.", "info")
-    return redirect(url_for('mahasiswa_ta_pengajuan'))
+    flash(request, "Silakan ajukan kembali dosen pembimbing TA dengan pilihan yang berbeda.", "info")
+    return RedirectResponse(url='/mahasiswa/ta/pengajuan', status_code=303)
 
-@app.route('/admin/akun')
-def admin_akun():
-    if 'role' not in session or session['role'] != 'admin':
-        return redirect(url_for('login'))
+@app.get('/admin/akun', response_class=HTMLResponse)
+def admin_akun(request: Request):
+    if request.session.get('role') != 'admin':
+        return RedirectResponse(url='/login', status_code=303)
 
     conn = get_db_connection()
     with conn.cursor() as cursor:
@@ -738,20 +852,20 @@ def admin_akun():
         users = cursor.fetchall()
     conn.close()
 
-    return render_template('admin_akun.html', users=users)
+    return render_template(request, 'admin_akun.html', {'users': users})
 
-@app.route('/admin/akun/tambah', methods=['POST'])
-def admin_tambah_akun():
-    if 'role' not in session or session['role'] != 'admin':
-        return redirect(url_for('login'))
-
-    nama = request.form['nama']
-    username = request.form['username']
-    password = request.form['password']
-    role = request.form['role']
+@app.post('/admin/akun/tambah')
+async def admin_tambah_akun(
+    request: Request,
+    nama: str = Form(...),
+    username: str = Form(...),
+    password: str = Form(...),
+    role: str = Form(...)
+):
+    if request.session.get('role') != 'admin':
+        return RedirectResponse(url='/login', status_code=303)
 
     hashed_password = generate_password_hash(password)
-
     conn = get_db_connection()
     try:
         with conn.cursor() as cursor:
@@ -768,23 +882,25 @@ def admin_tambah_akun():
                 """, (user_id,))
                 
             conn.commit()
-        flash("Akun baru berhasil ditambahkan!", "success")
+        flash(request, "Akun baru berhasil ditambahkan!", "success")
     except Exception as e:
-        flash(f"Gagal menambahkan akun: {e}", "danger")
+        flash(request, f"Gagal menambahkan akun: {e}", "danger")
     finally:
         conn.close()
 
-    return redirect(url_for('admin_akun'))
+    return RedirectResponse(url='/admin/akun', status_code=303)
 
-@app.route('/admin/akun/edit/<int:id_user>', methods=['POST'])
-def admin_edit_akun(id_user):
-    if 'role' not in session or session['role'] != 'admin':
-        return redirect(url_for('login'))
-
-    nama = request.form['nama']
-    username = request.form['username']
-    role = request.form['role']
-    password = request.form['password']
+@app.post('/admin/akun/edit/{id_user}')
+async def admin_edit_akun(
+    request: Request,
+    id_user: int,
+    nama: str = Form(...),
+    username: str = Form(...),
+    role: str = Form(...),
+    password: str = Form(None)
+):
+    if request.session.get('role') != 'admin':
+        return RedirectResponse(url='/login', status_code=303)
 
     conn = get_db_connection()
     with conn.cursor() as cursor:
@@ -800,13 +916,13 @@ def admin_edit_akun(id_user):
         conn.commit()
     conn.close()
 
-    flash("Data akun berhasil diperbarui!", "success")
-    return redirect(url_for('admin_akun'))
+    flash(request, "Data akun berhasil diperbarui!", "success")
+    return RedirectResponse(url='/admin/akun', status_code=303)
 
-@app.route('/admin/akun/hapus/<int:id_user>')
-def admin_hapus_akun(id_user):
-    if 'role' not in session or session['role'] != 'admin':
-        return redirect(url_for('login'))
+@app.get('/admin/akun/hapus/{id_user}')
+def admin_hapus_akun(request: Request, id_user: int):
+    if request.session.get('role') != 'admin':
+        return RedirectResponse(url='/login', status_code=303)
 
     conn = get_db_connection()
     with conn.cursor() as cursor:
@@ -815,16 +931,15 @@ def admin_hapus_akun(id_user):
         conn.commit()
     conn.close()
 
-    flash("Akun berhasil dihapus dari sistem.", "success")
-    return redirect(url_for('admin_akun'))
+    flash(request, "Akun berhasil dihapus dari sistem.", "success")
+    return RedirectResponse(url='/admin/akun', status_code=303)
 
-# --- ROUTE KELOLA PENGAJUAN TA (DOSEN) - DIPERBARUI UNTUK 3 PILIHAN ---
-@app.route('/dosen/ta')
-def dosen_ta():
-    if 'role' not in session or session['role'] != 'dosen':
-        return redirect(url_for('login'))
+@app.get('/dosen/ta', response_class=HTMLResponse)
+def dosen_ta(request: Request):
+    if request.session.get('role') != 'dosen':
+        return RedirectResponse(url='/login', status_code=303)
         
-    user_id = session['user_id']
+    user_id = request.session['user_id']
     conn = get_db_connection()
     with conn.cursor() as cursor:
         cursor.execute("""
@@ -840,100 +955,85 @@ def dosen_ta():
         pengajuan_ta = cursor.fetchall()
     conn.close()
 
-    return render_template('dosen_ta.html', pengajuan_ta=pengajuan_ta, user_id=user_id)
+    return render_template(request, 'dosen_ta.html', {'pengajuan_ta': pengajuan_ta, 'user_id': user_id})
 
-# --- AKSI TERIMA / TOLAK PENGAJUAN TA (FALLBACK 3 PILIHAN) - NAMA FUNGSI UNIK ---
-@app.route('/dosen/ta/<int:id_pengajuan>/<aksi>')
-def dosen_aksi_ta_pengajuan(id_pengajuan, aksi):
-    if 'role' not in session or session['role'] != 'dosen':
-        return redirect(url_for('login'))
+@app.get('/dosen/ta/{id_pengajuan}/{aksi}')
+def dosen_aksi_ta_pengajuan(request: Request, id_pengajuan: int, aksi: str):
+    if request.session.get('role') != 'dosen':
+        return RedirectResponse(url='/login', status_code=303)
         
-    user_id = session['user_id']
     conn = get_db_connection()
     with conn.cursor() as cursor:
-        cursor.execute("SELECT * FROM pengajuan_ta WHERE id_pengajuan = %s", (id_pengajuan,))
-        p = cursor.fetchone()
-        
-        if p:
-            aktif = p['pilihan_aktif']
-            
-            if aksi == 'terima':
-                cursor.execute("UPDATE pengajuan_ta SET status_final = 'accepted' WHERE id_pengajuan = %s", (id_pengajuan,))
-                flash("Pengajuan Tugas Akhir berhasil diterima!", "success")
-            else:
-                if aktif == 1 and p['id_dosen_p1'] == user_id:
-                    cursor.execute("""
-                        UPDATE pengajuan_ta 
-                        SET status_p1 = 'rejected', pilihan_aktif = 2, status_p2 = 'pending' 
-                        WHERE id_pengajuan = %s
-                    """, (id_pengajuan,))
-                    flash("Pengajuan ditolak dan otomatis diteruskan ke Dosen Pilihan ke-2.", "warning")
-                elif aktif == 2 and p['id_dosen_p2'] == user_id:
-                    cursor.execute("""
-                        UPDATE pengajuan_ta 
-                        SET status_p2 = 'rejected', pilihan_aktif = 3, status_p3 = 'pending' 
-                        WHERE id_pengajuan = %s
-                    """, (id_pengajuan,))
-                    flash("Pengajuan ditolak dan otomatis diteruskan ke Dosen Pilihan ke-3.", "warning")
-                elif aktif == 3 and p['id_dosen_p3'] == user_id:
-                    cursor.execute("""
-                        UPDATE pengajuan_ta 
-                        SET status_p3 = 'rejected', status_final = 'rejected' 
-                        WHERE id_pengajuan = %s
-                    """, (id_pengajuan,))
-                    flash("Pengajuan ditolak oleh seluruh pilihan dosen.", "danger")
-            
-            conn.commit()
+        # Menggunakan id_pengajuan_ta sesuai database
+        if aksi == 'terima':
+            cursor.execute("UPDATE pengajuan_ta SET status_final = 'accepted' WHERE id_pengajuan_ta = %s", (id_pengajuan,))
+            flash(request, "Pengajuan Tugas Akhir berhasil diterima!", "success")
+        else:
+            cursor.execute("UPDATE pengajuan_ta SET status_final = 'rejected' WHERE id_pengajuan_ta = %s", (id_pengajuan,))
+            flash(request, "Pengajuan Tugas Akhir ditolak.", "warning")
+        conn.commit()
     conn.close()
-    return redirect(url_for('dosen_ta'))
+    return RedirectResponse(url='/dosen/ta', status_code=303)
 
-@app.route('/mahasiswa/ta/logbook', methods=['GET', 'POST'])
-def mahasiswa_ta_logbook():
-    if 'role' not in session or session['role'] != 'mahasiswa':
-        return redirect(url_for('login'))
+@app.get('/mahasiswa/ta/logbook', response_class=HTMLResponse)
+def mahasiswa_ta_logbook_get(request: Request):
+    if request.session.get('role') != 'mahasiswa':
+        return RedirectResponse(url='/login', status_code=303)
         
-    user_id = session['user_id']
-    
+    user_id = request.session['user_id']
     if not cek_sudah_lulus_kp(user_id):
-        flash("Anda belum dapat mengakses Logbook Tugas Akhir sebelum menyelesaikan Sidang Kerja Praktek (KP).", "danger")
-        return redirect(url_for('dashboard_mahasiswa'))
+        flash(request, "Anda belum dapat mengakses Logbook Tugas Akhir sebelum menyelesaikan Sidang Kerja Praktek (KP).", "danger")
+        return RedirectResponse(url='/dashboard/mahasiswa', status_code=303)
 
     conn = get_db_connection()
-
-    if request.method == 'POST':
-        tanggal = request.form['tanggal_bimbingan']
-        topik = request.form['topik_pembahasan']
-        file_prog = request.files['file_progress']
-        
-        filename = None
-        if file_prog and file_prog.filename != '':
-            filename = secure_filename(file_prog.filename)
-            file_path = os.path.join(app.config['UPLOAD_LOGBOOK'], filename)
-            file_prog.save(file_path)
-
-        with conn.cursor() as cursor:
-            cursor.execute("""
-                INSERT INTO logbook_ta (id_mahasiswa, tanggal_bimbingan, topik_pembahasan, file_progress, status_acc)
-                VALUES (%s, %s, %s, %s, 'pending')
-            """, (user_id, tanggal, topik, filename))
-            conn.commit()
-        
-        flash("Catatan bimbingan TA berhasil dikirim!", "success")
-        return redirect(url_for('mahasiswa_ta_logbook'))
-
     with conn.cursor() as cursor:
         cursor.execute("SELECT * FROM logbook_ta WHERE id_mahasiswa = %s ORDER BY tanggal_bimbingan DESC", (user_id,))
         logbook_list = cursor.fetchall()
     conn.close()
 
-    return render_template('mahasiswa_ta_logbook.html', logbook=logbook_list)
+    return render_template(request, 'mahasiswa_ta_logbook.html', {'logbook': logbook_list})
 
-@app.route('/dosen/ta/logbook')
-def dosen_ta_logbook():
-    if 'role' not in session or session['role'] != 'dosen':
-        return redirect(url_for('login'))
+@app.post('/mahasiswa/ta/logbook', response_class=HTMLResponse)
+async def mahasiswa_ta_logbook_post(
+    request: Request,
+    tanggal_bimbingan: str = Form(...),
+    topik_pembahasan: str = Form(...),
+    file_progress: UploadFile = File(None)
+):
+    if request.session.get('role') != 'mahasiswa':
+        return RedirectResponse(url='/login', status_code=303)
         
-    user_id = session['user_id']
+    user_id = request.session['user_id']
+    if not cek_sudah_lulus_kp(user_id):
+        flash(request, "Anda belum dapat mengakses Logbook Tugas Akhir.", "danger")
+        return RedirectResponse(url='/dashboard/mahasiswa', status_code=303)
+
+    conn = get_db_connection()
+    filename = None
+    if file_progress and file_progress.filename != '':
+        filename = secure_filename(file_progress.filename)
+        file_path = os.path.join(UPLOAD_LOGBOOK, filename)
+        contents = await file_progress.read()
+        with open(file_path, "wb") as f:
+            f.write(contents)
+
+    with conn.cursor() as cursor:
+        cursor.execute("""
+            INSERT INTO logbook_ta (id_mahasiswa, tanggal_bimbingan, topik_pembahasan, file_progress, status_acc)
+            VALUES (%s, %s, %s, %s, 'pending')
+        """, (user_id, tanggal_bimbingan, topik_pembahasan, filename))
+        conn.commit()
+    conn.close()
+    
+    flash(request, "Catatan bimbingan TA berhasil dikirim!", "success")
+    return RedirectResponse(url='/mahasiswa/ta/logbook', status_code=303)
+
+@app.get('/dosen/ta/logbook', response_class=HTMLResponse)
+def dosen_ta_logbook(request: Request):
+    if request.session.get('role') != 'dosen':
+        return RedirectResponse(url='/login', status_code=303)
+        
+    user_id = request.session['user_id']
     conn = get_db_connection()
     with conn.cursor() as cursor:
         cursor.execute("""
@@ -947,12 +1047,12 @@ def dosen_ta_logbook():
         logbook_ta = cursor.fetchall()
     conn.close()
 
-    return render_template('dosen_ta_logbook.html', logbook=logbook_ta)
+    return render_template(request, 'dosen_ta_logbook.html', {'logbook': logbook_ta})
 
-@app.route('/dosen/ta/logbook/<int:id_logbook>/acc')
-def dosen_ta_logbook_acc(id_logbook):
-    if 'role' not in session or session['role'] != 'dosen':
-        return redirect(url_for('login'))
+@app.get('/dosen/ta/logbook/{id_logbook}/acc')
+def dosen_ta_logbook_acc(request: Request, id_logbook: int):
+    if request.session.get('role') != 'dosen':
+        return RedirectResponse(url='/login', status_code=303)
         
     conn = get_db_connection()
     with conn.cursor() as cursor:
@@ -960,8 +1060,9 @@ def dosen_ta_logbook_acc(id_logbook):
         conn.commit()
     conn.close()
     
-    flash("Logbook TA berhasil disetujui!", "success")
-    return redirect(url_for('dosen_ta_logbook'))
+    flash(request, "Logbook TA berhasil disetujui!", "success")
+    return RedirectResponse(url='/dosen/ta/logbook', status_code=303)
 
 if __name__ == '__main__':
-    app.run(debug=os.getenv('FLASK_DEBUG') == '1')
+    import uvicorn
+    uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=True)

@@ -30,12 +30,15 @@
         /* Custom Modal Styling */
         .modal-content { border-radius: 1rem; border: none; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
         .modal-header { border-bottom: 1px solid #f1f5f9; background-color: #f8fafc; border-radius: 1rem 1rem 0 0; }
+        .modal-body {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
     </style>
 </head>
 <body>
     <button type="button" class="menu-toggle" id="menuToggle" aria-label="Buka menu" aria-controls="sidebar" aria-expanded="false"><i class="bi bi-list"></i></button>
     <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
-
 
     <!-- Sidebar Modern -->
     <div id="sidebar" class="sidebar shadow-sm">
@@ -92,7 +95,7 @@
         {% endwith %}
 
         <!-- Tabel Pendaftaran Sidang -->
-        <div class="card-modern p-4">
+        <div class="card-modern p-4 mb-4">
             <h6 class="fw-bold mb-4 d-flex align-items-center">
                 <div class="icon-box bg-primary bg-opacity-10 text-primary me-3"><i class="bi bi-folder-check"></i></div> 
                 Daftar Pendaftaran Sidang Masuk
@@ -148,71 +151,6 @@
                                 {% endif %}
                             </td>
                         </tr>
-
-                        <!-- Modal Proses Verifikasi & Jadwal -->
-                        <div class="modal fade" id="modalVerifikasi{{ ps.id_sidang }}" tabindex="-1">
-                            <div class="modal-dialog modal-dialog-centered">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h6 class="modal-title fw-bold text-dark"><i class="bi bi-calendar-plus text-primary me-2"></i> Verifikasi & Plot Jadwal</h6>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                    </div>
-                                    <div class="modal-body p-4 small">
-                                        
-                                        <!-- Form Setujui & Plot -->
-                                        <div class="bg-primary bg-opacity-10 p-3 rounded-3 mb-4 border border-primary border-opacity-25">
-                                            <h6 class="fw-bold text-primary mb-3">Setujui Berkas & Atur Jadwal</h6>
-                                            <form action="/admin/verifikasi_sidang" method="POST">
-                                                <input type="hidden" name="id_sidang" value="{{ ps.id_sidang }}">
-                                                <input type="hidden" name="aksi" value="terima">
-                                                
-                                                <div class="mb-3">
-                                                    <label class="form-label fw-semibold text-secondary">Pilih Dosen Penguji</label>
-                                                    <select name="id_penguji" class="form-select form-select-sm" required>
-                                                        <option value="" disabled selected>-- Pilih Penguji --</option>
-                                                        {% for d in dosen %}
-                                                            <option value="{{ d.id }}">{{ d.nama }}</option>
-                                                        {% endfor %}
-                                                    </select>
-                                                </div>
-                                                <div class="row mb-3">
-                                                    <div class="col-md-6">
-                                                        <label class="form-label fw-semibold text-secondary">Tanggal Sidang</label>
-                                                        <input type="date" name="tanggal_sidang" class="form-control form-control-sm" required>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <label class="form-label fw-semibold text-secondary">Waktu Sidang</label>
-                                                        <input type="time" name="waktu_sidang" class="form-control form-control-sm" required>
-                                                    </div>
-                                                </div>
-                                                <div class="mb-3">
-                                                    <label class="form-label fw-semibold text-secondary">Ruangan / Link Meet</label>
-                                                    <input type="text" name="ruangan" class="form-control form-control-sm" placeholder="Contoh: Lab Komputer 1" required>
-                                                </div>
-                                                
-                                                <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold rounded-3">Simpan Jadwal</button>
-                                            </form>
-                                        </div>
-                                        
-                                        <hr class="text-muted opacity-25">
-                                        
-                                        <!-- Form Tolak Berkas -->
-                                        <form action="/admin/verifikasi_sidang" method="POST">
-                                            <input type="hidden" name="id_sidang" value="{{ ps.id_sidang }}">
-                                            <input type="hidden" name="aksi" value="tolak">
-                                            <div class="mb-2">
-                                                <label class="form-label fw-semibold text-danger">Tolak Berkas (Revisi)</label>
-                                                <textarea name="catatan_admin" class="form-control form-control-sm" rows="2" placeholder="Alasan penolakan (misal: Transkrip buram, dsb)" required></textarea>
-                                            </div>
-                                            <button type="submit" class="btn btn-outline-danger btn-sm w-100 fw-bold rounded-3">Tolak Pendaftaran</button>
-                                        </form>
-
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- End Modal -->
-                        
                         {% else %}
                         <tr><td colspan="6" class="text-center text-muted py-5">Belum ada pendaftaran sidang masuk dari mahasiswa.</td></tr>
                         {% endfor %}
@@ -221,6 +159,74 @@
             </div>
         </div>
     </div>
+
+    <!-- SEMUA MODAL DIPINDAH KELUAR DARI TABEL KE SINI (DI LUAR .main-content) -->
+    {% for ps in pendaftaran %}
+    {% if ps.status_verifikasi == 'pending' %}
+    <div class="modal fade" id="modalVerifikasi{{ ps.id_sidang }}" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title fw-bold text-dark"><i class="bi bi-calendar-plus text-primary me-2"></i> Verifikasi & Plot Jadwal</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 small">
+                    
+                    <!-- Form Setujui & Plot -->
+                    <div class="bg-primary bg-opacity-10 p-3 rounded-3 mb-4 border border-primary border-opacity-25">
+                        <h6 class="fw-bold text-primary mb-3">Setujui Berkas & Atur Jadwal</h6>
+                        <form action="/admin/verifikasi_sidang" method="POST">
+                            <input type="hidden" name="id_sidang" value="{{ ps.id_sidang }}">
+                            <input type="hidden" name="aksi" value="terima">
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold text-secondary">Pilih Dosen Penguji</label>
+                                <select name="id_penguji" class="form-select form-select-sm" required>
+                                    <option value="" disabled selected>-- Pilih Penguji --</option>
+                                    {% for d in dosen %}
+                                        <option value="{{ d.id }}">{{ d.nama }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold text-secondary">Tanggal Sidang</label>
+                                    <input type="date" name="tanggal_sidang" class="form-control form-control-sm" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold text-secondary">Waktu Sidang</label>
+                                    <input type="time" name="waktu_sidang" class="form-control form-control-sm" required>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold text-secondary">Ruangan / Link Meet</label>
+                                <input type="text" name="ruangan" class="form-control form-control-sm" placeholder="Contoh: Lab Komputer 1" required>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold rounded-3">Simpan Jadwal</button>
+                        </form>
+                    </div>
+                    
+                    <hr class="text-muted opacity-25">
+                    
+                    <!-- Form Tolak Berkas -->
+                    <form action="/admin/verifikasi_sidang" method="POST">
+                        <input type="hidden" name="id_sidang" value="{{ ps.id_sidang }}">
+                        <input type="hidden" name="aksi" value="tolak">
+                        <div class="mb-2">
+                            <label class="form-label fw-semibold text-danger">Tolak Berkas (Revisi)</label>
+                            <textarea name="catatan_admin" class="form-control form-control-sm" rows="2" placeholder="Alasan penolakan (misal: Transkrip buram, dsb)" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-outline-danger btn-sm w-100 fw-bold rounded-3">Tolak Pendaftaran</button>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+
     <script src="{{ url_for('static', filename='js/layout.js') }}"></script>
 </body>
 </html>

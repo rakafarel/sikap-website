@@ -22,7 +22,6 @@
     <button type="button" class="menu-toggle" id="menuToggle" aria-label="Buka menu" aria-controls="sidebar" aria-expanded="false"><i class="bi bi-list"></i></button>
     <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
-
     <div id="sidebar" class="sidebar shadow-sm">
         <div>
             <div class="d-flex align-items-center mb-5 px-3 mt-2">
@@ -60,7 +59,7 @@
         </div>
     </div>
 
-    <div class="main-content">
+    <div class="main-content p-4">
         <div class="mb-4">
             <h4 class="fw-bold mb-1">Pendaftaran Sidang Kerja Praktek</h4>
             <p class="text-muted small mb-0">Unggah laporan final dan pantau jadwal sidang Anda.</p>
@@ -69,14 +68,14 @@
         {% include '_flash.html' %}
 
         {% if sidang and sidang.nilai_akhir %}
-            <!-- Tampilan Jika Sudah Dinilai (Hasil Sidang Akhir) -->
-            <div class="card-modern p-0 overflow-hidden border-start border-5 border-success mb-4">
-                <div class="bg-success bg-opacity-10 p-4 border-bottom border-success border-opacity-25">
-                    <h5 class="fw-bold mb-0 text-success"><i class="bi bi-trophy-fill me-2"></i> Hasil Sidang & Nilai Akhir</h5>
+            <!-- Tampilan Jika Sudah Dinilai (Hasil Sidang Akhir) - Nuansa Biru -->
+            <div class="card-modern p-0 overflow-hidden border-start border-5 border-primary mb-4">
+                <div class="bg-primary bg-opacity-10 p-4 border-bottom border-primary border-opacity-25">
+                    <h5 class="fw-bold mb-0 text-primary"><i class="bi bi-trophy-fill me-2"></i> Hasil Sidang & Nilai Akhir</h5>
                 </div>
                 <div class="p-4">
                     <p class="mb-2 text-dark">Selamat! Anda telah menyelesaikan Sidang Kerja Praktek dengan Nilai Akhir:</p>
-                    <h1 class="fw-bold text-success mb-4 display-4">{{ sidang.nilai_akhir }}</h1>
+                    <h1 class="fw-bold text-primary mb-4 display-4">{{ sidang.nilai_akhir }}</h1>
                     <div class="bg-light p-3 rounded-3 border">
                         <p class="small fw-bold mb-1 text-dark"><i class="bi bi-chat-quote-fill text-muted me-1"></i> Catatan Revisi dari Penguji:</p>
                         <p class="small mb-0 text-dark fst-italic">{{ sidang.catatan_revisi }}</p>
@@ -85,7 +84,7 @@
             </div>
 
         {% elif sidang and sidang.status_verifikasi == 'verified' %}
-            <!-- Tiket Sidang Modern -->
+            <!-- Tiket Sidang Modern (Nuansa Biru) -->
             <div class="card-modern p-0 overflow-hidden border-start border-5 border-primary mb-4">
                 <div class="bg-primary bg-opacity-10 p-4 border-bottom border-primary border-opacity-25">
                     <h5 class="fw-bold mb-0 text-primary"><i class="bi bi-calendar2-check-fill me-2"></i> Jadwal Sidang Ditetapkan</h5>
@@ -139,7 +138,7 @@
                         <label class="form-label small fw-semibold text-secondary">KRS Semester Berjalan</label>
                         <input type="file" name="file_krs" class="form-control form-control-lg fs-6" accept=".pdf" required>
                     </div>
-                    <button type="submit" class="btn btn-primary btn-lg w-100 rounded-3 fs-6 fw-bold mt-2">Kirim Berkas Pendaftaran</button>
+                    <button type="submit" class="btn btn-primary btn-lg w-100 rounded-3 fs-6 fw-bold mt-2 shadow-sm">Kirim Berkas Pendaftaran</button>
                 </form>
             </div>
         {% endif %}

@@ -1,15 +1,15 @@
-{%- set is_register = request.endpoint == 'register' -%}
+{%- set is_register = request.url.path.endswith('/register') -%}
 <!DOCTYPE html>
 <html lang="id" data-mode="{{ 'register' if is_register else 'login' }}">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{% if request.endpoint == 'register' %}Daftar{% else %}Masuk{% endif %} - SIKAP</title>
+    <title>{{ 'Daftar' if is_register else 'Masuk' }} - SIKAP</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', path='css/auth.css') }}" />
   </head>
   <body>
-    {% set is_register = request.endpoint == 'register' %}
+    {% set is_register = request.url.path.endswith('/register') %}
     {% set msgs = get_flashed_messages(with_categories=true) %}
 
     <div class="bg" aria-hidden="true"><i class="orb o1"></i><i class="orb o2"></i><i class="orb o3"></i></div>
@@ -19,7 +19,7 @@
       <!-- Sisi kiri: identitas SIKAP -->
       <aside class="brand">
         <div class="logo-wrap">
-          <img class="logo" src="{{ url_for('static', filename='img/sikap-logo-transparent.svg') }}" alt="Logo Universitas Muhammadiyah Indonesia Bekasi" />
+          <img class="logo" src="{{ url_for('static', path='img/sikap-logo-transparent.svg') }}" alt="Logo Universitas Muhammadiyah Indonesia Bekasi" />
         </div>
         <div class="who">
           <h1 class="word" aria-label="SIKAP"><span style="--i:0">S</span><span style="--i:1">I</span><span style="--i:2">K</span><span style="--i:3">A</span><span style="--i:4">P</span></h1>
@@ -85,6 +85,6 @@
       </section>
     </main>
 
-    <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+    <script src="{{ url_for('static', path='js/auth.js') }}"></script>
   </body>
 </html>
