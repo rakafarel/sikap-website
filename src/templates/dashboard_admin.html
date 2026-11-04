@@ -3,48 +3,252 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Admin - SiKP</title>
+    <title>Verifikasi Sidang - SIKAP Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <style>
-        .main-content { background-color: #f8fafc; min-height: 100vh; }
-        .card-modern {
-            border: none; border-radius: 1rem; background: #ffffff;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-            transition: transform 0.2s ease-in-out;
+        /* ==========================================
+           TEMA KHUSUS SIDEBAR ADMIN (DARK SLATE & INDIGO)
+           ========================================== */
+        body #sidebar.sidebar-admin {
+            background: linear-gradient(180deg, #0f172a 0%, #020617 100%) !important;
+            border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
         }
-        .card-modern:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08); }
-        .icon-box { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 0.75rem; font-size: 1.25rem; }
-        .banner-admin {
-            background: linear-gradient(135deg, #334155 0%, #0f172a 100%);
-            border-radius: 1.25rem;
+
+        body #sidebar.sidebar-admin .fw-bold.fs-5 {
+            color: #818cf8 !important;
+            font-family: Sora, sans-serif;
+        }
+
+        body #sidebar.sidebar-admin .fw-bold .text-primary {
+            color: #ffffff !important;
+        }
+
+        body #sidebar.sidebar-admin .bg-primary {
+            background-color: #4f46e5 !important;
+            color: #ffffff !important;
+            border-radius: 12px !important;
+        }
+
+        body #sidebar.sidebar-admin .nav-link-custom {
+            color: rgba(255, 255, 255, 0.85) !important;
+        }
+
+        body #sidebar.sidebar-admin .nav-link-custom:hover {
+            background: rgba(255, 255, 255, 0.1) !important;
+            color: #ffffff !important;
+            transform: translateX(3px);
+        }
+
+        body #sidebar.sidebar-admin .nav-link-custom.active {
+            background: #ffffff !important;
+            color: #3730a3 !important;
+            font-weight: 700 !important;
+            box-shadow: 0 6px 20px rgba(79, 70, 229, 0.35) !important;
+            transform: translateX(5px);
+        }
+
+        body #sidebar.sidebar-admin .nav-link-custom.active i {
+            color: #3730a3 !important;
+        }
+
+        /* Hero Banner Sub-Page Indigo Admin */
+        .hero-banner-sub-admin {
+            background: #0f172a !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            border-radius: 18px;
+            padding: 1.5rem 2rem;
+            color: #ffffff !important;
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.3) !important;
             position: relative;
             overflow: hidden;
+            margin-bottom: 1.5rem;
         }
-        .banner-bg-icon {
-            position: absolute; right: -10px; bottom: -40px; font-size: 10rem;
-            color: rgba(255, 255, 255, 0.05); transform: rotate(-15deg);
+
+        /* Matrix Animation Background Layer */
+        .matrix-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+            opacity: 0.35;
         }
-        /* Custom Modal Styling */
-        .modal-content { border-radius: 1rem; border: none; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
-        .modal-header { border-bottom: 1px solid #f1f5f9; background-color: #f8fafc; border-radius: 1rem 1rem 0 0; }
+
+        /* Hero Content Foreground Layer */
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .badge-admin-hero {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(4px);
+            color: #a5b4fc;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .hero-sub-title {
+            font-family: 'Sora', sans-serif;
+            font-size: 1.45rem;
+            font-weight: 700;
+            color: #ffffff !important;
+            margin: 0.35rem 0 0.2rem 0;
+        }
+
+        .hero-sub-subtitle {
+            color: rgba(255, 255, 255, 0.8) !important;
+            font-size: 0.88rem;
+            margin: 0;
+        }
+
+        /* Card Modern Design */
+        .card-modern {
+            background: #ffffff;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03);
+        }
+
+        .icon-box {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        /* PIPELINE TRACKER GRID STYLES ADMIN */
+        .admin-pipeline-grid {
+            display: grid;
+            grid-template-columns: 2.2fr 1fr;
+            gap: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .pipeline-card {
+            background: #ffffff;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            padding: 1.25rem;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03);
+        }
+
+        .pipeline-steps {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.75rem;
+        }
+
+        .pipeline-step {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 1rem 0.75rem;
+            transition: all 0.2s ease;
+        }
+
+        .pipeline-step.active-step {
+            background: #fefce8;
+            border-color: #fde047;
+        }
+
+        .pipeline-step.success-step {
+            background: #eef2ff;
+            border-color: #c7d2fe;
+        }
+
+        .step-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.82rem;
+            margin-bottom: 0.65rem;
+        }
+
+        .step-icon-indigo { background: #4f46e5; color: #ffffff; }
+        .step-icon-active { background: #eab308; color: #ffffff; }
+        .step-icon-neutral { background: #cbd5e1; color: #475569; }
+
+        .step-title {
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: #0f172a;
+            margin-bottom: 0.15rem;
+        }
+
+        .step-desc {
+            font-size: 0.73rem;
+            color: #64748b;
+            line-height: 1.3;
+        }
+
+        .stat-action-card {
+            background: #ffffff;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03);
+        }
+
+        .stat-box-inner {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+            border: 1px dashed #cbd5e1;
+        }
+
+        .btn-indigo {
+            background-color: #4f46e5 !important;
+            color: #ffffff !important;
+            border: none;
+        }
+
+        .btn-indigo:hover {
+            background-color: #4338ca !important;
+            color: #ffffff !important;
+        }
+
+        @media (max-width: 992px) {
+            .admin-pipeline-grid {
+                grid-template-columns: 1fr;
+            }
+            .pipeline-steps {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
     </style>
 </head>
 <body>
     <button type="button" class="menu-toggle" id="menuToggle" aria-label="Buka menu" aria-controls="sidebar" aria-expanded="false"><i class="bi bi-list"></i></button>
     <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
-
-    <!-- Sidebar Modern -->
-    <div id="sidebar" class="sidebar shadow-sm">
+    <!-- Sidebar Admin (Dark Slate & Indigo) -->
+    <div id="sidebar" class="sidebar sidebar-admin shadow-sm">
         <div>
             <div class="d-flex align-items-center mb-5 px-3 mt-2">
                 <div class="bg-primary text-white rounded p-2 me-2 d-flex align-items-center justify-content-center">
                     <i class="bi bi-shield-lock-fill fs-5"></i>
                 </div>
-                <span class="fw-bold fs-5 tracking-wide">SiKP <span class="text-primary">Admin</span></span>
+                <span class="fw-bold fs-5 tracking-wide">SIKAP <span class="text-primary">Admin</span></span>
             </div>
             <nav class="sidebar-menu px-2">
                 <a href="/dashboard/admin" class="nav-link-custom active mb-2 rounded-3">
@@ -62,51 +266,155 @@
             </nav>
         </div>
         <div class="sidebar-bottom px-2 mb-3">
+            <a href="/profil" class="nav-link-custom mb-2 rounded-3">
+                <i class="bi bi-person-gear me-3 fs-5"></i> Profil Akun
+            </a>
             <a href="/logout" class="nav-link-custom text-danger rounded-3 m-0">
                 <i class="bi bi-box-arrow-right me-3 fs-5"></i> Logout
             </a>
         </div>
     </div>
 
-    <!-- Main Content -->
-    <div class="main-content">
-        
-        <!-- Banner Admin -->
-        <div class="banner-admin p-5 text-white mb-4 shadow-sm d-flex align-items-center justify-content-between">
-            <div class="position-relative" style="z-index: 2;">
-                <p class="text-white-50 fw-semibold mb-1 text-uppercase tracking-wider small">Portal Koordinator KP</p>
-                <h3 class="fw-bold mb-2">Verifikasi & Plotting Jadwal Sidang</h3>
-                <p class="mb-0 opacity-75 small">Kelola pendaftaran sidang, validasi berkas, dan tentukan dosen penguji.</p>
+    <!-- Main Content Area -->
+    <div class="main-content"><div class="page">
+        {% set n_wait = pendaftaran|selectattr('status_verifikasi', 'equalto', 'pending')|list|length %}
+        {% set n_ok = pendaftaran|selectattr('status_verifikasi', 'equalto', 'verified')|list|length %}
+        {% set n_no = pendaftaran|selectattr('status_verifikasi', 'equalto', 'rejected')|list|length %}
+
+        <!-- Header Hero Banner Admin dengan Animasi Matrix Rain -->
+        <div class="hero-banner-sub-admin">
+            <!-- Canvas Animasi Kode Matrix -->
+            <canvas id="matrixCanvas" class="matrix-bg"></canvas>
+
+            <!-- Konten Banner -->
+            <div class="hero-content d-flex justify-content-between align-items-center w-100">
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="badge-admin-hero"><i class="bi bi-shield-check me-1"></i> Control Panel Admin</span>
+                    </div>
+                    <h1 class="hero-sub-title">Verifikasi dan Jadwal Sidang KP</h1>
+                    <p class="hero-sub-subtitle">
+                        {% if n_wait %}{{ n_wait }} pendaftaran menunggu Anda periksa berkasnya dan tentukan jadwalnya.{% else %}Tidak ada pendaftaran yang menunggu diproses.{% endif %}
+                    </p>
+                </div>
+                <div class="text-end d-none d-md-block">
+                    <i class="bi bi-sliders fs-1 text-white opacity-75"></i>
+                </div>
             </div>
-            <i class="bi bi-shield-check banner-bg-icon"></i>
         </div>
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} p-3 small border-0 shadow-sm rounded-4 mb-4">
-                        <i class="bi bi-info-circle-fill me-2"></i>{{ message }}
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+        {% include '_flash.html' %}
 
-        <!-- Tabel Pendaftaran Sidang -->
+        <!-- Pipeline Tracker Alur Akademik Prodi -->
+        <div class="admin-pipeline-grid">
+            <div class="pipeline-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="fw-bold text-dark small text-uppercase tracking-wider">
+                        <i class="bi bi-diagram-3-fill text-primary me-1"></i> Monitoring Alur Akademik Mahasiswa
+                    </span>
+                    <span class="badge bg-light text-secondary border">Pipeline Status</span>
+                </div>
+                
+                <div class="pipeline-steps">
+                    <!-- Step 1 -->
+                    <div class="pipeline-step success-step">
+                        <div class="step-icon step-icon-indigo"><i class="bi bi-check-lg"></i></div>
+                        <div class="step-title">1. Pembimbing</div>
+                        <div class="step-desc">Pengajuan dosen disetujui</div>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="pipeline-step success-step">
+                        <div class="step-icon step-icon-indigo"><i class="bi bi-check-lg"></i></div>
+                        <div class="step-title">2. Logbook</div>
+                        <div class="step-desc">Syarat min. 6x ACC</div>
+                    </div>
+
+                    <!-- Step 3 (Aktif untuk Verifikasi Admin) -->
+                    <div class="pipeline-step {% if n_wait > 0 %}active-step{% else %}success-step{% endif %}">
+                        <div class="step-icon {% if n_wait > 0 %}step-icon-active{% else %}step-icon-indigo{% endif %}">
+                            {% if n_wait > 0 %}{{ n_wait }}{% else %}<i class="bi bi-check-lg"></i>{% endif %}
+                        </div>
+                        <div class="step-title">3. Sidang KP</div>
+                        <div class="step-desc">Verifikasi & Plotting Admin</div>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="pipeline-step">
+                        <div class="step-icon step-icon-neutral"><i class="bi bi-lock-fill"></i></div>
+                        <div class="step-title">4. Tugas Akhir</div>
+                        <div class="step-desc">Terbuka pasca lulus KP</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card Summary Plotting Right -->
+            <div class="stat-action-card">
+                <div class="d-flex align-items-center gap-2 mb-2 text-primary fw-bold small">
+                    <i class="bi bi-pie-chart-fill"></i> Progress Plotting Sidang
+                </div>
+                <div class="stat-box-inner">
+                    <div class="display-6 fw-bold text-dark mb-0">{{ n_ok }}<span class="fs-5 text-muted">/{{ pendaftaran|length }}</span></div>
+                    <span class="text-muted small fw-medium">Pendaftaran Berkas Disetujui</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3 Ringkasan Stat Cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="card-modern p-3 d-flex align-items-center">
+                    <div class="icon-box bg-warning bg-opacity-10 text-warning me-3">
+                        <i class="bi bi-hourglass-split"></i>
+                    </div>
+                    <div>
+                        <h3 class="fw-bold mb-0 text-dark">{{ n_wait }}</h3>
+                        <span class="text-muted small">Menunggu Diproses</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card-modern p-3 d-flex align-items-center">
+                    <div class="icon-box bg-primary bg-opacity-10 text-primary me-3">
+                        <i class="bi bi-check-circle-fill"></i>
+                    </div>
+                    <div>
+                        <h3 class="fw-bold mb-0 text-dark">{{ n_ok }}</h3>
+                        <span class="text-muted small">Sudah Dijadwalkan</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card-modern p-3 d-flex align-items-center">
+                    <div class="icon-box bg-danger bg-opacity-10 text-danger me-3">
+                        <i class="bi bi-x-circle-fill"></i>
+                    </div>
+                    <div>
+                        <h3 class="fw-bold mb-0 text-dark">{{ n_no }}</h3>
+                        <span class="text-muted small">Berkas Ditolak</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabel Pendaftaran Sidang Utama -->
         <div class="card-modern p-4">
             <h6 class="fw-bold mb-4 d-flex align-items-center">
-                <div class="icon-box bg-primary bg-opacity-10 text-primary me-3"><i class="bi bi-folder-check"></i></div> 
-                Daftar Pendaftaran Sidang Masuk
+                <div class="icon-box bg-primary bg-opacity-10 text-primary me-3">
+                    <i class="bi bi-card-checklist"></i>
+                </div>
+                Pendaftaran Sidang Kerja Praktek
             </h6>
-            
+
             <div class="table-responsive">
                 <table class="table table-hover align-middle small mb-0">
                     <thead class="table-light">
                         <tr>
                             <th class="text-secondary fw-semibold">Mahasiswa</th>
                             <th class="text-secondary fw-semibold">Judul KP</th>
-                            <th class="text-secondary fw-semibold">Berkas (.PDF)</th>
-                            <th class="text-secondary fw-semibold">Status Verifikasi</th>
-                            <th class="text-secondary fw-semibold">Jadwal & Penguji</th>
+                            <th class="text-secondary fw-semibold">Berkas Kelengkapan</th>
+                            <th class="text-secondary fw-semibold">Status</th>
+                            <th class="text-secondary fw-semibold">Jadwal & Dosen Penguji</th>
                             <th class="text-center text-secondary fw-semibold">Aksi</th>
                         </tr>
                     </thead>
@@ -117,110 +425,172 @@
                                 <strong class="text-dark">{{ ps.nama_mahasiswa }}</strong><br>
                                 <span class="text-muted">{{ ps.npm }}</span>
                             </td>
-                            <td class="text-truncate" style="max-width: 200px;" title="{{ ps.judul_kp }}">{{ ps.judul_kp }}</td>
+                            <td class="text-truncate" style="max-width: 200px" title="{{ ps.judul_kp }}">{{ ps.judul_kp }}</td>
                             <td>
-                                <a href="/uploads/sidang/{{ ps.file_laporan_final }}" target="_blank" class="badge bg-light text-primary border text-decoration-none me-1"><i class="bi bi-file-pdf"></i> Laporan</a>
-                                <a href="/uploads/sidang/{{ ps.file_transkrip }}" target="_blank" class="badge bg-light text-primary border text-decoration-none"><i class="bi bi-file-pdf"></i> Transkrip</a>
+                                <div class="d-flex flex-column gap-1">
+                                    <a href="/uploads/sidang/{{ ps.file_laporan_final }}" target="_blank" class="badge bg-light text-primary border text-decoration-none text-start">
+                                        <i class="bi bi-file-pdf me-1"></i> Laporan
+                                    </a>
+                                    <a href="/uploads/sidang/{{ ps.file_transkrip }}" target="_blank" class="badge bg-light text-primary border text-decoration-none text-start">
+                                        <i class="bi bi-file-pdf me-1"></i> Transkrip
+                                    </a>
+                                    {% if ps.file_krs %}
+                                    <a href="/uploads/sidang/{{ ps.file_krs }}" target="_blank" class="badge bg-light text-primary border text-decoration-none text-start">
+                                        <i class="bi bi-file-pdf me-1"></i> KRS
+                                    </a>
+                                    {% endif %}
+                                </div>
                             </td>
                             <td>
                                 {% if ps.status_verifikasi == 'verified' %}
-                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1 rounded-pill"><i class="bi bi-check-circle-fill me-1"></i> Disetujui</span>
+                                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1 rounded-pill">Disetujui</span>
                                 {% elif ps.status_verifikasi == 'rejected' %}
-                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2 py-1 rounded-pill"><i class="bi bi-x-circle-fill me-1"></i> Ditolak</span>
+                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2 py-1 rounded-pill">Ditolak</span>
                                 {% else %}
-                                    <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-2 py-1 rounded-pill"><i class="bi bi-clock-fill me-1"></i> Menunggu</span>
+                                    <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-2 py-1 rounded-pill">Menunggu</span>
                                 {% endif %}
                             </td>
                             <td>
                                 {% if ps.status_verifikasi == 'verified' %}
-                                    <span class="fw-semibold text-dark">{{ ps.tanggal_sidang }} ({{ ps.waktu_sidang }})</span><br>
-                                    <span class="text-muted">Ruang: {{ ps.ruangan }}</span><br>
-                                    <span class="text-primary fw-semibold"><i class="bi bi-person-fill me-1"></i>{{ ps.nama_penguji }}</span>
+                                    <strong class="text-dark">{{ ps.tanggal_sidang }}, {{ ps.waktu_sidang }}</strong><br>
+                                    <span class="text-muted small"><i class="bi bi-geo-alt me-1 text-primary"></i>{{ ps.ruangan }} &middot; {{ ps.nama_penguji }}</span>
                                 {% else %}
-                                    <span class="text-muted fst-italic">Belum diplot</span>
+                                    <span class="text-muted small">Belum dijadwalkan</span>
                                 {% endif %}
                             </td>
                             <td class="text-center">
                                 {% if ps.status_verifikasi == 'pending' %}
-                                    <button class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalVerifikasi{{ ps.id_sidang }}">Proses Plotting</button>
+                                <button class="btn btn-indigo btn-sm rounded-pill px-3 fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalVerifikasi{{ ps.id_sidang }}">
+                                    <i class="bi bi-gear-fill me-1"></i> Proses
+                                </button>
                                 {% else %}
-                                    <span class="text-muted"><i class="bi bi-check2-all fs-5"></i></span>
+                                <i class="bi bi-check2-all text-primary fs-5"></i>
                                 {% endif %}
                             </td>
                         </tr>
-
-                        <!-- Modal Proses Verifikasi & Jadwal -->
-                        <div class="modal fade" id="modalVerifikasi{{ ps.id_sidang }}" tabindex="-1">
-                            <div class="modal-dialog modal-dialog-centered">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h6 class="modal-title fw-bold text-dark"><i class="bi bi-calendar-plus text-primary me-2"></i> Verifikasi & Plot Jadwal</h6>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                    </div>
-                                    <div class="modal-body p-4 small">
-                                        
-                                        <!-- Form Setujui & Plot -->
-                                        <div class="bg-primary bg-opacity-10 p-3 rounded-3 mb-4 border border-primary border-opacity-25">
-                                            <h6 class="fw-bold text-primary mb-3">Setujui Berkas & Atur Jadwal</h6>
-                                            <form action="/admin/verifikasi_sidang" method="POST">
-                                                <input type="hidden" name="id_sidang" value="{{ ps.id_sidang }}">
-                                                <input type="hidden" name="aksi" value="terima">
-                                                
-                                                <div class="mb-3">
-                                                    <label class="form-label fw-semibold text-secondary">Pilih Dosen Penguji</label>
-                                                    <select name="id_penguji" class="form-select form-select-sm" required>
-                                                        <option value="" disabled selected>-- Pilih Penguji --</option>
-                                                        {% for d in dosen %}
-                                                            <option value="{{ d.id }}">{{ d.nama }}</option>
-                                                        {% endfor %}
-                                                    </select>
-                                                </div>
-                                                <div class="row mb-3">
-                                                    <div class="col-md-6">
-                                                        <label class="form-label fw-semibold text-secondary">Tanggal Sidang</label>
-                                                        <input type="date" name="tanggal_sidang" class="form-control form-control-sm" required>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <label class="form-label fw-semibold text-secondary">Waktu Sidang</label>
-                                                        <input type="time" name="waktu_sidang" class="form-control form-control-sm" required>
-                                                    </div>
-                                                </div>
-                                                <div class="mb-3">
-                                                    <label class="form-label fw-semibold text-secondary">Ruangan / Link Meet</label>
-                                                    <input type="text" name="ruangan" class="form-control form-control-sm" placeholder="Contoh: Lab Komputer 1" required>
-                                                </div>
-                                                
-                                                <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold rounded-3">Simpan Jadwal</button>
-                                            </form>
-                                        </div>
-                                        
-                                        <hr class="text-muted opacity-25">
-                                        
-                                        <!-- Form Tolak Berkas -->
-                                        <form action="/admin/verifikasi_sidang" method="POST">
-                                            <input type="hidden" name="id_sidang" value="{{ ps.id_sidang }}">
-                                            <input type="hidden" name="aksi" value="tolak">
-                                            <div class="mb-2">
-                                                <label class="form-label fw-semibold text-danger">Tolak Berkas (Revisi)</label>
-                                                <textarea name="catatan_admin" class="form-control form-control-sm" rows="2" placeholder="Alasan penolakan (misal: Transkrip buram, dsb)" required></textarea>
-                                            </div>
-                                            <button type="submit" class="btn btn-outline-danger btn-sm w-100 fw-bold rounded-3">Tolak Pendaftaran</button>
-                                        </form>
-
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- End Modal -->
-                        
                         {% else %}
-                        <tr><td colspan="6" class="text-center text-muted py-5">Belum ada pendaftaran sidang masuk dari mahasiswa.</td></tr>
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-5">
+                                Belum ada pendaftaran sidang. Pendaftaran dari mahasiswa akan muncul di sini.
+                            </td>
+                        </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
         </div>
-    </div>
+
+        <!-- Modal Verifikasi & Plotting Sidang KP -->
+        {% for ps in pendaftaran if ps.status_verifikasi == 'pending' %}
+        <div class="modal fade" id="modalVerifikasi{{ ps.id_sidang }}" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content" style="border-radius: 16px;">
+                    <div class="modal-header border-bottom-0 pb-0">
+                        <h6 class="modal-title fw-bold text-dark d-flex align-items-center">
+                            <i class="bi bi-shield-check text-primary me-2 fs-5"></i> Proses Pendaftaran {{ ps.nama_mahasiswa }}
+                        </h6>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                    </div>
+                    <div class="modal-body p-4 small">
+                        <!-- Form Setujui & Plotting -->
+                        <form action="/admin/verifikasi_sidang" method="POST" class="mb-4">
+                            <input type="hidden" name="id_sidang" value="{{ ps.id_sidang }}">
+                            <input type="hidden" name="aksi" value="terima">
+                            <p class="fw-bold mb-3 text-secondary">Setujui berkas dan atur jadwal sidang</p>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold text-secondary">Dosen Penguji</label>
+                                <select name="id_penguji" class="form-select rounded-3" required>
+                                    <option value="" disabled selected>Pilih dosen penguji</option>
+                                    {% for d in dosen %}
+                                        <option value="{{ d.id }}">{{ d.nama }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-6">
+                                    <label class="form-label fw-semibold text-secondary">Tanggal Sidang</label>
+                                    <input type="date" name="tanggal_sidang" class="form-control rounded-3" required>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label fw-semibold text-secondary">Waktu Sidang</label>
+                                    <input type="time" name="waktu_sidang" class="form-control rounded-3" required>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold text-secondary">Ruangan / Tautan Rapat</label>
+                                <input type="text" name="ruangan" class="form-control rounded-3" placeholder="Contoh: Lab Komputer 1 / Zoom Link" required>
+                            </div>
+
+                            <button type="submit" class="btn btn-indigo w-100 fw-bold rounded-3 py-2 shadow-sm">
+                                Setujui dan Simpan Jadwal
+                            </button>
+                        </form>
+
+                        <hr class="opacity-25">
+
+                        <!-- Form Tolak Berkas -->
+                        <form action="/admin/verifikasi_sidang" method="POST">
+                            <input type="hidden" name="id_sidang" value="{{ ps.id_sidang }}">
+                            <input type="hidden" name="aksi" value="tolak">
+                            <label class="form-label fw-semibold text-danger">Tolak Berkas & Minta Revisi</label>
+                            <textarea name="catatan_admin" class="form-control rounded-3 mb-3" rows="2" placeholder="Jelaskan alasan penolakan, mis. transkrip nilai buram" required></textarea>
+                            <button type="submit" class="btn btn-outline-danger w-100 fw-semibold rounded-3 py-2">
+                                Tolak Pendaftaran
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+    </div></div>
+
     <script src="{{ url_for('static', filename='js/layout.js') }}"></script>
+
+    <!-- Skrip Animasi Matrix Code Rain (Aksen Indigo Admin) -->
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const canvas = document.getElementById('matrixCanvas');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = canvas.parentElement.offsetWidth;
+            canvas.height = canvas.parentElement.offsetHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        const characters = '011001010{}<>/=+$#@;*ADM';
+        const fontSize = 13;
+        let columns = Math.floor(canvas.width / fontSize);
+        let drops = Array(columns).fill(1);
+
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.15)'; // Slate dark background trail
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#818cf8'; // Indigo light neon text
+            ctx.font = `${fontSize}px monospace`;
+
+            for (let i = 0; i < drops.length; i++) {
+                const text = characters.charAt(Math.floor(Math.random() * characters.length));
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+
+        setInterval(drawMatrix, 50);
+    });
+    </script>
 </body>
 </html>
