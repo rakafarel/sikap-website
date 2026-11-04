@@ -14,8 +14,8 @@
            ========================================== */
         body #sidebar.sidebar-admin { background: linear-gradient(180deg, #0f172a 0%, #020617 100%) !important; border-right: 1px solid rgba(255, 255, 255, 0.08) !important; }
         body #sidebar.sidebar-admin .fw-bold.fs-5 { color: #818cf8 !important; font-family: Sora, sans-serif; }
-        body #sidebar.sidebar-admin .fw-bold .text-primary { color: #ffffff !important; }
-        body #sidebar.sidebar-admin .bg-primary { background-color: #4f46e5 !important; color: #ffffff !important; border-radius: 12px !important; }
+        body #sidebar.sidebar-admin .fw-bold .text-indigo { color: #ffffff !important; }
+        body #sidebar.sidebar-admin .bg-indigo { background-color: #4f46e5 !important; color: #ffffff !important; border-radius: 12px !important; }
         body #sidebar.sidebar-admin .nav-link-custom { color: rgba(255, 255, 255, 0.85) !important; }
         body #sidebar.sidebar-admin .nav-link-custom:hover { background: rgba(255, 255, 255, 0.1) !important; color: #ffffff !important; transform: translateX(3px); }
         body #sidebar.sidebar-admin .nav-link-custom.active { background: #ffffff !important; color: #3730a3 !important; font-weight: 700 !important; box-shadow: 0 6px 20px rgba(79, 70, 229, 0.35) !important; transform: translateX(5px); }
@@ -65,8 +65,6 @@
     </style>
 </head>
 <body>
-    <body>
-    <!-- 1. Tentukan warna background berdasarkan role di sini -->
     {% set role_color = 'primary' %}
     {% set logo_bg = '#0b3d91' %}
     
@@ -80,16 +78,11 @@
         {% set role_color = 'dark' %}
         {% set logo_bg = '#212529' %}
     {% endif %}
-    {% set role_color = 'primary' %}
-    {% if session.role == 'dosen' %}{% set role_color = 'success' %}
-    {% elif session.role == 'admin' %}{% set role_color = 'indigo' %}
-    {% elif session.role == 'kaprodi' %}{% set role_color = 'dark' %}{% endif %}
 
     <button type="button" class="menu-toggle" id="menuToggle" aria-label="Buka menu" aria-controls="sidebar" aria-expanded="false"><i class="bi bi-list"></i></button>
     <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
-    <!-- Sidebar Navigation di profil.html (Flexbox & Scrollable Menu) -->
-<!-- Sidebar Navigation Dinamis berdasarkan Role -->
+    <!-- Sidebar Navigation Dinamis Berdasarkan Role -->
     <div id="sidebar" class="sidebar shadow-sm vh-100 d-flex flex-column {% if session.role == 'dosen' %}sidebar-dosen{% elif session.role == 'admin' %}sidebar-admin{% elif session.role == 'kaprodi' %}sidebar-kaprodi{% endif %}">
         <div class="sidebar-inner d-flex flex-column h-100">
             
@@ -97,7 +90,7 @@
             <div class="flex-shrink-0">
                 <!-- AREA LOGO SIKAP -->
                 <a href="/" class="d-flex align-items-center justify-content-center text-decoration-none text-white pt-4 pb-2 gap-2">
-                    <div class="rounded p-1 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                    <div class="rounded p-1 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px; background-color: {{ logo_bg }};">
                         <img src="/static/img/logo---mahasiswa.png" alt="Logo SIKAP" style="width: 130%; height: 130%; object-fit: cover; object-position: center top;">
                     </div>
                     <span class="fw-bold fs-5 tracking-wide">SIKAP 
@@ -108,7 +101,7 @@
                     </span>
                 </a>
 
-                <!-- PROFIL CENTERED -->
+                <!-- PROFIL CENTERED (Top Centered Profile) -->
                 <div class="sidebar-profile-centered text-center py-2 border-bottom border-light border-opacity-10 mb-2">
                     <a href="/profil" class="text-decoration-none d-block user-profile-link" style="transition: transform 0.2s ease;">
                         <div class="position-relative d-inline-block mb-2">
@@ -154,16 +147,20 @@
                         </a>
                     {% elif session.role == 'dosen' %}
                         <a href="/dashboard/dosen" class="nav-link-custom mb-1 rounded-3">
-                            <i class="bi bi-house-door me-3 fs-5"></i> Dashboard Dosen
-                        </a>
-                        <a href="/dosen/bimbingan" class="nav-link-custom mb-1 rounded-3">
-                            <i class="bi bi-people me-3 fs-5"></i> Bimbingan Mahasiswa
+                            <i class="bi bi-house-door me-3 fs-5"></i> Dashboard KP
                         </a>
                         <a href="/dosen/logbook" class="nav-link-custom mb-1 rounded-3">
-                            <i class="bi bi-journal-check me-3 fs-5"></i> Validasi Logbook
+                            <i class="bi bi-journal-check me-3 fs-5"></i> Logbook KP
                         </a>
-                        <a href="/dosen/sidang" class="nav-link-custom mb-1 rounded-3">
-                            <i class="bi bi-file-earmark-check me-3 fs-5"></i> Penilaian Sidang
+                        <a href="/dosen/jadwal_menguji" class="nav-link-custom mb-1 rounded-3">
+                            <i class="bi bi-calendar-check me-3 fs-5"></i> Jadwal Menguji
+                        </a>
+                        <hr class="text-muted opacity-25 my-2">
+                        <a href="/dosen/ta" class="nav-link-custom mb-1 rounded-3">
+                            <i class="bi bi-journal-richtext me-3 fs-5"></i> Pengajuan TA
+                        </a>
+                        <a href="/dosen/ta/logbook" class="nav-link-custom rounded-3">
+                            <i class="bi bi-journal-check me-3 fs-5"></i> Logbook TA
                         </a>
                     {% elif session.role == 'admin' %}
                         <a href="/dashboard/admin" class="nav-link-custom mb-1 rounded-3">
