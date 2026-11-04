@@ -1,8 +1,23 @@
 {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
-    <div id="flash-data" hidden>
+    <div class="toast-stack">
       {% for category, message in messages %}
-        <span data-category="{{ category }}">{{ message }}</span>
+        {% set cat = 'danger' if category == 'error' else category %}
+        <div class="toast-item toast-{{ cat }}">
+          <div class="toast-icon">
+            {% if cat == 'danger' %}
+              <i class="bi bi-x-circle-fill"></i>
+            {% elif cat == 'warning' %}
+              <i class="bi bi-exclamation-triangle-fill"></i>
+            {% elif cat == 'success' %}
+              <i class="bi bi-check-circle-fill"></i>
+            {% else %}
+              <i class="bi bi-info-circle-fill"></i>
+            {% endif %}
+          </div>
+          <div class="toast-text">{{ message }}</div>
+          <button type="button" class="toast-close" onclick="this.parentElement.remove()" aria-label="Tutup">&times;</button>
+        </div>
       {% endfor %}
     </div>
   {% endif %}

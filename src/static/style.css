@@ -1,16 +1,16 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap");
 
 :root {
     --primary-color: #0f172a;
-    --accent-color: #2563eb;
-    --bg-body: #f8fafc;
+    --accent-color: #0F5BB9;
+    --bg-body: #f4f7fc;
     --text-main: #334155;
     --text-muted: #64748b;
     --border-color: #e2e8f0;
 }
 
 body {
-    font-family: 'Inter', sans-serif;
+    font-family: 'DM Sans', system-ui, sans-serif;
     background-color: var(--bg-body);
     color: var(--text-main);
 }
@@ -147,31 +147,1449 @@ body {
 }
 
 
-/* ===== Toast / pop up notifikasi ===== */
+/* ==========================================
+   OPSI 1: GLASSMORPHISM TOAST (POJOK KANAN ATAS)
+   ========================================== */
 .toast-stack {
-    position: fixed; top: 1rem; right: 1rem; z-index: 2000;
-    display: flex; flex-direction: column; gap: .6rem;
-    width: min(380px, calc(100vw - 2rem)); pointer-events: none;
+    position: fixed !important;
+    top: 1.25rem !important;
+    right: 1.25rem !important;
+    left: auto !important;
+    transform: none !important;
+    z-index: 99999 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+    width: min(380px, calc(100vw - 2rem)) !important;
+    pointer-events: none !important;
 }
+
 .toast-item {
-    pointer-events: auto; display: flex; align-items: flex-start; gap: .65rem;
-    padding: .85rem 1rem; border-radius: 14px; background: #fff;
-    border: 1px solid var(--border-color); border-left-width: 5px;
-    box-shadow: 0 12px 30px -8px rgba(15, 23, 42, .25);
-    font-size: .88rem; font-weight: 500; color: var(--text-main);
-    animation: toast-in .35s cubic-bezier(.22, 1, .36, 1) both;
+    pointer-events: auto !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 0.85rem !important;
+    padding: 0.85rem 1.15rem !important;
+    border-radius: 16px !important;
+    background: rgba(15, 23, 42, 0.9) !important; /* Efek kaca gelap */
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 16px 35px -10px rgba(0, 0, 0, 0.5) !important;
+    font-size: 0.88rem !important;
+    font-weight: 500 !important;
+    color: #f8fafc !important;
+    animation: toast-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both !important;
 }
-.toast-item.out { animation: toast-out .3s ease forwards; }
-.toast-item .bi { font-size: 1.15rem; margin-top: 1px; }
-.toast-item .toast-text { flex: 1; }
-.toast-item button { border: 0; background: none; color: var(--text-muted); font-size: 1.2rem; line-height: 1; cursor: pointer; padding: 0; }
-.toast-success { border-left-color: #059669; } .toast-success .bi { color: #059669; }
-.toast-danger  { border-left-color: #dc2626; } .toast-danger  .bi { color: #dc2626; }
-.toast-warning { border-left-color: #d97706; } .toast-warning .bi { color: #d97706; }
-.toast-info    { border-left-color: #2563eb; } .toast-info    .bi { color: #2563eb; }
-@keyframes toast-in  { from { opacity: 0; transform: translateX(24px) scale(.96); } }
+
+.toast-item.out { 
+    animation: toast-out 0.3s ease forwards !important; 
+}
+
+.toast-item .bi { 
+    font-size: 1.15rem !important; 
+    margin-top: 1px !important;
+}
+
+.toast-item .toast-text { 
+    flex: 1 !important; 
+    line-height: 1.4 !important;
+    color: #f8fafc !important;
+}
+
+.toast-item button {
+    border: 0 !important;
+    background: none !important;
+    color: #94a3b8 !important;
+    font-size: 1.25rem !important;
+    cursor: pointer !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+}
+.toast-item button:hover { 
+    color: #ffffff !important; 
+}
+
+/* Warna Garis Sisi Kiri & Aksen Ikon */
+.toast-danger  { border-left: 4px solid #1e40af !important; } .toast-danger .bi  { color: #1e3dee !important; }
+.toast-success { border-left: 4px solid #10b981 !important; } .toast-success .bi { color: #34d399 !important; }
+.toast-warning { border-left: 4px solid #f59e0b !important; } .toast-warning .bi { color: #fbbf24 !important; }
+.toast-info    { border-left: 4px solid #6366f1 !important; } .toast-info .bi    { color: #818cf8 !important; }
+
+@keyframes toast-in  { from { opacity: 0; transform: translateX(24px) scale(0.96); } }
 @keyframes toast-out { to   { opacity: 0; transform: translateX(24px); } }
 
+/* Penyesuaian di Layar HP */
+@media (max-width: 768px) {
+    .toast-stack {
+        top: 1rem !important;
+        right: 1rem !important;
+        left: 1rem !important;
+        width: auto !important;
+    }
+}
+
+
+/* ===== TAMPILAN BARU: sidebar & dashboard ===== */
+:root { --blue: #0F5BB9; --orange: #F58600; --navy: #061a3d; --ink: #0b1b33; --ease: cubic-bezier(.22, 1, .36, 1); }
+a:focus-visible, button:focus-visible { outline: 3px solid rgba(15, 91, 185, .4); outline-offset: 2px; }
+
+.sidebar .fw-bold.fs-5 { font-family: Sora, sans-serif; letter-spacing: -.01em; color: var(--ink); }
+.sidebar .rounded.p-2 { background: var(--blue) !important; border-radius: 12px !important; }
+.sidebar .fw-bold .text-primary, .sidebar .fw-bold .text-success, .sidebar .fw-bold .text-dark { color: var(--orange) !important; }
+.nav-link-custom { border-radius: 12px; font-size: .95rem; }
+.nav-link-custom:hover { background: #f1f5fb; color: var(--ink); }
+.nav-link-custom.active { background: #eaf2fd; color: var(--blue); font-weight: 600; box-shadow: inset 3px 0 0 var(--blue); }
+.nav-link-custom.text-danger:hover { background: #fee2e2; color: #b91c1c !important; }
+
+.main-content { padding: clamp(1rem, 3vw, 2.25rem); }
+.page { max-width: 1160px; margin: 0 auto; }
+
+.dh { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem 2rem; margin-bottom: 1.5rem; }
+.dh h1 { font: 700 clamp(1.5rem, 2.6vw, 2rem)/1.2 Sora, sans-serif; letter-spacing: -.02em; color: var(--ink); margin: 0; }
+.dh p { margin: .45rem 0 0; color: var(--text-muted); max-width: 62ch; }
+.chips { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .85rem; }
+.chip { padding: .3rem .75rem; border: 1px solid var(--border-color); border-radius: 999px; background: #fff; font-size: .82rem; font-weight: 500; color: var(--text-muted); }
+
+.btn-go { display: inline-block; padding: .7rem 1.25rem; border: 0; border-radius: 12px; background: var(--orange); color: #fff; font: 700 .95rem "DM Sans", sans-serif; text-decoration: none; cursor: pointer; transition: background .2s, transform .2s var(--ease); }
+.btn-go:hover { background: #dc7700; color: #fff; transform: translateY(-1px); }
+.btn-s { display: inline-block; padding: .4rem .9rem; border: 1px solid transparent; border-radius: 10px; font: 600 .85rem "DM Sans", sans-serif; text-decoration: none; cursor: pointer; }
+.btn-s.ok { background: var(--blue); color: #fff; } .btn-s.ok:hover { background: #0a4a99; color: #fff; }
+.btn-s.no { background: #fff; border-color: #fca5a5; color: #b91c1c; } .btn-s.no:hover { background: #fee2e2; color: #b91c1c; }
+
+.panel { background: #fff; border: 1px solid var(--border-color); border-radius: 16px; padding: 1.35rem; }
+.panel-h { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .25rem 1rem; margin-bottom: 1rem; }
+.panel-h h2 { font: 600 1.05rem Sora, sans-serif; color: var(--ink); margin: 0; }
+.panel-h span { font-size: .85rem; color: var(--text-muted); }
+.grid-2 { display: grid; grid-template-columns: 1fr 1.4fr; gap: 1.25rem; align-items: start; }
+.stack-y > * + * { margin-top: 1.25rem; }
+@media (max-width: 991.98px) { .grid-2 { grid-template-columns: 1fr; } }
+
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.25rem; }
+.stat { background: #fff; border: 1px solid var(--border-color); border-radius: 16px; padding: 1.1rem 1.35rem; }
+.stat strong { display: block; font: 700 2rem/1.1 Sora, sans-serif; color: var(--ink); }
+.stat span { color: var(--text-muted); font-size: .88rem; }
+.stat.hot { border-color: #fcd9a8; background: #fff9f0; } .stat.hot strong { color: #b45f00; }
+
+.tbl-wrap { overflow-x: auto; }
+.tbl { width: 100%; border-collapse: collapse; font-size: .9rem; }
+.tbl th { padding: .55rem .9rem; border-bottom: 1px solid var(--border-color); text-align: left; font-size: .82rem; font-weight: 600; color: var(--text-muted); white-space: nowrap; }
+.tbl td { padding: .85rem .9rem; border-bottom: 1px solid #eef2f8; vertical-align: middle; }
+.tbl tr:last-child td { border-bottom: 0; }
+.tbl .sub { display: block; font-size: .82rem; color: var(--text-muted); }
+.tbl .name { font-weight: 600; color: var(--ink); }
+.tbl .r { text-align: right; white-space: nowrap; }
+.file { display: inline-flex; align-items: center; gap: .3rem; padding: .2rem .6rem; border: 1px solid var(--border-color); border-radius: 8px; font-size: .82rem; font-weight: 500; color: var(--blue); text-decoration: none; }
+.file:hover { background: #eaf2fd; }
+.empty { padding: 2rem 1rem; text-align: center; color: var(--text-muted); }
+
+.pill { display: inline-flex; align-items: center; gap: .35rem; padding: .22rem .7rem; border-radius: 999px; font-size: .8rem; font-weight: 600; white-space: nowrap; }
+.pill-ok { background: #dcfce7; color: #166534; } .pill-wait { background: #fef3c7; color: #92400e; }
+.pill-no { background: #fee2e2; color: #991b1b; } .pill-off { background: #eef2f8; color: #475569; }
+
+.slots { display: flex; gap: 6px; margin: .9rem 0; }
+.slots i { flex: 1; height: 10px; border-radius: 99px; background: #e2e8f0; }
+.slots i.on { background: var(--blue); } .slots.full i.on { background: #dc2626; }
+.bar { height: 8px; min-width: 90px; border-radius: 99px; background: #e2e8f0; overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--blue); } .bar.full > i { background: #dc2626; }
+
+/* Perjalanan KP -> TA (urutan nyata) */
+.journey { list-style: none; margin: 0 0 1.25rem; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); background: #fff; border: 1px solid var(--border-color); border-radius: 20px; overflow: hidden; }
+.step { display: flex; flex-direction: column; gap: .3rem; height: 100%; padding: 1.35rem 1.25rem; border-left: 1px solid var(--border-color); text-decoration: none; color: inherit; animation: rise .55s var(--ease) both; animation-delay: calc(var(--i) * 80ms); }
+.journey li:first-child .step { border-left: 0; }
+.step-n { display: grid; place-items: center; width: 36px; height: 36px; margin-bottom: .6rem; border: 2px solid var(--border-color); border-radius: 50%; background: #fff; font: 700 .9rem Sora, sans-serif; color: var(--text-muted); }
+.step b { font: 600 1rem Sora, sans-serif; color: var(--ink); }
+.step small { font-size: .86rem; line-height: 1.45; color: var(--text-muted); }
+.step.done .step-n { background: #15803d; border-color: #15803d; color: #fff; }
+.step.now { background: #fff7ec; }
+.step.now .step-n { background: var(--orange); border-color: var(--orange); color: #fff; box-shadow: 0 0 0 6px rgba(245, 134, 0, .18); }
+.step.locked { background: #f8fafc; } .step.locked b, .step.locked small { color: #94a3b8; }
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } }
+@media (max-width: 767.98px) { .journey { grid-template-columns: 1fr; } .step { border-left: 0; border-top: 1px solid var(--border-color); } .journey li:first-child .step { border-top: 0; } }
+
+.notes { margin: 0; padding: 0; list-style: none; }
+.notes li { padding: .15rem 0 .15rem 1rem; border-left: 3px solid #fcd9a8; color: var(--text-main); }
+.notes li + li { margin-top: .9rem; }
+.notes a { color: var(--blue); font-weight: 600; }
+
+
+/* ===== HALAMAN LAIN: disamakan dengan dashboard (komponen Bootstrap lama ikut ditata ulang) ===== */
+:root { --bs-primary: #0F5BB9; --bs-primary-rgb: 15, 91, 185; --bs-link-color: #0F5BB9; --bs-link-hover-color: #0a4a99; --bs-body-font-family: 'DM Sans', system-ui, sans-serif; }
+
+/* Kartu = panel dashboard */
+.card-modern { background: #fff; border: 1px solid var(--border-color); border-radius: 16px; box-shadow: none; padding: 1.35rem; transform: none !important; }
+.card-modern:hover { box-shadow: none; }
+.card-modern.p-4, .card-modern.p-5 { padding: 1.35rem !important; }
+.card-modern.p-0 { padding: 0 !important; }
+.card-modern h5, .card-modern h6 { font-family: Sora, sans-serif; color: var(--ink); }
+.card-modern h6 { font-size: 1.05rem; font-weight: 600; }
+.card-modern h6.mb-4 { margin-bottom: 1rem !important; }
+.card-modern h5 { font-weight: 600; }
+.icon-box { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 10px; font-size: 1.05rem; background: #eaf2fd !important; color: var(--blue) !important; }
+.icon-box.me-3 { margin-right: .75rem !important; }
+.page h1, .page h2, .page h3, .page h4 { font-family: Sora, sans-serif; color: var(--ink); }
+.page .text-dark { color: var(--ink) !important; }
+
+/* Tabel */
+.page .table { --bs-table-bg: transparent; --bs-table-hover-bg: #f6f9fe; --bs-table-border-color: #eef2f8; font-size: .9rem !important; margin-bottom: 0; }
+.page .table > thead, .page .table > thead.table-light { --bs-table-bg: transparent; }
+.page .table > thead th { padding: .55rem .9rem; border-bottom: 1px solid var(--border-color); font-size: .82rem; font-weight: 600 !important; color: var(--text-muted) !important; white-space: nowrap; }
+.page .table > tbody td { padding: .85rem .9rem; vertical-align: middle; }
+.page .table-borderless > :not(caption) > * > * { padding-top: .45rem; padding-bottom: .45rem; }
+.page .table tr:last-child > td { border-bottom-width: 0; }
+
+/* Lencana jadi gaya pill dashboard */
+.page .badge { font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: .8rem; letter-spacing: 0; text-transform: none; padding: .3rem .7rem; border-radius: 999px; }
+.page .badge.bg-light { background: #fff !important; border-color: var(--border-color) !important; color: var(--blue) !important; border-radius: 8px; font-weight: 500; }
+.page .badge.bg-light .text-danger { color: var(--blue) !important; }
+.page .badge.bg-success.bg-opacity-10 { background: #dcfce7 !important; color: #166534 !important; border-color: transparent !important; }
+.page .badge.bg-warning.bg-opacity-10 { background: #fef3c7 !important; color: #92400e !important; border-color: transparent !important; }
+.page .badge.bg-danger.bg-opacity-10  { background: #fee2e2 !important; color: #991b1b !important; border-color: transparent !important; }
+.page .badge.bg-primary.bg-opacity-10 { background: #eaf2fd !important; color: var(--blue) !important; border-color: transparent !important; }
+
+/* Tombol */
+.page .btn, .modal .btn { font-family: 'DM Sans', sans-serif; font-weight: 600; border-radius: 10px; }
+.page .btn.rounded-pill, .modal .btn.rounded-pill { border-radius: 10px !important; }
+.btn-primary, .btn-success { --bs-btn-bg: var(--blue); --bs-btn-border-color: var(--blue); --bs-btn-hover-bg: #0a4a99; --bs-btn-hover-border-color: #0a4a99; --bs-btn-active-bg: #083d80; --bs-btn-active-border-color: #083d80; --bs-btn-disabled-bg: var(--blue); --bs-btn-disabled-border-color: var(--blue); --bs-btn-focus-shadow-rgb: 15, 91, 185; }
+.btn-outline-primary, .btn-outline-success { --bs-btn-color: var(--blue); --bs-btn-border-color: #b9d1ef; --bs-btn-hover-bg: var(--blue); --bs-btn-hover-border-color: var(--blue); --bs-btn-hover-color: #fff; --bs-btn-active-bg: var(--blue); --bs-btn-active-border-color: var(--blue); --bs-btn-focus-shadow-rgb: 15, 91, 185; }
+.btn-outline-danger { --bs-btn-border-color: #fca5a5; --bs-btn-color: #b91c1c; --bs-btn-hover-bg: #fee2e2; --bs-btn-hover-color: #b91c1c; --bs-btn-hover-border-color: #fca5a5; }
+.btn-warning { --bs-btn-bg: var(--orange); --bs-btn-border-color: var(--orange); --bs-btn-color: #fff; --bs-btn-hover-bg: #dc7700; --bs-btn-hover-border-color: #dc7700; --bs-btn-hover-color: #fff; }
+
+/* Formulir */
+.page .form-label { font-weight: 600; color: var(--text-muted) !important; margin-bottom: .35rem; }
+.page .form-control, .page .form-select, .modal .form-control, .modal .form-select { border-color: #d5deeb; border-radius: 10px; background-color: #fff; color: var(--ink); }
+.page .form-control::placeholder, .modal .form-control::placeholder { color: #94a3b8; }
+.page .form-control:focus, .page .form-select:focus, .modal .form-control:focus, .modal .form-select:focus { border-color: var(--blue); box-shadow: 0 0 0 .22rem rgba(15, 91, 185, .15); }
+.page .form-control.form-control-lg, .page .form-select.form-select-lg { font-size: .95rem !important; }
+.page .btn-lg { padding: .75rem 1.25rem; font-size: .95rem !important; }
+
+/* Kotak pesan dalam halaman */
+.page .alert { border: 1px solid transparent; border-radius: 12px; }
+.page .alert-warning { background: #fff7ec; border-color: #fcd9a8; color: #7a4300; }
+.page .alert-danger { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
+.page .bg-light.rounded-3, .page .bg-light.border { background: #f8fafc !important; }
+
+/* Modal */
+.modal-content { border: 0; border-radius: 16px; box-shadow: 0 24px 60px -12px rgba(6, 26, 61, .35); }
+.modal-header { background: #fff; border-bottom: 1px solid var(--border-color); border-radius: 16px 16px 0 0; }
+.modal-header .modal-title { font-family: Sora, sans-serif; font-weight: 600; font-size: 1.05rem; color: var(--ink); }
+.modal-footer { border-top: 1px solid var(--border-color); }
+
+/* Animasi masuk halus, sama seperti dashboard */
+.page > .dh, .page > .card-modern, .page > .row { animation: rise .55s var(--ease) both; }
+@media (prefers-reduced-motion: reduce) { .page > *, .step { animation: none !important; } }
+@media (max-width: 575.98px) { .card-modern.p-4, .card-modern.p-5 { padding: 1rem !important; } }
+
+/* Nama aplikasi + peran di sidebar harus muat satu baris */
+.sidebar .fw-bold.fs-5 { font-size: 1.05rem !important; white-space: nowrap; }
+
+/* ==========================================
+   DESAIN MODUL MAHASISWA MODERN & MEWAH
+   ========================================== */
+
+/* 1. Latar Belakang Dot Grid Halus */
+body {
+    background-color: #f4f7fc;
+    background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+    background-size: 24px 24px;
+}
+
+/* 2. Hero Banner Gradient */
+.hero-banner {
+    background: linear-gradient(135deg, #0F5BB9 0%, #061a3d 100%);
+    border-radius: 20px;
+    padding: 2.25rem 2.5rem;
+    color: #ffffff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+    box-shadow: 0 12px 30px -10px rgba(15, 91, 185, 0.35);
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 1.75rem;
+    animation: rise 0.55s var(--ease) both;
+}
+
+/* Aksen Efek Glow Lingkaran Oranye di Latar Banner */
+.hero-banner::after {
+    content: '';
+    position: absolute;
+    right: -40px;
+    bottom: -40px;
+    width: 220px;
+    height: 220px;
+    background: radial-gradient(circle, rgba(245, 134, 0, 0.3) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.badge-hero {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+    padding: 0.35rem 0.85rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.badge-hero-outline {
+    background: rgba(245, 134, 0, 0.2);
+    border: 1px solid rgba(245, 134, 0, 0.4);
+    color: #ffb866;
+    padding: 0.35rem 0.85rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.hero-title {
+    font-family: 'Sora', sans-serif;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0.5rem 0 0.35rem 0;
+}
+
+.hero-subtitle {
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.95rem;
+    margin: 0;
+    max-width: 580px;
+    line-height: 1.5;
+}
+
+.btn-hero-action {
+    background: var(--orange);
+    color: #ffffff !important;
+    padding: 0.85rem 1.6rem;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 4px 15px rgba(245, 134, 0, 0.4);
+    transition: all 0.25s var(--ease);
+    white-space: nowrap;
+    z-index: 2;
+}
+
+.btn-hero-action:hover {
+    background: #dc7700;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(245, 134, 0, 0.55);
+}
+
+/* 3. Dashboard Grid System 2 Kolom (70% Utama - 30% Widget) */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 1.5rem;
+    align-items: start;
+}
+
 @media (max-width: 991.98px) {
-    .toast-stack { top: 4.5rem; right: .75rem; left: .75rem; width: auto; }
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+    .hero-banner {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 1.75rem;
+    }
+}
+
+/* 4. Widget Card Styling */
+.widget-card {
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1.25rem 1.35rem;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+    margin-bottom: 1.25rem;
+    animation: rise 0.55s var(--ease) both;
+}
+
+.widget-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.widget-header h6 {
+    font-family: 'Sora', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 0;
+}
+
+.widget-progress-box {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 1.25rem;
+    text-align: center;
+    border: 1px dashed var(--border-color);
+}
+
+.progress-count {
+    font-family: 'Sora', sans-serif;
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: var(--blue);
+    line-height: 1;
+}
+
+.progress-count small {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+/* Mini Timeline Agenda */
+.timeline-mini {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.timeline-item {
+    display: flex;
+    gap: 0.85rem;
+    align-items: flex-start;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #f8fafc;
+}
+
+.timeline-item:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+}
+
+.timeline-badge {
+    background: #eaf2fd;
+    color: var(--blue);
+    font-weight: 700;
+    font-size: 0.75rem;
+    padding: 0.35rem 0.65rem;
+    border-radius: 8px;
+    white-space: nowrap;
+}
+
+.timeline-info strong {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--ink);
+}
+
+.timeline-info span {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+/* Akses Cepat (Quick Links) */
+.quick-link-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border-radius: 10px;
+    background: #f8fafc;
+    color: var(--ink);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+    margin-bottom: 0.5rem;
+}
+
+.quick-link-item:hover {
+    background: #eaf2fd;
+    color: var(--blue);
+}
+
+/* ==========================================
+   PENYERASIAN WARNA HERO BANNER
+   ========================================== */
+
+/* 1. Latar Belakang Navy-Blue Elegan */
+.hero-banner {
+    background: linear-gradient(135deg, #0243aa 0%, #083178 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 20px;
+    padding: 2rem 2.25rem;
+    color: #ffffff !important;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+    box-shadow: 0 10px 25px -5px rgba(6, 18, 38, 0.3) !important;
+    position: relative;
+    overflow: hidden;
+}
+
+/* 2. Efek Glow Latar Belakang yang Halus */
+.hero-banner::after {
+    content: '';
+    position: absolute;
+    right: -30px;
+    bottom: -50px;
+    width: 240px;
+    height: 240px;
+    background: radial-gradient(circle, rgba(194, 84, 0, 0.35) 0%, transparent 70%) !important;
+    pointer-events: none;
+}
+
+/* 3. PERBAIKAN UTAMA: Judul Dibuat Putih Bersih & Jelas */
+.hero-title {
+    font-family: 'Sora', sans-serif;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #ffffff !important; /* Terbaca sempurna di atas latar gelap */
+    margin: 0.4rem 0 0.35rem 0;
+}
+
+.hero-subtitle {
+    color: rgba(255, 255, 255, 0.82) !important;
+    font-size: 0.92rem;
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* 4. Perbaikan Badge 1 (NPM) */
+.badge-hero {
+    background: rgba(255, 255, 255, 0.12) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: #ffffff !important;
+    padding: 0.35rem 0.85rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+/* 5. Perbaikan Badge 2 (Prodi Informatika) — Dibuat Bersih & Cerah */
+.badge-hero-outline {
+    background: rgba(255, 184, 102, 0.15) !important;
+    border: 1px solid rgba(255, 184, 102, 0.35) !important;
+    color: #ffe3cc !important; /* Warna krem emas hangat, kontras & tidak kusam */
+    padding: 0.35rem 0.85rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+/* 6. Tombol Aksi — Warna Orange Selaras dengan Sidebar */
+.btn-hero-action {
+    background: linear-gradient(135deg, #e66000 0%, #c25400 100%) !important;
+    color: #ffffff !important;
+    padding: 0.85rem 1.6rem;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 4px 15px rgba(194, 84, 0, 0.4) !important;
+    transition: all 0.25s ease;
+    white-space: nowrap;
+    border: 0;
+}
+
+.btn-hero-action:hover {
+    background: linear-gradient(135deg, #ff6f03 0%, #d65d00 100%) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(194, 84, 0, 0.55) !important;
+}
+
+/* ==========================================
+   SIDEBAR BIRU TUA (DARK NAVY THEME)
+   ========================================== */
+
+/* 1. Latar Belakang Sidebar (Biru Tua Navy Gradient) */
+#sidebar.sidebar {
+    background: linear-gradient(180deg, #0b1f40 0%, #061226 100%) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* 2. Judul Brand SIKAP Mahasiswa */
+#sidebar .fw-bold.fs-5 {
+    color: #ffffff !important;
+}
+#sidebar .fw-bold .text-primary {
+    color: #38bdf8 !important; /* Warna cyan terang agar menonjol */
+}
+#sidebar .bg-primary {
+    background-color: #0F5BB9 !important;
+}
+
+/* 3. Tautan Menu Biasa (Teks Terang & Kontras) */
+#sidebar .nav-link-custom {
+    color: rgba(255, 255, 255, 0.8) !important;
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 0.8rem 1.1rem;
+    border-radius: 12px;
+    font-weight: 500;
+    font-size: 0.92rem;
+    text-decoration: none;
+    margin-bottom: 0.35rem;
+    transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+    border: 0 !important;
+}
+
+/* Hover State (Efek Kursor Diarahkan) */
+#sidebar .nav-link-custom:hover {
+    background: rgba(255, 255, 255, 0.12) !important;
+    color: #ffffff !important;
+    transform: translateX(3px);
+}
+
+/* 4. TAMPILAN MENU AKTIF (Kartu Biru Melayang Ber-Glow) */
+#sidebar .nav-link-custom.active {
+    background: #0F5BB9 !important; /* Warna Biru Utama SIKAP */
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    box-shadow: 0 6px 18px rgba(15, 91, 185, 0.45) !important;
+    transform: translateX(5px);
+}
+
+#sidebar .nav-link-custom.active i {
+    color: #ffffff !important;
+}
+
+/* 5. Garis Pemisah & Logout */
+#sidebar hr {
+    border-color: rgba(255, 255, 255, 0.15) !important;
+}
+#sidebar .sidebar-bottom {
+    border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+#sidebar .nav-link-custom.text-danger {
+    color: #fca5a5 !important;
+}
+#sidebar .nav-link-custom.text-danger:hover {
+    background: rgba(220, 38, 38, 0.25) !important;
+    color: #ffffff !important;
+}
+
+/* ==========================================
+   SIKAP ORANGE + IKON LOGO TETAP BIRU ASLI
+   ========================================== */
+
+/* 1. Teks "SIKAP" Warna Orange Cerah */
+#sidebar .fw-bold.fs-5 {
+    color: #f58600 !important;
+}
+
+/* 2. Teks Sub-peran ("Mahasiswa") Warna Putih Bersih */
+#sidebar .fw-bold .text-primary {
+    color: #ffffff !important;
+}
+
+/* 3. Kotak Ikon Topi Toga Tetap Warna Biru Utama SIKAP */
+#sidebar .bg-primary {
+    background-color: #0F5BB9 !important;
+    color: #ffffff !important;
+}
+
+/* ==========================================
+   SUB-PAGE HERO BANNER & STATUS CARDS (ALL MODULES)
+   ========================================== */
+
+/* Sub-page Header Compact */
+.hero-banner-sub {
+    background: linear-gradient(135deg, #0b1f40 0%, #061226 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 18px;
+    padding: 1.5rem 2rem;
+    color: #ffffff !important;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+    box-shadow: 0 10px 25px -5px rgba(6, 18, 38, 0.25) !important;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+
+.hero-banner-sub::after {
+    content: '';
+    position: absolute;
+    right: -20px;
+    bottom: -40px;
+    width: 180px;
+    height: 180px;
+    background: radial-gradient(circle, rgba(15, 91, 185, 0.4) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.hero-sub-title {
+    font-family: 'Sora', sans-serif;
+    font-size: 1.45rem;
+    font-weight: 700;
+    color: #ffffff !important;
+    margin: 0.35rem 0 0.2rem 0;
+}
+
+.hero-sub-subtitle {
+    color: rgba(255, 255, 255, 0.8) !important;
+    font-size: 0.88rem;
+    margin: 0;
+}
+
+/* Status Info Grid Cards (Pengajuan & Status) */
+.status-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.status-card {
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1.25rem 1.4rem;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.status-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
+}
+
+.status-card-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 0.6rem;
+    display: block;
+}
+
+.status-card-value {
+    font-family: 'Sora', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 0.5rem;
+}
+
+/* ==========================================
+   PENYERASIAN HERO BANNER DASHBOARD & MODUL
+   ========================================== */
+
+/* 1. Latar Belakang Navy Gradient (Sama dengan Modul Lain) */
+.hero-banner, .hero-banner-sub {
+    background: linear-gradient(135deg, #0b1f40 0%, #061226 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 20px;
+    padding: 2rem 2.25rem;
+    color: #ffffff !important;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+    box-shadow: 0 10px 25px -5px rgba(6, 18, 38, 0.3) !important;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 1.75rem;
+}
+
+/* 2. Efek Glow Latar Belakang Halus */
+.hero-banner::after, .hero-banner-sub::after {
+    content: '';
+    position: absolute;
+    right: -30px;
+    bottom: -50px;
+    width: 240px;
+    height: 240px;
+    background: radial-gradient(circle, rgba(15, 91, 185, 0.35) 0%, transparent 70%) !important;
+    pointer-events: none;
+}
+
+/* 3. Teks Judul Putih Terang & Jelas */
+.hero-title, .hero-sub-title {
+    font-family: 'Sora', sans-serif;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #ffffff !important;
+    margin: 0.4rem 0 0.35rem 0;
+}
+
+/* 4. Sub-judul / Deskripsi */
+.hero-subtitle, .hero-sub-subtitle {
+    color: rgba(255, 255, 255, 0.82) !important;
+    font-size: 0.92rem;
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* 5. Badge NPM & Kategori */
+.badge-hero {
+    background: rgba(255, 255, 255, 0.12) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: #ffffff !important;
+    padding: 0.35rem 0.85rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+/* 6. Badge Prodi (Cerah & Kontras) */
+.badge-hero-outline {
+    background: rgba(255, 184, 102, 0.15) !important;
+    border: 1px solid rgba(255, 184, 102, 0.35) !important;
+    color: #ffe3cc !important;
+    padding: 0.35rem 0.85rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+/* 7. Tombol Aksi */
+.btn-hero-action {
+    background: linear-gradient(135deg, #e66000 0%, #c25400 100%) !important;
+    color: #ffffff !important;
+    padding: 0.85rem 1.6rem;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 4px 15px rgba(194, 84, 0, 0.4) !important;
+    transition: all 0.25s ease;
+    white-space: nowrap;
+    border: 0;
+}
+
+.btn-hero-action:hover {
+    background: linear-gradient(135deg, #ff6f03 0%, #d65d00 100%) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(194, 84, 0, 0.55) !important;
+}
+
+/* ==========================================
+   FIX WARNA TOMBOL HERO BANNER (Z-INDEX & KONTRAST)
+   ========================================== */
+
+/* 1. Kunci Efek Glow Latar Belakang di Layer Belakang */
+.hero-banner::after, .hero-banner-sub::after {
+    content: '';
+    position: absolute;
+    right: -30px;
+    bottom: -50px;
+    width: 240px;
+    height: 240px;
+    background: radial-gradient(circle, rgba(15, 91, 185, 0.25) 0%, transparent 70%) !important;
+    pointer-events: none;
+    z-index: 1 !important; /* Layer paling bawah */
+}
+
+/* 2. Naikkan Layer Pembungkus Konten & Tombol */
+.hero-banner > div, .hero-banner-sub > div {
+    position: relative;
+    z-index: 2 !important;
+}
+
+/* 3. Tombol Orange Cerah Solid (Bebas Tertimpa Latar) */
+.btn-hero-action {
+    position: relative;
+    z-index: 3 !important; /* Layer paling depan */
+    background: #df7b00 !important; /* Orange solid cerah */
+    color: #ffffff !important;
+    padding: 0.85rem 1.6rem;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 4px 15px rgba(245, 134, 0, 0.35) !important;
+    transition: all 0.25s ease;
+    white-space: nowrap;
+    border: 0;
+}
+
+.btn-hero-action:hover {
+    background: #dc7700 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(245, 134, 0, 0.5) !important;
+}
+
+/* ==========================================
+   TOAST NOTIFIKASI MODERN & ELEGAN (FIXED)
+   ========================================== */
+
+/* Container Pengumpul Toast */
+.toast-stack {
+    position: fixed;
+    top: 1.25rem;
+    right: 1.25rem;
+    z-index: 2050;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: min(400px, calc(100vw - 2.5rem));
+    pointer-events: none;
+}
+
+/* Item Toast */
+.toast-item {
+    pointer-events: auto;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+    padding: 0.95rem 1.15rem;
+    border-radius: 16px;
+    background: #ffffff;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    border-left: 5px solid #dc2626; /* Warna default border kiri */
+    overflow: hidden !important; /* Mencegah border kiri mencuat keluar lengkungan */
+    box-shadow: 0 14px 35px -8px rgba(15, 23, 42, 0.18);
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: #0b1b33;
+    animation: toast-in 0.35s cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.toast-item.out {
+    animation: toast-out 0.3s ease forwards;
+}
+
+.toast-item .toast-icon {
+    font-size: 1.25rem;
+    line-height: 1;
+    margin-top: 1px;
+    flex-shrink: 0;
+}
+
+.toast-item .toast-text {
+    flex: 1;
+    line-height: 1.45;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: #334155;
+}
+
+.toast-item .toast-close {
+    border: 0;
+    background: none;
+    color: #94a3b8;
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+    margin-left: 0.5rem;
+    transition: color 0.2s ease;
+}
+
+.toast-item .toast-close:hover {
+    color: #0b1b33;
+}
+
+/* Varian Warna Sesuai Tema */
+.toast-danger {
+    border-left-color: #dc2626 !important;
+}
+.toast-danger .toast-icon { color: #dc2626; }
+
+.toast-warning {
+    border-left-color: #f58600 !important;
+}
+.toast-warning .toast-icon { color: #f58600; }
+
+.toast-success {
+    border-left-color: #059669 !important;
+}
+.toast-success .toast-icon { color: #059669; }
+
+.toast-info {
+    border-left-color: #0F5BB9 !important;
+}
+.toast-info .toast-icon { color: #0F5BB9; }
+
+@keyframes toast-in {
+    from {
+        opacity: 0;
+        transform: translateX(30px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+}
+
+@keyframes toast-out {
+    to {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+}
+
+/* ==========================================
+   TEMA SIDEBAR DOSEN (HIJAU EMERALD & PUTIH)
+   ========================================== */
+
+/* 1. Latar Belakang Sidebar Dosen (Gradasi Hijau Emerald Dark) */
+#sidebar.sidebar-dosen {
+    background: linear-gradient(180deg, #064e3b 0%, #022c22 100%) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* 2. Brand SIKAP Dosen */
+#sidebar.sidebar-dosen .fw-bold.fs-5 {
+    color: #10b981 !important; /* Teks "SIKAP" Hijau Emerald Segar */
+}
+
+#sidebar.sidebar-dosen .fw-bold .text-success {
+    color: #ffffff !important; /* Teks "Dosen" Putih Terang */
+}
+
+#sidebar.sidebar-dosen .bg-success {
+    background-color: #059669 !important; /* Kotak Ikon Hijau Emerald */
+    color: #ffffff !important;
+}
+
+/* 3. Tautan Menu Biasa (Teks Putih Semi-Transparan) */
+#sidebar.sidebar-dosen .nav-link-custom {
+    color: rgba(255, 255, 255, 0.85) !important;
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 0.8rem 1.1rem;
+    border-radius: 12px;
+    font-weight: 500;
+    font-size: 0.92rem;
+    text-decoration: none;
+    margin-bottom: 0.35rem;
+    transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+    border: 0 !important;
+}
+
+/* Hover State Dosen */
+#sidebar.sidebar-dosen .nav-link-custom:hover {
+    background: rgba(255, 255, 255, 0.12) !important;
+    color: #ffffff !important;
+    transform: translateX(3px);
+}
+
+/* 4. TAMPILAN MENU AKTIF DOSEN (Kartu Putih Melayang Teks Hijau) */
+#sidebar.sidebar-dosen .nav-link-custom.active {
+    background: #ffffff !important;
+    color: #046c4e !important;
+    font-weight: 700 !important;
+    box-shadow: 0 6px 20px rgba(5, 150, 105, 0.35) !important;
+    transform: translateX(5px);
+}
+
+#sidebar.sidebar-dosen .nav-link-custom.active i {
+    color: #046c4e !important;
+}
+
+/* 5. Garis Pemisah & Logout Dosen */
+#sidebar.sidebar-dosen hr,
+#sidebar.sidebar-dosen .sidebar-bottom {
+    border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+#sidebar.sidebar-dosen .nav-link-custom.text-danger {
+    color: #fca5a5 !important;
+}
+
+#sidebar.sidebar-dosen .nav-link-custom.text-danger:hover {
+    background: rgba(220, 38, 38, 0.25) !important;
+    color: #ffffff !important;
+}
+
+/* TEMA SIDEBAR MAHASISWA (BIRU NAVY) */
+#sidebar.sidebar-mahasiswa {
+    background: linear-gradient(180deg, #0b1f40 0%, #061226 100%) !important;
+}
+
+#sidebar.sidebar-mahasiswa .nav-link-custom.active {
+    background: #0F5BB9 !important;
+    color: #ffffff !important;
+    box-shadow: 0 6px 18px rgba(15, 91, 185, 0.45) !important;
+}
+
+/* ==========================================
+   TEMA HIJAU DOSEN (DIPAKSA OVERRIDE)
+   ========================================== */
+
+/* 1. Latar Belakang Sidebar Dosen */
+#sidebar.sidebar-dosen,
+body #sidebar.sidebar-dosen {
+    background: linear-gradient(180deg, #064e3b 0%, #022c22 100%) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* 2. Brand SIKAP Dosen */
+#sidebar.sidebar-dosen .fw-bold.fs-5,
+body #sidebar.sidebar-dosen .fw-bold.fs-5 {
+    color: #10b981 !important; /* Tulisan "SIKAP" Hijau Emerald */
+}
+#sidebar.sidebar-dosen .fw-bold .text-success,
+body #sidebar.sidebar-dosen .fw-bold .text-success {
+    color: #ffffff !important; /* Tulisan "Dosen" Putih */
+}
+#sidebar.sidebar-dosen .bg-success,
+body #sidebar.sidebar-dosen .bg-success {
+    background-color: #059669 !important; /* Kotak Ikon Topi */
+    color: #ffffff !important;
+}
+
+/* 3. Menu Biasa */
+#sidebar.sidebar-dosen .nav-link-custom,
+body #sidebar.sidebar-dosen .nav-link-custom {
+    color: rgba(255, 255, 255, 0.85) !important;
+}
+#sidebar.sidebar-dosen .nav-link-custom:hover,
+body #sidebar.sidebar-dosen .nav-link-custom:hover {
+    background: rgba(255, 255, 255, 0.12) !important;
+    color: #ffffff !important;
+}
+
+/* 4. TAMPILAN MENU AKTIF DOSEN (Kartu Putih Melayang Teks Hijau) */
+#sidebar.sidebar-dosen .nav-link-custom.active,
+body #sidebar.sidebar-dosen .nav-link-custom.active {
+    background: #ffffff !important;
+    color: #046c4e !important;
+    font-weight: 700 !important;
+    box-shadow: 0 6px 20px rgba(5, 150, 105, 0.35) !important;
+    transform: translateX(5px);
+}
+#sidebar.sidebar-dosen .nav-link-custom.active i,
+body #sidebar.sidebar-dosen .nav-link-custom.active i {
+    color: #046c4e !important;
+}
+
+/* 5. Garis & Logout */
+#sidebar.sidebar-dosen hr,
+#sidebar.sidebar-dosen .sidebar-bottom,
+body #sidebar.sidebar-dosen hr,
+body #sidebar.sidebar-dosen .sidebar-bottom {
+    border-color: rgba(255, 255, 255, 0.15) !important;
+}
+#sidebar.sidebar-dosen .nav-link-custom.text-danger,
+body #sidebar.sidebar-dosen .nav-link-custom.text-danger {
+    color: #fca5a5 !important;
+}
+#sidebar.sidebar-dosen .nav-link-custom.text-danger:hover,
+body #sidebar.sidebar-dosen .nav-link-custom.text-danger:hover {
+    background: rgba(220, 38, 38, 0.25) !important;
+    color: #ffffff !important;
+}
+
+/* ==========================================
+   PENGATURAN KHUSUS AGAR TIDAK TABRAKAN
+   ========================================== */
+
+/* 1. Paksa Sidebar Dosen Berwarna Hijau Emerald */
+body #sidebar.sidebar-dosen {
+    background: linear-gradient(180deg, #064e3b 0%, #022c22 100%) !important;
+}
+body #sidebar.sidebar-dosen .nav-link-custom.active {
+    background: #ffffff !important;
+    color: #046c4e !important;
+    box-shadow: 0 6px 20px rgba(5, 150, 105, 0.35) !important;
+}
+
+/* 2. Paksa Sidebar Mahasiswa Berwarna Biru Navy */
+body #sidebar.sidebar-mahasiswa {
+    background: linear-gradient(180deg, #0b1f40 0%, #061226 100%) !important;
+}
+body #sidebar.sidebar-mahasiswa .nav-link-custom.active {
+    background: #0F5BB9 !important;
+    color: #ffffff !important;
+}
+
+/* Kontainer Utama Card */
+.hero-banner-sub {
+    position: relative;
+    background: #070e1b; /* Warna latar dasar card */
+    border-radius: 18px;
+    padding: 1.75rem 2rem;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Canvas Animasi Matrix Background */
+.matrix-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none; /* Agar tidak menghalangi klik mouse */
+    opacity: 0.35;        /* Tingkat transparansi animasi agar teks tetap terbaca */
+}
+
+/* Konten Teks & Tombol di Lapisan Depan */
+.hero-content {
+    position: relative;
+    z-index: 2;
+}
+
+/* Tombol Oranye */
+.btn-action-orange {
+    background: #e67e00;
+    color: #ffffff;
+    font-weight: 600;
+    padding: 0.65rem 1.4rem;
+    border-radius: 12px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    box-shadow: 0 4px 15px rgba(230, 126, 0, 0.4);
+    transition: all 0.2s ease;
+}
+
+.btn-action-orange:hover {
+    background: #d97000;
+    color: #ffffff;
+    transform: translateY(-2px);
+}
+
+/* Sidebar Container Base Update */
+.sidebar {
+    position: fixed;
+    overflow: hidden; /* Mencegah canvas meluap keluar */
+}
+
+/* Canvas Matrix Sidebar Layer */
+.sidebar-matrix-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none; /* Klik mouse menembus ke menu */
+    opacity: 0.18;        /* Dibuat tipis agar menu tetap kontras */
+}
+
+/* Konten Dalam Sidebar agar Berada di Depan Canvas */
+.sidebar-inner {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* ==========================================
+   TAMPILAN KHUSUS HP / MOBILE (<= 768px)
+   ========================================== */
+@media (max-width: 768px) {
+
+    /* 1. Ubah tata letak Banner Hero dari Samping ke Atas-Bawah */
+    .hero-banner, 
+    .hero-banner-sub {
+        padding: 1.25rem 1rem !important;
+    }
+
+    .hero-content {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 1.25rem !important;
+    }
+
+    /* 2. Tombol dibuat Memanjang Rapi (Full Width) di HP */
+    .hero-content > div:last-child {
+        width: 100%;
+    }
+
+    .btn-hero-action, 
+    .btn-action-orange {
+        width: 100% !important;
+        justify-content: center !important;
+        padding: 0.75rem 1rem !important;
+    }
+
+    /* 3. Penyesuaian Ukuran Font di HP agar Tidak Sesak */
+    .hero-title, 
+    .hero-sub-title {
+        font-size: 1.25rem !important;
+    }
+
+    .hero-subtitle, 
+    .hero-sub-subtitle {
+        font-size: 0.8rem !important;
+        line-height: 1.4 !important;
+    }
+
+    /* 4. Penyesuaian Badge NPM & Prodi */
+    .badge-hero, 
+    .badge-hero-outline {
+        font-size: 0.7rem !important;
+        padding: 3px 8px !important;
+    }
+
+    /* 5. Memberi Ruang di Atas Banner untuk Tombol Menu Toggle (Hamburger) */
+    .main-content {
+        padding-top: 3.5rem !important;
+    }
+}
+
+/* Pastikan rule untuk toast-danger override warna merah */
+.toast-stack .toast-item.toast-danger,
+.toast-stack .toast-danger {
+    border-left: 4px solid #1e3a8a !important; /* Biru tua / Navy */
+}
+
+.toast-stack .toast-item.toast-danger .bi,
+.toast-stack .toast-danger .bi {
+    color: #3b82f6 !important; /* Warna ikon menyesuaikan jadi biru terang */
+}
+
+/* Custom Pill Tab Profile */
+.custom-tab-pills .nav-link {
+    color: #64748b;
+    font-weight: 600;
+    font-size: 0.88rem;
+    padding: 0.6rem 1.1rem;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+}
+
+.custom-tab-pills .nav-link:hover {
+    color: #0f172a;
+    background: #f1f5f9;
+}
+
+.custom-tab-pills .nav-link.active {
+    background-color: #2563eb !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
+}
+
+/* ==========================================
+   1. FIX AVATAR & WARNA ADMIN (INDIGO)
+   ========================================== */
+.bg-indigo { background-color: #4338ca !important; }
+.text-indigo { color: #4338ca !important; }
+.border-indigo { border-color: #4338ca !important; }
+
+.btn-indigo {
+    background-color: #4338ca !important;
+    color: #ffffff !important;
+    border: none !important;
+}
+
+.btn-outline-indigo {
+    border: 1px solid #4338ca !important;
+    color: #4338ca !important;
+    background-color: transparent !important;
+}
+.btn-outline-indigo:hover {
+    background-color: #4338ca !important;
+    color: #ffffff !important;
+}
+
+/* ==========================================
+   2. FIX WARNA TAB NAVIGASI (DOSEN & ADMIN)
+   ========================================== */
+.custom-tab-pills.role-tab-dosen .nav-link.active {
+    background-color: #10b981 !important; /* Hijau Dosen */
+    color: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25) !important;
+}
+
+.custom-tab-pills.role-tab-admin .nav-link.active {
+    background-color: #4338ca !important; /* Indigo Admin */
+    color: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(67, 56, 202, 0.25) !important;
+}
+
+/* ==========================================
+   3. FIX GAYA MENU SIDEBAR AKTIF (KONSISTENSI PUTIH)
+   ========================================== */
+/* Memaksa menu aktif di Admin menjadi putih dengan border indigo */
+.sidebar-admin .sidebar-menu .nav-link-custom.active,
+.sidebar-admin .sidebar-bottom .nav-link-custom.active {
+    background-color: #ffffff !important;
+    color: #4338ca !important;
+    border-left: 4px solid #4338ca !important;
+    box-shadow: -2px 2px 10px rgba(0,0,0,0.05) !important;
+}
+
+/* Memaksa menu aktif di Dosen menjadi putih dengan border hijau */
+.sidebar-dosen .sidebar-menu .nav-link-custom.active,
+.sidebar-dosen .sidebar-bottom .nav-link-custom.active {
+    background-color: #ffffff !important;
+    color: #10b981 !important;
+    border-left: 4px solid #10b981 !important;
+    box-shadow: -2px 2px 10px rgba(0,0,0,0.05) !important;
+}
+
+.btn-outline-indigo {
+    color: #4f46e5 !important;
+    border-color: #4f46e5 !important;
+}
+
+.btn-outline-indigo:hover {
+    background-color: #4f46e5 !important;
+    color: #ffffff !important;
+}
+
+/* Aturan dasar icon-box universal */
+.icon-box {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+}
+
+/* Biarkan class Bootstrap bawaan bekerja tanpa terkunci !important */
+.icon-box.bg-success {
+    background-color: rgba(5, 150, 105, 0.1) !important;
+    color: #059669 !important;
+}
+
+.icon-box.bg-primary {
+    background-color: rgba(15, 91, 185, 0.1) !important;
+    color: #0F5BB9 !important;
+}
+
+.icon-box.bg-warning {
+    background-color: rgba(217, 119, 6, 0.1) !important;
+    color: #d97706 !important;
+}
+
+.user-mini-card:hover {
+    background: rgba(255, 255, 255, 0.15) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+.user-mini-card:hover i.bi-gear-fill {
+    color: #ffffff !important;
+    transform: rotate(90deg);
+    transition: transform 0.3s ease;
+}
+
+.user-profile-link:hover {
+    transform: translateY(-2px);
+    opacity: 0.9;
 }

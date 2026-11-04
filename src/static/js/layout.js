@@ -49,27 +49,36 @@
     setTimeout(function () { el.remove(); }, 300);
   }
 
-  window.showToast = function (message, category, ms) {
-    category = ICONS[category] ? category : "info";
-    var box = getStack();
+  window.showToast = function (message, type = "info") {
+      let container = document.querySelector(".toast-stack");
+      if (!container) {
+          container = document.createElement("div");
+          container.className = "toast-stack";
+          document.body.appendChild(container);
+      }
 
-    // pesan yang sama tidak ditumpuk
-    box.querySelectorAll(".toast-item").forEach(function (t) {
-      if (t.dataset.msg === message) t.remove();
-    });
-    // maksimal 3 pesan tampil bersamaan
-    while (box.children.length >= 3) box.firstElementChild.remove();
+      const icons = {
+          success: "bi-check-circle-fill",
+          danger: "bi-x-circle-fill",
+          warning: "bi-exclamation-triangle-fill",
+          info: "bi-info-circle-fill"
+      };
 
-    var el = document.createElement("div");
-    el.className = "toast-item toast-" + category;
-    el.dataset.msg = message;
-    el.setAttribute("role", "alert");
-    el.innerHTML = '<i class="bi ' + ICONS[category] + '"></i><span class="toast-text"></span>' +
-                   '<button type="button" aria-label="Tutup">&times;</button>';
-    el.querySelector(".toast-text").textContent = message;
-    el.querySelector("button").addEventListener("click", function () { dismiss(el); });
-    box.appendChild(el);
-    setTimeout(function () { dismiss(el); }, ms || 5000);
+      const toast = document.createElement("div");
+      toast.className = `toast-item toast-${type}`;
+      
+      toast.innerHTML = `
+          <i class="bi ${icons[type] || icons.info}"></i>
+          <div class="toast-text">${message}</div>
+          <button type="button" onclick="this.parentElement.remove()">&times;</button>
+      `;
+
+      container.appendChild(toast);
+
+      setTimeout(() => {
+          toast.classList.add("out");
+          setTimeout(() => toast.remove(), 300);
+      }, 2000);
   };
 
   // Pesan flash dari server (lihat _flash.html)
@@ -95,3 +104,49 @@
     });
   }
 })();
+
+document.addEventListener('DOMContentLoaded', () => {
+    const canvas = document.getElementById('matrixCanvas');
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+
+    // Penyesuaian ukuran canvas dengan kontainer induknya
+    function resizeCanvas() {
+        canvas.width = canvas.parentElement.offsetWidth;
+        canvas.height = canvas.parentElement.offsetHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    // Karakter yang ditampilkan (Biner & Simbol Kode)
+    const characters = '011001010{}<>/=+$#@;*INF';
+    const fontSize = 13;
+    let columns = Math.floor(canvas.width / fontSize);
+
+    // Posisi Y awal untuk tiap baris kolom
+    let drops = Array(columns).fill(1);
+
+    function drawMatrix() {
+        // Efek trail/bayangan saat karakter meluncur turun (sesuai warna background #070e1b)
+        ctx.fillStyle = 'rgba(7, 14, 27, 0.15)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Warna teks kode (Biru Cyan Neon)
+        ctx.fillStyle = '#60a5fa'; 
+        ctx.font = `${fontSize}px monospace`;
+
+        for (let i = 0; i < drops.length; i++) {
+            const text = characters.charAt(Math.floor(Math.random() * characters.length));
+            ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+            if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                drops[i] = 0;
+            }
+            drops[i]++;
+        }
+    }
+
+    // Interval pembaharuan animasi (50ms)
+    setInterval(drawMatrix, 50);
+});
