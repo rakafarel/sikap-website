@@ -1,57 +1,222 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-bs-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Beranda - SIKAP</title>
+    
+    <!-- Script untuk mencegah FOUC (Flash of Unstyled Content) saat reload di Dark Mode -->
+    <script>
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-bs-theme', savedTheme);
+    </script>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        /* ==========================================
+           WIDGET & PANEL STYLING MODERN (BAGIAN BAWAH)
+           ========================================== */
+        .panel-modern {
+            background: #ffffff;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03);
+            padding: 1.75rem;
+            height: 100%;
+        }
+
+        .widget-card {
+            background: #ffffff;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .widget-header {
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 1rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .widget-header h6 { margin: 0; font-weight: 700; color: #1e293b; }
+
+        /* Progress Box Widget */
+        .widget-progress-box {
+            text-align: center;
+            padding: 1.5rem;
+            background: #f8fafc;
+            border-radius: 12px;
+            border: 1px dashed #cbd5e1;
+        }
+        .progress-count {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #0f5bb9;
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+        .progress-count small { font-size: 1.25rem; color: #94a3b8; font-weight: 600; }
+
+        /* Timeline Mini Widget */
+        .timeline-mini {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+        .timeline-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+        .timeline-badge {
+            background: #e0f2fe;
+            color: #0284c7;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.35rem 0.65rem;
+            border-radius: 6px;
+            white-space: nowrap;
+        }
+        .timeline-info strong { display: block; font-size: 0.9rem; color: #334155; margin-bottom: 0.2rem; }
+        .timeline-info span { display: block; font-size: 0.8rem; color: #64748b; }
+        
+        /* Styling untuk sub-menu agar pas di sidebar */
+        .sidebar-menu .collapse .nav-link-custom {
+            color: rgba(255, 255, 255, 0.75) !important;
+            font-size: 0.88rem;
+        }
+        .sidebar-menu .collapse .nav-link-custom:hover {
+            color: #ffffff !important;
+            background: rgba(255, 255, 255, 0.08) !important;
+        }
+
+        /* Efek putar panah saat dropdown terbuka */
+        [data-bs-toggle="collapse"][aria-expanded="true"] .transition-icon {
+            transform: rotate(180deg);
+        }
+        .transition-icon {
+            transition: transform 0.3s ease;
+        }
+        
+        .cursor-pointer { cursor: pointer; }
+
+        /* ==========================================
+           DARK MODE STYLING SIKAP
+           ========================================== */
+        [data-bs-theme="dark"] body, 
+        [data-bs-theme="dark"] .main-content, 
+        [data-bs-theme="dark"] .page {
+            background-color: #0f172a !important; 
+            color: #f8fafc !important;
+        }
+
+        [data-bs-theme="dark"] .panel-modern, 
+        [data-bs-theme="dark"] .widget-card {
+            background-color: #1e293b !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.2) !important;
+        }
+
+        [data-bs-theme="dark"] .widget-progress-box {
+            background-color: #0f172a !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+        }
+
+        [data-bs-theme="dark"] .widget-header {
+            border-bottom-color: rgba(255, 255, 255, 0.1) !important;
+        }
+        
+        [data-bs-theme="dark"] .widget-header h6 {
+            color: #f8fafc !important;
+        }
+
+        [data-bs-theme="dark"] .text-dark { color: #f1f5f9 !important; }
+        [data-bs-theme="dark"] .text-muted,
+        [data-bs-theme="dark"] .text-secondary { color: #94a3b8 !important; }
+        
+        [data-bs-theme="dark"] .border-bottom { border-bottom-color: rgba(255, 255, 255, 0.1) !important; }
+        
+        [data-bs-theme="dark"] .timeline-info strong { color: #f1f5f9 !important; }
+        [data-bs-theme="dark"] .timeline-badge { background: #0c4a6e !important; color: #38bdf8 !important; }
+
+        /* Animasi Transisi Tema */
+        html, body, .panel-modern, .widget-card, .main-content, .widget-progress-box {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        /* ==========================================
+           DARK MODE KHUSUS JOURNEY STEPPER (FIX UTAMA)
+           ========================================== */
+        /* Memaksa kontainer journey dan elemen list/langkah menjadi gelap */
+        [data-bs-theme="dark"] .journey {
+            background-color: #1e293b !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.2) !important;
+        }
+
+        /* Mengubah latar belakang kotak langkah yang terkunci/belum aktif agar ikut gelap */
+        [data-bs-theme="dark"] .journey .step,
+        [data-bs-theme="dark"] .journey li .step {
+            background-color: #1e293b !important;
+            color: #f8fafc !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+        }
+
+        /* Mengatur warna teks judul dan deskripsi di dalam stepper */
+        [data-bs-theme="dark"] .journey .step b {
+            color: #f8fafc !important;
+        }
+
+        [data-bs-theme="dark"] .journey .step small {
+            color: #94a3b8 !important;
+        }
+
+        /* Warna latar belakang saat langkah sedang aktif ('now') */
+        [data-bs-theme="dark"] .journey .step.now {
+            background-color: rgba(245, 158, 11, 0.15) !important; 
+            border-color: rgba(245, 158, 11, 0.3) !important;
+        }
+
+        /* Warna ikon gembok/locked pada langkah yang belum terbuka */
+        [data-bs-theme="dark"] .journey .step.locked .step-n,
+        [data-bs-theme="dark"] .journey .step.locked {
+            color: #64748b !important;
+        }
+    </style>
 </head>
 <body>
     <button type="button" class="menu-toggle" id="menuToggle" aria-label="Buka menu" aria-controls="sidebar" aria-expanded="false"><i class="bi bi-list"></i></button>
     <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
     <!-- Sidebar Navigation -->
-    <!-- Sidebar Navigation -->
     <div id="sidebar" class="sidebar shadow-sm vh-100 d-flex flex-column">
-        <!-- Konten Sidebar (Layer Depan) -->
         <div class="sidebar-inner d-flex flex-column h-100">
-            
-            <!-- ========================================== -->
-            <!-- 1. HEADER: LOGO & PROFIL (Statis di Atas)  -->
-            <!-- ========================================== -->
+            <!-- 1. HEADER: LOGO & PROFIL -->
             <div class="flex-shrink-0">
-                <!-- AREA LOGO SIKAP -->
-                <!-- AREA LOGO SIKAP -->
                 <a href="/" class="d-flex align-items-center justify-content-center text-decoration-none text-white pt-4 pb-2 gap-2">
-                    
-                    <!-- Kotak Background Biru dengan Sudut Membulat -->
-                    <div class="background-color: #002244; rounded p-1 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
-                        
-                        <!-- Logo Baru di Dalam Kotak (di-zoom sedikit untuk menghilangkan ruang kosong) -->
-                        <img src="/static/img/logo---mahasiswa.png" alt="Logo SIKAP" style="width: 130%; height: 130%; object-fit: cover; object-position: center top;">
-                        
+                    <div class="rounded p-1 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px; background-color: #0c1d5374;">
+                        <img src="/static/img/logo_sikap.png" alt="Logo SIKAP" style="width: 130%; height: 130%; object-fit: cover; object-position: center top;">
                     </div>
-                    
                     <span class="fw-bold fs-5 tracking-wide">SIKAP <span class="text-primary">Mahasiswa</span></span>
                 </a>
 
-                <!-- DESAIN SIDEBAR NO 1 (TOP CENTERED PROFILE) -->
+                <!-- PROFIL CENTERED (76px) -->
                 <div class="sidebar-profile-centered text-center py-2 border-bottom border-light border-opacity-10 mb-2">
                     <a href="/profil" class="text-decoration-none d-block user-profile-link" style="transition: transform 0.2s ease;">
-                        
                         <div class="position-relative d-inline-block mb-2">
                             {% if user and user.foto_profil %}
-                                <img src="/uploads/profil/{{ user.foto_profil }}" class="rounded-circle shadow-lg border border-2 border-primary border-opacity-75" style="width: 65px; height: 65px; object-fit: cover;">
+                                <img src="/uploads/profil/{{ user.foto_profil }}" class="rounded-circle shadow-lg border border-2 border-primary border-opacity-75" style="width: 100px; height: 100px; object-fit: cover;">
                             {% else %}
-                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow-lg mx-auto fw-bold fs-4 border border-2 border-white border-opacity-25" style="width: 65px; height: 65px;">
+                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow-lg mx-auto fw-bold fs-3 border border-2 border-white border-opacity-25" style="width: 100px; height: 100px;">
                                     {{ (user.nama if (user and user.nama) else session.nama)[0] | upper }}
                                 </div>
                             {% endif %}
-                            <span class="position-absolute bottom-0 end-0 p-1 bg-success border border-2 border-dark rounded-circle" style="transform: translate(-5%, -5%); width: 14px; height: 14px;" title="Online"></span>
+                            <span class="position-absolute bottom-0 end-0 p-1 bg-success border border-2 border-dark rounded-circle" style="transform: translate(-10%, -10%); width: 15px; height: 15px;" title="Online"></span>
                         </div>
-                        
                         <h6 class="text-white fw-bold mb-0 text-truncate px-3" style="font-size: 0.9rem;">
                             {{ user.nama if user else session.nama }}
                         </h6>
@@ -60,54 +225,67 @@
                 </div>
             </div>
 
-            <!-- ========================================== -->
-            <!-- 2. MENU TENGAH (Scrollable Area)           -->
-            <!-- ========================================== -->
-            <!-- flex-grow-1 memastikan area ini mengisi sisa ruang kosong -->
-            <!-- overflow-y-auto mengizinkan scroll jika menu terlalu panjang -->
-            <div class="flex-grow-1 overflow-y-auto pb-2" style="scrollbar-width: none; -ms-overflow-style: none;">
+            <!-- 2. MENU TENGAH -->
+            <div class="flex-grow-1 overflow-y-auto pb-2" style="scrollbar-width: none;">
                 <nav class="sidebar-menu px-2">
+                    <!-- Menu Dashboard Biasa -->
                     <a href="/dashboard/mahasiswa" class="nav-link-custom active mb-1 rounded-3">
                         <i class="bi bi-house-door me-3 fs-5"></i> Dashboard
                     </a>
-                    <a href="/mahasiswa/pengajuan" class="nav-link-custom mb-1 rounded-3">
-                        <i class="bi bi-person-badge me-3 fs-5"></i> Pengajuan KP
-                    </a>
-                    <a href="/mahasiswa/logbook" class="nav-link-custom mb-1 rounded-3">
-                        <i class="bi bi-journal-check me-3 fs-5"></i> Logbook KP
-                    </a>
-                    <a href="/mahasiswa/sidang" class="nav-link-custom mb-1 rounded-3">
-                        <i class="bi bi-file-earmark-text me-3 fs-5"></i> Daftar Sidang KP
-                    </a>
-                    
-                    <!-- Pemisah (Divider) -->
-                    <hr class="text-muted opacity-25 my-2">
-                    
-                    <a href="/mahasiswa/ta/pengajuan" class="nav-link-custom mb-1 rounded-3">
-                        <i class="bi bi-journal-richtext me-3 fs-5"></i> Pengajuan TA
-                    </a>
-                    <a href="/mahasiswa/ta/logbook" class="nav-link-custom rounded-3">
-                        <i class="bi bi-journal-check me-3 fs-5"></i> Logbook TA
-                    </a>
+
+                    <!-- MENU DROPDOWN: KERJA PRAKTEK -->
+                    <div class="mb-1">
+                        <a class="nav-link-custom d-flex align-items-center justify-content-between rounded-3 text-decoration-none" data-bs-toggle="collapse" href="#menuKerjaPraktek" role="button" aria-expanded="false" aria-controls="menuKerjaPraktek">
+                            <span><i class="bi bi-briefcase me-3 fs-5"></i> Kerja Praktik</span>
+                            <i class="bi bi-chevron-down small transition-icon"></i>
+                        </a>
+                        
+                        <!-- Sub-menu yang bisa buka-tutup -->
+                        <div class="collapse ps-4 mt-1" id="menuKerjaPraktek">
+                            <a href="/mahasiswa/pengajuan" class="nav-link-custom sub-menu-link mb-1 rounded-3 py-2 fs-7 d-block">
+                                <i class="bi bi-circle-fill me-2" style="font-size: 0.4rem;"></i> Pengajuan KP
+                            </a>
+                            <a href="/mahasiswa/logbook" class="nav-link-custom sub-menu-link mb-1 rounded-3 py-2 fs-7 d-block">
+                                <i class="bi bi-circle-fill me-2" style="font-size: 0.4rem;"></i> Logbook KP
+                            </a>
+                            <a href="/mahasiswa/sidang" class="nav-link-custom sub-menu-link rounded-3 py-2 fs-7 d-block">
+                                <i class="bi bi-circle-fill me-2" style="font-size: 0.4rem;"></i> Daftar Sidang KP
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Contoh untuk Tugas Akhir -->
+                    <div class="mb-1">
+                        <a class="nav-link-custom d-flex align-items-center justify-content-between rounded-3 text-decoration-none" data-bs-toggle="collapse" href="#menuTugasAkhir" role="button" aria-expanded="false" aria-controls="menuTugasAkhir">
+                            <span><i class="bi bi-journal-richtext me-3 fs-5"></i> Tugas Akhir</span>
+                            <i class="bi bi-chevron-down small transition-icon"></i>
+                        </a>
+                        <div class="collapse ps-4 mt-1" id="menuTugasAkhir">
+                            <a href="/mahasiswa/ta/pengajuan" class="nav-link-custom sub-menu-link mb-1 rounded-3 py-2 fs-7 d-block">
+                                <i class="bi bi-circle-fill me-2" style="font-size: 0.4rem;"></i> Pengajuan TA
+                            </a>
+                            <a href="/mahasiswa/ta/logbook" class="nav-link-custom sub-menu-link rounded-3 py-2 fs-7 d-block">
+                                <i class="bi bi-circle-fill me-2" style="font-size: 0.4rem;"></i> Logbook TA
+                            </a>
+                        </div>
+                    </div>
                 </nav>
             </div>
             
-            <!-- ========================================== -->
-            <!-- 3. FOOTER: LOGOUT (Statis di Bawah)        -->
-            <!-- ========================================== -->
+            <!-- 3. FOOTER (DARK MODE TOGGLE & LOGOUT) -->
             <div class="flex-shrink-0 px-2 pb-3 pt-2 mt-auto border-top border-light border-opacity-10">
+                <!-- Tombol Dark Mode Toggle -->
+                <button class="nav-link-custom mb-1 rounded-3 d-flex align-items-center w-100 bg-transparent border-0 text-start cursor-pointer" id="themeToggle">
+                    <i class="bi bi-moon-fill me-3 fs-5" id="themeIcon"></i> <span id="themeText">Dark Mode</span>
+                </button>
                 <a href="/logout" class="nav-link-custom text-danger rounded-3 m-0 w-100 d-flex align-items-center">
                     <i class="bi bi-box-arrow-right me-3 fs-5"></i> Logout
                 </a>
             </div>
-            
         </div>
     </div>
 
-        <!-- ========================================== -->
-        <!-- 2. MENU TENGAH (Scrollable Area) -->
-
-    <!-- Main Content Area -->
+    <!-- MAIN CONTENT AREA -->
     <div class="main-content"><div class="page">
 {% set acc = logbook_stat.total_acc if logbook_stat else 0 %}
 {% set ok1 = pengajuan and pengajuan.status_final == 'accepted' %}
@@ -139,35 +317,32 @@
 <li><a class="step {{ state }}" href="{{ url }}" style="--i: {{ n - 1 }}"><span class="step-n">{% if state == 'done' %}<i class="bi bi-check-lg"></i>{% elif state == 'locked' %}<i class="bi bi-lock-fill"></i>{% else %}{{ n }}{% endif %}</span><b>{{ title }}</b><small>{{ text }}</small></a></li>
 {% endmacro %}
 
-<!-- 1. HERO BANNER DINAMIS -->
-<div class="hero-banner position-relative overflow-hidden">
-    <!-- Canvas Animasi Kode Matrix -->
-    <canvas id="matrixCanvas" class="matrix-bg"></canvas>
+        <!-- 1. HERO BANNER DINAMIS -->
+        <div class="hero-banner position-relative overflow-hidden mb-4">
+            <!-- Canvas Animasi Kode Matrix -->
+            <canvas id="matrixCanvas" class="matrix-bg"></canvas>
 
-    <!-- Konten Banner (Lapisan Depan / Foreground) -->
-    <div class="hero-content d-flex justify-content-between align-items-center w-100">
-        <div>
-            <div class="d-flex align-items-center gap-2 mb-2">
-                <span class="badge-hero-outline">Prodi Informatika</span>
+            <!-- Konten Banner (Lapisan Depan / Foreground) -->
+            <div class="hero-content d-flex justify-content-between align-items-center w-100">
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="badge-hero-outline">Prodi Informatika</span>
+                    </div>
+                    <h1 class="hero-title">Halo, {{ session['nama'].split(' ')[0] }}!</h1>
+                    <p class="hero-subtitle">{{ nxt[0] }}</p>
+                </div>
+                <div>
+                    <a class="btn-hero-action" href="{{ nxt[1] }}">
+                        <span>{{ nxt[2] }}</span>
+                        <i class="bi bi-arrow-right fs-5"></i>
+                    </a>
+                </div>
             </div>
-            <h1 class="hero-title">Halo, {{ session['nama'].split(' ')[0] }}!</h1>
-            <p class="hero-subtitle">{{ nxt[0] }}</p>
         </div>
-        <div>
-            <a class="btn-hero-action" href="{{ nxt[1] }}">
-                <span>{{ nxt[2] }}</span>
-                <i class="bi bi-arrow-right fs-5"></i>
-            </a>
-        </div>
-    </div>
-</div>
 
-{% include '_flash.html' %}
+        {% include '_flash.html' %}
 
-<!-- 2. LAYOUT DASHBOARD GRID (2 KOLOM) -->
-<div class="dashboard-grid">
-    <!-- KOLOM UTAMA (KIRI) -->
-    <div class="main-column">
+        <!-- 2. JOURNEY STEPPER ALUR -->
         <ol class="journey mb-4">
             {{ step(1, s1, '/mahasiswa/pengajuan', 'Dosen pembimbing',
                 'Pengajuan Anda disetujui' if ok1 else ('Belum ada pengajuan' if not pengajuan else ('Ditolak kedua dosen' if pengajuan.status_final == 'unassigned' else 'Menunggu jawaban dosen'))) }}
@@ -179,111 +354,120 @@
                 'Terbuka setelah lulus Sidang KP' if s4 == 'locked' else ('Pembimbing TA disetujui' if ta_ok else ('Belum ada pengajuan' if not pengajuan_ta else 'Menunggu jawaban dosen'))) }}
         </ol>
 
-        <section class="panel">
-            <div class="panel-h"><h2>Yang perlu Anda ketahui</h2></div>
-            <ul class="notes">
-                <li>Baca <a href="#">Pedoman Penyusunan Laporan KP Prodi Informatika</a> sebelum mengajukan proposal.</li>
-                <li>Bimbingan minimal 6 kali dan dicatat di Logbook KP. Hanya bimbingan yang disetujui dosen yang dihitung.</li>
-                <li>Menu Tugas Akhir terbuka setelah Anda lulus Sidang KP.</li>
-            </ul>
-        </section>
-    </div>
-
-    <!-- KOLOM WIDGET (KANAN) -->
-    <div class="side-column">
-        <!-- Widget Ringkasan Logbook -->
-        <div class="widget-card">
-            <div class="widget-header">
-                <h6><i class="bi bi-journal-check text-primary me-2"></i> Progress Bimbingan</h6>
-            </div>
-            <div class="widget-progress-box">
-                <div class="progress-count">{{ acc }}<small>/6</small></div>
-                <span class="text-muted small fw-semibold">Sesi Logbook Disetujui</span>
-            </div>
-        </div>
-
-        <!-- Widget Agenda Akademik -->
-        <div class="widget-card">
-            <div class="widget-header">
-                <h6><i class="bi bi-calendar-event text-warning me-2"></i> Agenda Akademik</h6>
-            </div>
-            <div class="timeline-mini">
-                <div class="timeline-item">
-                    <span class="timeline-badge">Tahap 1</span>
-                    <div class="timeline-info">
-                        <strong>Pengajuan Pembimbing</strong>
-                        <span>Pilih 2 dosen calon pembimbing</span>
+        <!-- 3. LAYOUT BAWAH (2 KOLOM) -->
+        <div class="row g-4">
+            <!-- KOLOM UTAMA (KIRI) -->
+            <div class="col-lg-8">
+                <div class="panel-modern">
+                    <div class="d-flex align-items-center gap-3 mb-4">
+                        <div class="bg-primary bg-opacity-10 text-primary p-2 rounded-3 fs-5">
+                            <i class="bi bi-info-circle-fill"></i>
+                        </div>
+                        <h5 class="fw-bold text-dark mb-0">Yang Perlu Anda Ketahui</h5>
                     </div>
-                </div>
-                <div class="timeline-item">
-                    <span class="timeline-badge">Tahap 2</span>
-                    <div class="timeline-info">
-                        <strong>Minimal 6 Sesi ACC</strong>
-                        <span>Syarat kelayakan Sidang KP</span>
-                    </div>
+                    
+                    <ul class="notes list-unstyled mb-0" style="padding-left: 0;">
+                        <li class="d-flex gap-3 mb-3 pb-3 border-bottom">
+                            <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                            <div>
+                                <strong class="d-block text-dark mb-1">Pedoman Penyusunan Laporan</strong>
+                                <span class="text-secondary small">Baca <a href="#" class="text-primary text-decoration-none fw-semibold">Pedoman Penyusunan Laporan KP Prodi Informatika</a> secara cermat sebelum mengajukan proposal kepada dosen pembimbing.</span>
+                            </div>
+                        </li>
+                        <li class="d-flex gap-3 mb-3 pb-3 border-bottom">
+                            <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                            <div>
+                                <strong class="d-block text-dark mb-1">Syarat Bimbingan Berkala</strong>
+                                <span class="text-secondary small">Bimbingan wajib dilaksanakan minimal 6 kali dan dicatat di sistem Logbook. Hanya entri bimbingan yang telah disetujui/ACC dosen yang dihitung valid.</span>
+                            </div>
+                        </li>
+                        <li class="d-flex gap-3">
+                            <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                            <div>
+                                <strong class="d-block text-dark mb-1">Integrasi Tugas Akhir</strong>
+                                <span class="text-secondary small">Menu pendaftaran dan logbook Tugas Akhir akan otomatis terbuka di sistem setelah Anda dinyatakan LULUS pada Sidang KP.</span>
+                            </div>
+                        </li>
+                    </ul>
                 </div>
             </div>
-        </div>
 
-        <!-- Widget Akses Cepat -->
-        <div class="widget-card">
-            <div class="widget-header">
-                <h6><i class="bi bi-lightning-charge text-success me-2"></i> Akses Cepat</h6>
+            <!-- KOLOM WIDGET (KANAN) -->
+            <div class="col-lg-4">
+                
+                <!-- Widget Ringkasan Logbook -->
+                <div class="widget-card">
+                    <div class="widget-header">
+                        <h6><i class="bi bi-journal-check text-primary me-2"></i> Progress Bimbingan</h6>
+                    </div>
+                    <div class="widget-progress-box">
+                        <div class="progress-count">{{ acc }}<small>/6</small></div>
+                        <span class="text-muted small fw-semibold">Sesi Logbook Disetujui</span>
+                    </div>
+                </div>
+
+                <!-- Widget Agenda Akademik -->
+                <div class="widget-card">
+                    <div class="widget-header">
+                        <h6><i class="bi bi-calendar-event text-warning me-2"></i> Agenda Akademik</h6>
+                    </div>
+                    <div class="timeline-mini">
+                        <div class="timeline-item">
+                            <span class="timeline-badge">Tahap 1</span>
+                            <div class="timeline-info">
+                                <strong>Pengajuan Pembimbing</strong>
+                                <span>Pilih 2 dosen calon pembimbing</span>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <span class="timeline-badge">Tahap 2</span>
+                            <div class="timeline-info">
+                                <strong>Minimal 6 Sesi ACC</strong>
+                                <span>Syarat kelayakan Sidang KP</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
-            <a href="#" class="quick-link-item">
-                <i class="bi bi-file-earmark-pdf text-danger fs-5"></i>
-                <span>Format Proposal KP (.DOCX)</span>
-            </a>
-            <a href="#" class="quick-link-item">
-                <i class="bi bi-headset text-primary fs-5"></i>
-                <span>Kontak Layanan Prodi</span>
-            </a>
         </div>
-    </div>
-</div>
-</div></div>
+    </div></div>
 
+    <!-- Script JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/layout.js') }}"></script>
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const canvas = document.getElementById('sidebarMatrixCanvas');
-        if (!canvas) return;
+        /* ==== LOGIKA DARK MODE ==== */
+        const themeToggleBtn = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        const themeText = document.getElementById('themeText');
+        const htmlElement = document.documentElement;
 
-        const ctx = canvas.getContext('2d');
-
-        function resizeCanvas() {
-            canvas.width = canvas.parentElement.offsetWidth;
-            canvas.height = canvas.parentElement.offsetHeight;
-        }
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
-
-        const characters = '01{}<>/=;$#@*MHS';
-        const fontSize = 12;
-        let columns = Math.floor(canvas.width / fontSize);
-        let drops = Array(columns).fill(1);
-
-        function drawMatrix() {
-            // Trail memudar warna gelap sidebar (#0f172a)
-            ctx.fillStyle = 'rgba(15, 23, 42, 0.2)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Warna teks karakter cyan/blue neon
-            ctx.fillStyle = '#38bdf8';
-            ctx.font = `${fontSize}px monospace`;
-
-            for (let i = 0; i < drops.length; i++) {
-                const text = characters.charAt(Math.floor(Math.random() * characters.length));
-                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-
-                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
-                    drops[i] = 0;
-                }
-                drops[i]++;
+        function updateToggleUI(theme) {
+            if (!themeIcon || !themeText) return;
+            if (theme === 'dark') {
+                themeIcon.className = 'bi bi-sun-fill me-3 fs-5 text-warning';
+                themeText.textContent = 'Light Mode';
+            } else {
+                themeIcon.className = 'bi bi-moon-fill me-3 fs-5';
+                themeText.textContent = 'Dark Mode';
             }
         }
 
-        setInterval(drawMatrix, 50);
+        const currentTheme = htmlElement.getAttribute('data-bs-theme');
+        updateToggleUI(currentTheme);
+
+        if (themeToggleBtn) {
+            themeToggleBtn.addEventListener('click', () => {
+                const activeTheme = htmlElement.getAttribute('data-bs-theme');
+                const newTheme = activeTheme === 'light' ? 'dark' : 'light';
+                
+                htmlElement.setAttribute('data-bs-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+                updateToggleUI(newTheme);
+            });
+        }
     });
     </script>
 </body>

@@ -54,6 +54,22 @@
             color: #3730a3 !important;
         }
 
+        /* Sidebar Dropdown Styling */
+        .sidebar-menu .collapse .nav-link-custom {
+            color: rgba(255, 255, 255, 0.75) !important;
+            font-size: 0.88rem;
+        }
+        .sidebar-menu .collapse .nav-link-custom:hover {
+            color: #ffffff !important;
+            background: rgba(255, 255, 255, 0.08) !important;
+        }
+        [data-bs-toggle="collapse"][aria-expanded="true"] .transition-icon {
+            transform: rotate(180deg);
+        }
+        .transition-icon {
+            transition: transform 0.3s ease;
+        }
+
         /* Hero Banner Sub-Page Indigo Admin */
         .hero-banner-sub-admin {
             background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%) !important;
@@ -69,17 +85,6 @@
             position: relative;
             overflow: hidden;
             margin-bottom: 1.5rem;
-        }
-
-        .hero-banner-sub-admin::after {
-            content: '';
-            position: absolute;
-            right: -20px;
-            bottom: -40px;
-            width: 180px;
-            height: 180px;
-            background: radial-gradient(circle, rgba(129, 140, 248, 0.3) 0%, transparent 70%);
-            pointer-events: none;
         }
 
         .badge-admin-hero {
@@ -107,7 +112,6 @@
             margin: 0;
         }
 
-        /* Card Modern Design */
         .card-modern {
             background: #ffffff;
             border-radius: 16px;
@@ -141,44 +145,75 @@
     <button type="button" class="menu-toggle" id="menuToggle" aria-label="Buka menu" aria-controls="sidebar" aria-expanded="false"><i class="bi bi-list"></i></button>
     <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
-    <!-- Sidebar Admin (Dark Slate & Indigo) -->
-    <div id="sidebar" class="sidebar sidebar-admin shadow-sm">
-        <div>
-            <div class="d-flex align-items-center mb-5 px-3 mt-2">
-                <div class="bg-primary text-white rounded p-2 me-2 d-flex align-items-center justify-content-center">
-                    <i class="bi bi-shield-lock-fill fs-5"></i>
+    <!-- Sidebar Admin (Dark Slate & Indigo) dengan Dropdown -->
+    <div id="sidebar" class="sidebar sidebar-admin shadow-sm vh-100 d-flex flex-column">
+        <div class="sidebar-inner d-flex flex-column h-100">
+            <div class="flex-shrink-0">
+                <div class="d-flex align-items-center mb-4 px-3 pt-4">
+                    <div class="bg-primary text-white rounded p-2 me-2 d-flex align-items-center justify-content-center">
+                        <i class="bi bi-shield-lock-fill fs-5"></i>
+                    </div>
+                    <div class="rounded p-1 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px; background-color: #0c1d5374;">
+                        <img src="/static/img/logo_sikap.png" alt="Logo SIKAP" style="width: 130%; height: 130%; object-fit: cover; object-position: center top;">
+                    </div>
+                    <span class="fw-bold fs-5 tracking-wide">SIKAP <span class="text-primary">Admin</span></span>
                 </div>
-                <span class="fw-bold fs-5 tracking-wide">SIKAP <span class="text-primary">Admin</span></span>
             </div>
-            <nav class="sidebar-menu px-2">
-                <a href="/dashboard/admin" class="nav-link-custom mb-2 rounded-3">
-                    <i class="bi bi-calendar-check me-3 fs-5"></i> Plotting Sidang
+
+            <div class="flex-grow-1 overflow-y-auto pb-2" style="scrollbar-width: none;">
+                <nav class="sidebar-menu px-2">
+                    <a href="/dashboard/admin" class="nav-link-custom mb-1 rounded-3">
+                        <i class="bi bi-house-door me-3 fs-5"></i> Dashboard Admin
+                    </a>
+
+                    <!-- DROPDOWN KERJA PRAKTIK ADMIN -->
+                    <div class="mb-1">
+                        <a class="nav-link-custom active d-flex align-items-center justify-content-between rounded-3 text-decoration-none" data-bs-toggle="collapse" href="#menuKerjaPraktekAdmin" role="button" aria-expanded="true" aria-controls="menuKerjaPraktekAdmin">
+                            <span><i class="bi bi-briefcase me-3 fs-5"></i> Kerja Praktik</span>
+                            <i class="bi bi-chevron-down small transition-icon"></i>
+                        </a>
+                        <div class="collapse show ps-3 mt-1" id="menuKerjaPraktekAdmin">
+                            <a href="/dashboard/admin" class="nav-link-custom mb-1 rounded-3 py-2 d-block">
+                                <i class="bi bi-circle-fill me-2" style="font-size: 0.4rem;"></i> Plotting Sidang
+                            </a>
+                            <a href="/admin/kuota_dosen" class="nav-link-custom active mb-1 rounded-3 py-2 d-block">
+                                <i class="bi bi-circle-fill me-2" style="font-size: 0.4rem;"></i> Kuota Dosen
+                            </a>
+                            <a href="/admin/mahasiswa" class="nav-link-custom rounded-3 py-2 d-block">
+                                <i class="bi bi-circle-fill me-2" style="font-size: 0.4rem;"></i> Data Mahasiswa
+                            </a>
+                        </div>
+                    </div>
+
+                    <hr class="text-muted opacity-25 my-2">
+
+                    <!-- DROPDOWN MANAJEMEN AKUN -->
+                    <div class="mb-1">
+                        <a class="nav-link-custom d-flex align-items-center justify-content-between rounded-3 text-decoration-none" data-bs-toggle="collapse" href="#menuManajemenAdmin" role="button" aria-expanded="false" aria-controls="menuManajemenAdmin">
+                            <span><i class="bi bi-gear-fill me-3 fs-5"></i> Manajemen Sistem</span>
+                            <i class="bi bi-chevron-down small transition-icon"></i>
+                        </a>
+                        <div class="collapse ps-3 mt-1" id="menuManajemenAdmin">
+                            <a href="/admin/akun" class="nav-link-custom mb-1 rounded-3 py-2 d-block">
+                                <i class="bi bi-circle-fill me-2" style="font-size: 0.4rem;"></i> Manajemen Akun
+                            </a>
+                        </div>
+                    </div>
+                </nav>
+            </div>
+            
+            <div class="flex-shrink-0 px-2 pb-3 pt-2 mt-auto border-top border-light border-opacity-10">
+                <a href="/profil" class="nav-link-custom mb-1 rounded-3 d-flex align-items-center">
+                    <i class="bi bi-person-gear me-3 fs-5"></i> Profil Akun
                 </a>
-                <a href="/admin/kuota_dosen" class="nav-link-custom active mb-2 rounded-3">
-                    <i class="bi bi-person-lines-fill me-3 fs-5"></i> Kuota Dosen
+                <a href="/logout" class="nav-link-custom text-danger rounded-3 m-0 w-100 d-flex align-items-center">
+                    <i class="bi bi-box-arrow-right me-3 fs-5"></i> Logout
                 </a>
-                <a href="/admin/mahasiswa" class="nav-link-custom mb-2 rounded-3">
-                    <i class="bi bi-people-fill me-3 fs-5"></i> Data Mahasiswa
-                </a>
-                <a href="/admin/akun" class="nav-link-custom mb-2 rounded-3">
-                    <i class="bi bi-person-badge-fill me-3 fs-5"></i> Manajemen Akun
-                </a>
-            </nav>
-        </div>
-        <div class="sidebar-bottom px-2 mb-3">
-            <a href="/profil" class="nav-link-custom mb-2 rounded-3">
-                <i class="bi bi-person-gear me-3 fs-5"></i> Profil Akun
-            </a>
-            <a href="/logout" class="nav-link-custom text-danger rounded-3 m-0">
-                <i class="bi bi-box-arrow-right me-3 fs-5"></i> Logout
-            </a>
+            </div>
         </div>
     </div>
 
-    <!-- Main Content Area -->
     <div class="main-content"><div class="page">
-        
-        <!-- Header Hero Banner Admin -->
         <div class="hero-banner-sub-admin">
             <canvas id="matrixCanvas" class="matrix-bg"></canvas>
             <div>
@@ -186,7 +221,7 @@
                     <span class="badge-admin-hero"><i class="bi bi-person-lines-fill me-1"></i> Kapasitas Bimbingan</span>
                 </div>
                 <h1 class="hero-sub-title">Manajemen Kuota Dosen Pembimbing</h1>
-                <p class="hero-sub-subtitle">Atur kapasitas maksimal mahasiswa bimbingan Kerja Praktek untuk masing-masing dosen.</p>
+                <p class="hero-sub-subtitle">Atur kapasitas maksimal mahasiswa bimbingan Kerja Praktek untuk masing-masing dosen[cite: 42].</p>
             </div>
             <div class="text-end d-none d-md-block">
                 <i class="bi bi-person-workspace fs-1 text-white opacity-75"></i>
@@ -195,63 +230,46 @@
 
         {% include '_flash.html' %}
 
-        <!-- Summary Stat Cards -->
         {% set total_dosen = dosen|length %}
         {% set full_dosen = dosen|selectattr('kuota_terpakai', 'ge', 1)|list|length %}
 
         <div class="row g-3 mb-4">
             <div class="col-md-4">
                 <div class="card-modern p-3 d-flex align-items-center">
-                    <div class="icon-box bg-primary bg-opacity-10 text-primary me-3">
-                        <i class="bi bi-people-fill"></i>
-                    </div>
-                    <div>
-                        <h3 class="fw-bold mb-0 text-dark">{{ total_dosen }}</h3>
-                        <span class="text-muted small">Total Dosen Pembimbing</span>
-                    </div>
+                    <div class="icon-box bg-primary bg-opacity-10 text-primary me-3"><i class="bi bi-people-fill"></i></div>
+                    <div><h3 class="fw-bold mb-0 text-dark">{{ total_dosen }}</h3><span class="text-muted small">Total Dosen Pembimbing[cite: 42]</span></div>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="card-modern p-3 d-flex align-items-center">
-                    <div class="icon-box bg-success bg-opacity-10 text-success me-3">
-                        <i class="bi bi-check-circle-fill"></i>
-                    </div>
-                    <div>
-                        <h3 class="fw-bold mb-0 text-dark">{{ total_dosen - full_dosen }}</h3>
-                        <span class="text-muted small">Kuota Masih Tersedia</span>
-                    </div>
+                    <div class="icon-box bg-primary bg-opacity-10 text-success me-3"><i class="bi bi-check-circle-fill"></i></div>
+                    <div><h3 class="fw-bold mb-0 text-dark">{{ total_dosen - full_dosen }}</h3><span class="text-muted small">Kuota Masih Tersedia[cite: 42]</span></div>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="card-modern p-3 d-flex align-items-center">
-                    <div class="icon-box bg-danger bg-opacity-10 text-danger me-3">
-                        <i class="bi bi-exclamation-octagon-fill"></i>
-                    </div>
-                    <div>
-                        <h3 class="fw-bold mb-0 text-dark">{{ full_dosen }}</h3>
-                        <span class="text-muted small">Dosen Penuh / Terisi</span>
-                    </div>
+                    <div class="icon-box bg-danger bg-opacity-10 text-danger me-3"><i class="bi bi-exclamation-octagon-fill"></i></div>
+                    <div><h3 class="fw-bold mb-0 text-dark">{{ full_dosen }}</h3><span class="text-muted small">Dosen Penuh / Terisi[cite: 42]</span></div>
                 </div>
             </div>
         </div>
 
-        <!-- Tabel Kuota Dosen -->
         <div class="card-modern p-4">
             <h6 class="fw-bold mb-4 d-flex align-items-center">
                 <div class="icon-box bg-primary bg-opacity-10 text-primary me-3"><i class="bi bi-table"></i></div> 
-                Daftar Kapasitas & Beban Bimbingan Dosen
+                Daftar Kapasitas & Beban Bimbingan Dosen[cite: 42]
             </h6>
             
             <div class="table-responsive">
                 <table class="table table-hover align-middle small mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th class="text-secondary fw-semibold">Nama Dosen</th>
-                            <th class="text-secondary fw-semibold">NIDN / Username</th>
-                            <th class="text-center text-secondary fw-semibold">Mahasiswa Terisi</th>
-                            <th class="text-center text-secondary fw-semibold">Maksimal Kuota</th>
-                            <th class="text-center text-secondary fw-semibold">Status Keterisian</th>
-                            <th class="text-center text-secondary fw-semibold">Aksi</th>
+                            <th class="text-secondary fw-semibold">Nama Dosen[cite: 42]</th>
+                            <th class="text-secondary fw-semibold">NIDN / Username[cite: 42]</th>
+                            <th class="text-center text-secondary fw-semibold">Mahasiswa Terisi[cite: 42]</th>
+                            <th class="text-center text-secondary fw-semibold">Maksimal Kuota[cite: 42]</th>
+                            <th class="text-center text-secondary fw-semibold">Status Keterisian[cite: 42]</th>
+                            <th class="text-center text-secondary fw-semibold">Aksi[cite: 42]</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -259,50 +277,49 @@
                         <tr>
                             <td><strong class="text-dark">{{ d.nama }}</strong></td>
                             <td class="text-muted">{{ d.nidn }}</td>
-                            <td class="text-center fw-bold">{{ d.kuota_terpakai }} Orang</td>
-                            <td class="text-center fw-bold text-primary">{{ d.max_kuota }} Orang</td>
+                            <td class="text-center fw-bold">{{ d.kuota_terpakai }} Orang[cite: 42]</td>
+                            <td class="text-center fw-bold text-primary">{{ d.max_kuota }} Orang[cite: 42]</td>
                             <td class="text-center">
                                 {% if d.kuota_terpakai >= d.max_kuota %}
-                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-3 py-1 rounded-pill">Penuh</span>
+                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-3 py-1 rounded-pill">Penuh[cite: 42]</span>
                                 {% else %}
-                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-1 rounded-pill">Tersedia</span>
+                                    <span class="badge bg-primary bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-1 rounded-pill">Tersedia[cite: 42]</span>
                                 {% endif %}
                             </td>
                             <td class="text-center">
                                 <button class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalKuota{{ d.id_dosen }}">
-                                    <i class="bi bi-pencil-square me-1"></i> Ubah Kuota
+                                    <i class="bi bi-pencil-square me-1"></i> Ubah Kuota[cite: 42]
                                 </button>
                             </td>
                         </tr>
 
-                        <!-- Modal Ubah Kuota -->
                         <div class="modal fade" id="modalKuota{{ d.id_dosen }}" tabindex="-1">
                             <div class="modal-dialog modal-dialog-centered">
                                 <div class="modal-content" style="border-radius: 16px;">
                                     <div class="modal-header border-bottom-0 pb-0">
-                                        <h6 class="modal-title fw-bold text-dark"><i class="bi bi-gear-fill text-primary me-2"></i> Ubah Kuota Dosen</h6>
+                                        <h6 class="modal-title fw-bold text-dark"><i class="bi bi-gear-fill text-primary me-2"></i> Ubah Kuota Dosen[cite: 42]</h6>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                     </div>
                                     <div class="modal-body p-4 small">
                                         <form action="/admin/kuota_dosen" method="POST">
                                             <input type="hidden" name="id_dosen" value="{{ d.id_dosen }}">
                                             <div class="mb-3">
-                                                <label class="form-label fw-semibold text-secondary">Nama Dosen</label>
+                                                <label class="form-label fw-semibold text-secondary">Nama Dosen[cite: 42]</label>
                                                 <input type="text" class="form-control rounded-3 bg-light" value="{{ d.nama }}" disabled>
                                             </div>
                                             <div class="mb-4">
-                                                <label class="form-label fw-semibold text-secondary">Batas Maksimal Kuota Mahasiswa</label>
-                                                <input type="number" name="max_kuota" class="form-control rounded-3" value="{{ d.max_kuota }}" min="1" max="20" required>
-                                                <div class="form-text small">Atur jumlah maksimal mahasiswa yang boleh dibimbing oleh dosen ini.</div>
+                                                <label class="form-label fw-semibold text-secondary">Batas Maksimal Kuota Mahasiswa[cite: 42]</label>
+                                                <input type="number" name="max_kuota" class="form-control rounded-3" value="{{ d.max_kuota }}" min="1" max="20" required[cite: 42]>
+                                                <div class="form-text small">Atur jumlah maksimal mahasiswa yang boleh dibimbing oleh dosen ini[cite: 42].</div>
                                             </div>
-                                            <button type="submit" class="btn btn-indigo w-100 fw-bold rounded-3 py-2 shadow-sm">Simpan Perubahan</button>
+                                            <button type="submit" class="btn btn-indigo w-100 fw-bold rounded-3 py-2 shadow-sm">Simpan Perubahan[cite: 42]</button>
                                         </form>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         {% else %}
-                        <tr><td colspan="6" class="text-center text-muted py-5">Belum ada data dosen terdaftar.</td></tr>
+                        <tr><td colspan="6" class="text-center text-muted py-5">Belum ada data dosen terdaftar[cite: 42].</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>

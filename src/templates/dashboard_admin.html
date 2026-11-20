@@ -54,6 +54,22 @@
             color: #3730a3 !important;
         }
 
+        /* Sidebar Dropdown Styling */
+        .sidebar-menu .collapse .nav-link-custom {
+            color: rgba(255, 255, 255, 0.75) !important;
+            font-size: 0.88rem;
+        }
+        .sidebar-menu .collapse .nav-link-custom:hover {
+            color: #ffffff !important;
+            background: rgba(255, 255, 255, 0.08) !important;
+        }
+        [data-bs-toggle="collapse"][aria-expanded="true"] .transition-icon {
+            transform: rotate(180deg);
+        }
+        .transition-icon {
+            transition: transform 0.3s ease;
+        }
+
         /* Hero Banner Sub-Page Indigo Admin */
         .hero-banner-sub-admin {
             background: #0f172a !important;
@@ -67,7 +83,6 @@
             margin-bottom: 1.5rem;
         }
 
-        /* Matrix Animation Background Layer */
         .matrix-bg {
             position: absolute;
             top: 0;
@@ -79,7 +94,6 @@
             opacity: 0.35;
         }
 
-        /* Hero Content Foreground Layer */
         .hero-content {
             position: relative;
             z-index: 2;
@@ -110,7 +124,6 @@
             margin: 0;
         }
 
-        /* Card Modern Design */
         .card-modern {
             background: #ffffff;
             border-radius: 16px;
@@ -128,7 +141,6 @@
             font-size: 1.1rem;
         }
 
-        /* PIPELINE TRACKER GRID STYLES ADMIN */
         .admin-pipeline-grid {
             display: grid;
             grid-template-columns: 2.2fr 1fr;
@@ -228,12 +240,8 @@
         }
 
         @media (max-width: 992px) {
-            .admin-pipeline-grid {
-                grid-template-columns: 1fr;
-            }
-            .pipeline-steps {
-                grid-template-columns: repeat(2, 1fr);
-            }
+            .admin-pipeline-grid { grid-template-columns: 1fr; }
+            .pipeline-steps { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
 </head>
@@ -241,37 +249,68 @@
     <button type="button" class="menu-toggle" id="menuToggle" aria-label="Buka menu" aria-controls="sidebar" aria-expanded="false"><i class="bi bi-list"></i></button>
     <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
-    <!-- Sidebar Admin (Dark Slate & Indigo) -->
-    <div id="sidebar" class="sidebar sidebar-admin shadow-sm">
-        <div>
-            <div class="d-flex align-items-center mb-5 px-3 mt-2">
-                <div class="bg-primary text-white rounded p-2 me-2 d-flex align-items-center justify-content-center">
-                    <i class="bi bi-shield-lock-fill fs-5"></i>
+    <!-- Sidebar Admin (Dark Slate & Indigo) dengan Dropdown -->
+    <div id="sidebar" class="sidebar sidebar-admin shadow-sm vh-100 d-flex flex-column">
+        <div class="sidebar-inner d-flex flex-column h-100">
+            <div class="flex-shrink-0">
+                <div class="d-flex align-items-center mb-4 px-3 pt-4">
+                    <div class="bg-primary text-white rounded p-2 me-2 d-flex align-items-center justify-content-center">
+                        <i class="bi bi-shield-lock-fill fs-5"></i>
+                    </div>
+                    <span class="fw-bold fs-5 tracking-wide">SIKAP <span class="text-primary">Admin</span></span>
                 </div>
-                <span class="fw-bold fs-5 tracking-wide">SIKAP <span class="text-primary">Admin</span></span>
             </div>
-            <nav class="sidebar-menu px-2">
-                <a href="/dashboard/admin" class="nav-link-custom active mb-2 rounded-3">
-                    <i class="bi bi-calendar-check me-3 fs-5"></i> Plotting Sidang
+
+            <div class="flex-grow-1 overflow-y-auto pb-2" style="scrollbar-width: none;">
+                <nav class="sidebar-menu px-2">
+                    <a href="/dashboard/admin" class="nav-link-custom mb-1 rounded-3">
+                        <i class="bi bi-house-door me-3 fs-5"></i> Dashboard Admin
+                    </a>
+
+                    <!-- DROPDOWN KERJA PRAKTIK ADMIN -->
+                    <div class="mb-1">
+                        <a class="nav-link-custom active d-flex align-items-center justify-content-between rounded-3 text-decoration-none" data-bs-toggle="collapse" href="#menuKerjaPraktekAdmin" role="button" aria-expanded="true" aria-controls="menuKerjaPraktekAdmin">
+                            <span><i class="bi bi-briefcase me-3 fs-5"></i> Kerja Praktik</span>
+                            <i class="bi bi-chevron-down small transition-icon"></i>
+                        </a>
+                        <div class="collapse show ps-3 mt-1" id="menuKerjaPraktekAdmin">
+                            <a href="/dashboard/admin" class="nav-link-custom active mb-1 rounded-3 py-2 d-block">
+                                <i class="bi bi-circle-fill me-2" style="font-size: 0.4rem;"></i> Plotting Sidang
+                            </a>
+                            <a href="/admin/kuota_dosen" class="nav-link-custom mb-1 rounded-3 py-2 d-block">
+                                <i class="bi bi-circle-fill me-2" style="font-size: 0.4rem;"></i> Kuota Dosen
+                            </a>
+                            <a href="/admin/mahasiswa" class="nav-link-custom rounded-3 py-2 d-block">
+                                <i class="bi bi-circle-fill me-2" style="font-size: 0.4rem;"></i> Data Mahasiswa
+                            </a>
+                        </div>
+                    </div>
+
+                    <hr class="text-muted opacity-25 my-2">
+
+                    <!-- DROPDOWN MANAJEMEN AKUN / SISTEM -->
+                    <div class="mb-1">
+                        <a class="nav-link-custom d-flex align-items-center justify-content-between rounded-3 text-decoration-none" data-bs-toggle="collapse" href="#menuManajemenAdmin" role="button" aria-expanded="false" aria-controls="menuManajemenAdmin">
+                            <span><i class="bi bi-gear-fill me-3 fs-5"></i> Manajemen Sistem</span>
+                            <i class="bi bi-chevron-down small transition-icon"></i>
+                        </a>
+                        <div class="collapse ps-3 mt-1" id="menuManajemenAdmin">
+                            <a href="/admin/akun" class="nav-link-custom mb-1 rounded-3 py-2 d-block">
+                                <i class="bi bi-circle-fill me-2" style="font-size: 0.4rem;"></i> Manajemen Akun
+                            </a>
+                        </div>
+                    </div>
+                </nav>
+            </div>
+            
+            <div class="flex-shrink-0 px-2 pb-3 pt-2 mt-auto border-top border-light border-opacity-10">
+                <a href="/profil" class="nav-link-custom mb-1 rounded-3 d-flex align-items-center">
+                    <i class="bi bi-person-gear me-3 fs-5"></i> Profil Akun
                 </a>
-                <a href="/admin/kuota_dosen" class="nav-link-custom mb-2 rounded-3">
-                    <i class="bi bi-person-lines-fill me-3 fs-5"></i> Kuota Dosen
+                <a href="/logout" class="nav-link-custom text-danger rounded-3 m-0 w-100 d-flex align-items-center">
+                    <i class="bi bi-box-arrow-right me-3 fs-5"></i> Logout
                 </a>
-                <a href="/admin/mahasiswa" class="nav-link-custom mb-2 rounded-3">
-                    <i class="bi bi-people-fill me-3 fs-5"></i> Data Mahasiswa
-                </a>
-                <a href="/admin/akun" class="nav-link-custom mb-2 rounded-3">
-                    <i class="bi bi-person-badge-fill me-3 fs-5"></i> Manajemen Akun
-                </a>
-            </nav>
-        </div>
-        <div class="sidebar-bottom px-2 mb-3">
-            <a href="/profil" class="nav-link-custom mb-2 rounded-3">
-                <i class="bi bi-person-gear me-3 fs-5"></i> Profil Akun
-            </a>
-            <a href="/logout" class="nav-link-custom text-danger rounded-3 m-0">
-                <i class="bi bi-box-arrow-right me-3 fs-5"></i> Logout
-            </a>
+            </div>
         </div>
     </div>
 
@@ -281,12 +320,8 @@
         {% set n_ok = pendaftaran|selectattr('status_verifikasi', 'equalto', 'verified')|list|length %}
         {% set n_no = pendaftaran|selectattr('status_verifikasi', 'equalto', 'rejected')|list|length %}
 
-        <!-- Header Hero Banner Admin dengan Animasi Matrix Rain -->
         <div class="hero-banner-sub-admin">
-            <!-- Canvas Animasi Kode Matrix -->
             <canvas id="matrixCanvas" class="matrix-bg"></canvas>
-
-            <!-- Konten Banner -->
             <div class="hero-content d-flex justify-content-between align-items-center w-100">
                 <div>
                     <div class="d-flex align-items-center gap-2 mb-1">
@@ -294,7 +329,7 @@
                     </div>
                     <h1 class="hero-sub-title">Verifikasi dan Jadwal Sidang KP</h1>
                     <p class="hero-sub-subtitle">
-                        {% if n_wait %}{{ n_wait }} pendaftaran menunggu Anda periksa berkasnya dan tentukan jadwalnya.{% else %}Tidak ada pendaftaran yang menunggu diproses.{% endif %}
+                        {% if n_wait %}{{ n_wait }} pendaftaran menunggu Anda periksa berkasnya dan tentukan jadwalnya[cite: 44].{% else %}Tidak ada pendaftaran yang menunggu diproses[cite: 44].{% endif %}
                     </p>
                 </div>
                 <div class="text-end d-none d-md-block">
@@ -305,7 +340,6 @@
 
         {% include '_flash.html' %}
 
-        <!-- Pipeline Tracker Alur Akademik Prodi -->
         <div class="admin-pipeline-grid">
             <div class="pipeline-card">
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -316,93 +350,66 @@
                 </div>
                 
                 <div class="pipeline-steps">
-                    <!-- Step 1 -->
                     <div class="pipeline-step success-step">
                         <div class="step-icon step-icon-indigo"><i class="bi bi-check-lg"></i></div>
                         <div class="step-title">1. Pembimbing</div>
-                        <div class="step-desc">Pengajuan dosen disetujui</div>
+                        <div class="step-desc">Pengajuan dosen disetujui[cite: 44]</div>
                     </div>
-
-                    <!-- Step 2 -->
                     <div class="pipeline-step success-step">
                         <div class="step-icon step-icon-indigo"><i class="bi bi-check-lg"></i></div>
                         <div class="step-title">2. Logbook</div>
-                        <div class="step-desc">Syarat min. 6x ACC</div>
+                        <div class="step-desc">Syarat min. 6x ACC[cite: 44]</div>
                     </div>
-
-                    <!-- Step 3 (Aktif untuk Verifikasi Admin) -->
                     <div class="pipeline-step {% if n_wait > 0 %}active-step{% else %}success-step{% endif %}">
                         <div class="step-icon {% if n_wait > 0 %}step-icon-active{% else %}step-icon-indigo{% endif %}">
                             {% if n_wait > 0 %}{{ n_wait }}{% else %}<i class="bi bi-check-lg"></i>{% endif %}
                         </div>
                         <div class="step-title">3. Sidang KP</div>
-                        <div class="step-desc">Verifikasi & Plotting Admin</div>
+                        <div class="step-desc">Verifikasi & Plotting Admin[cite: 44]</div>
                     </div>
-
-                    <!-- Step 4 -->
                     <div class="pipeline-step">
                         <div class="step-icon step-icon-neutral"><i class="bi bi-lock-fill"></i></div>
                         <div class="step-title">4. Tugas Akhir</div>
-                        <div class="step-desc">Terbuka pasca lulus KP</div>
+                        <div class="step-desc">Terbuka pasca lulus KP[cite: 44]</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Card Summary Plotting Right -->
             <div class="stat-action-card">
                 <div class="d-flex align-items-center gap-2 mb-2 text-primary fw-bold small">
                     <i class="bi bi-pie-chart-fill"></i> Progress Plotting Sidang
                 </div>
                 <div class="stat-box-inner">
                     <div class="display-6 fw-bold text-dark mb-0">{{ n_ok }}<span class="fs-5 text-muted">/{{ pendaftaran|length }}</span></div>
-                    <span class="text-muted small fw-medium">Pendaftaran Berkas Disetujui</span>
+                    <span class="text-muted small fw-medium">Pendaftaran Berkas Disetujui[cite: 44]</span>
                 </div>
             </div>
         </div>
 
-        <!-- 3 Ringkasan Stat Cards -->
         <div class="row g-3 mb-4">
             <div class="col-md-4">
                 <div class="card-modern p-3 d-flex align-items-center">
-                    <div class="icon-box bg-warning bg-opacity-10 text-warning me-3">
-                        <i class="bi bi-hourglass-split"></i>
-                    </div>
-                    <div>
-                        <h3 class="fw-bold mb-0 text-dark">{{ n_wait }}</h3>
-                        <span class="text-muted small">Menunggu Diproses</span>
-                    </div>
+                    <div class="icon-box bg-warning bg-opacity-10 text-warning me-3"><i class="bi bi-hourglass-split"></i></div>
+                    <div><h3 class="fw-bold mb-0 text-dark">{{ n_wait }}</h3><span class="text-muted small">Menunggu Diproses[cite: 44]</span></div>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="card-modern p-3 d-flex align-items-center">
-                    <div class="icon-box bg-primary bg-opacity-10 text-primary me-3">
-                        <i class="bi bi-check-circle-fill"></i>
-                    </div>
-                    <div>
-                        <h3 class="fw-bold mb-0 text-dark">{{ n_ok }}</h3>
-                        <span class="text-muted small">Sudah Dijadwalkan</span>
-                    </div>
+                    <div class="icon-box bg-primary bg-opacity-10 text-primary me-3"><i class="bi bi-check-circle-fill"></i></div>
+                    <div><h3 class="fw-bold mb-0 text-dark">{{ n_ok }}</h3><span class="text-muted small">Sudah Dijadwalkan[cite: 44]</span></div>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="card-modern p-3 d-flex align-items-center">
-                    <div class="icon-box bg-danger bg-opacity-10 text-danger me-3">
-                        <i class="bi bi-x-circle-fill"></i>
-                    </div>
-                    <div>
-                        <h3 class="fw-bold mb-0 text-dark">{{ n_no }}</h3>
-                        <span class="text-muted small">Berkas Ditolak</span>
-                    </div>
+                    <div class="icon-box bg-danger bg-opacity-10 text-danger me-3"><i class="bi bi-x-circle-fill"></i></div>
+                    <div><h3 class="fw-bold mb-0 text-dark">{{ n_no }}</h3><span class="text-muted small">Berkas Ditolak[cite: 44]</span></div>
                 </div>
             </div>
         </div>
 
-        <!-- Tabel Pendaftaran Sidang Utama -->
         <div class="card-modern p-4">
             <h6 class="fw-bold mb-4 d-flex align-items-center">
-                <div class="icon-box bg-primary bg-opacity-10 text-primary me-3">
-                    <i class="bi bi-card-checklist"></i>
-                </div>
+                <div class="icon-box bg-primary bg-opacity-10 text-primary me-3"><i class="bi bi-card-checklist"></i></div>
                 Pendaftaran Sidang Kerja Praktek
             </h6>
 
@@ -421,47 +428,38 @@
                     <tbody>
                         {% for ps in pendaftaran %}
                         <tr>
-                            <td>
-                                <strong class="text-dark">{{ ps.nama_mahasiswa }}</strong><br>
-                                <span class="text-muted">{{ ps.npm }}</span>
-                            </td>
-                            <td class="text-truncate" style="max-width: 200px" title="{{ ps.judul_kp }}">{{ ps.judul_kp }}</td>
+                            <td><strong class="text-dark">{{ ps.nama_mahasiswa }}</strong><br><span class="text-muted">{{ ps.npm }}</span></td>
+                            <td class="text-truncate" style="max-width: 200px" title="{{ ps.judul_kp }}">{{ ps.judul_kp }}[cite: 44]</td>
                             <td>
                                 <div class="d-flex flex-column gap-1">
-                                    <a href="/uploads/sidang/{{ ps.file_laporan_final }}" target="_blank" class="badge bg-light text-primary border text-decoration-none text-start">
-                                        <i class="bi bi-file-pdf me-1"></i> Laporan
-                                    </a>
-                                    <a href="/uploads/sidang/{{ ps.file_transkrip }}" target="_blank" class="badge bg-light text-primary border text-decoration-none text-start">
-                                        <i class="bi bi-file-pdf me-1"></i> Transkrip
-                                    </a>
+                                    <a href="/uploads/sidang/{{ ps.file_laporan_final }}" target="_blank" class="badge bg-light text-primary border text-decoration-none text-start"><i class="bi bi-file-pdf me-1"></i> Laporan[cite: 44]</a>
+                                    <a href="/uploads/sidang/{{ ps.file_transkrip }}" target="_blank" class="badge bg-light text-primary border text-decoration-none text-start"><i class="bi bi-file-pdf me-1"></i> Transkrip[cite: 44]</a>
                                     {% if ps.file_krs %}
-                                    <a href="/uploads/sidang/{{ ps.file_krs }}" target="_blank" class="badge bg-light text-primary border text-decoration-none text-start">
-                                        <i class="bi bi-file-pdf me-1"></i> KRS
-                                    </a>
+                                    <a href="/uploads/sidang/{{ ps.file_krs }}" target="_blank" class="badge bg-light text-primary border text-decoration-none text-start"><i class="bi bi-file-pdf me-1"></i> KRS[cite: 44]</a>
                                     {% endif %}
                                 </div>
                             </td>
                             <td>
                                 {% if ps.status_verifikasi == 'verified' %}
-                                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1 rounded-pill">Disetujui</span>
+                                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1 rounded-pill">Disetujui[cite: 44]</span>
                                 {% elif ps.status_verifikasi == 'rejected' %}
-                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2 py-1 rounded-pill">Ditolak</span>
+                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2 py-1 rounded-pill">Ditolak[cite: 44]</span>
                                 {% else %}
-                                    <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-2 py-1 rounded-pill">Menunggu</span>
+                                    <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-2 py-1 rounded-pill">Menunggu[cite: 44]</span>
                                 {% endif %}
                             </td>
                             <td>
                                 {% if ps.status_verifikasi == 'verified' %}
                                     <strong class="text-dark">{{ ps.tanggal_sidang }}, {{ ps.waktu_sidang }}</strong><br>
-                                    <span class="text-muted small"><i class="bi bi-geo-alt me-1 text-primary"></i>{{ ps.ruangan }} &middot; {{ ps.nama_penguji }}</span>
+                                    <span class="text-muted small"><i class="bi bi-geo-alt me-1 text-primary"></i>{{ ps.ruangan }} &middot; {{ ps.nama_penguji }}[cite: 44]</span>
                                 {% else %}
-                                    <span class="text-muted small">Belum dijadwalkan</span>
+                                    <span class="text-muted small">Belum dijadwalkan[cite: 44]</span>
                                 {% endif %}
                             </td>
                             <td class="text-center">
                                 {% if ps.status_verifikasi == 'pending' %}
                                 <button class="btn btn-indigo btn-sm rounded-pill px-3 fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalVerifikasi{{ ps.id_sidang }}">
-                                    <i class="bi bi-gear-fill me-1"></i> Proses
+                                    <i class="bi bi-gear-fill me-1"></i> Proses[cite: 44]
                                 </button>
                                 {% else %}
                                 <i class="bi bi-check2-all text-primary fs-5"></i>
@@ -469,76 +467,69 @@
                             </td>
                         </tr>
                         {% else %}
-                        <tr>
-                            <td colspan="6" class="text-center text-muted py-5">
-                                Belum ada pendaftaran sidang. Pendaftaran dari mahasiswa akan muncul di sini.
-                            </td>
-                        </tr>
+                        <tr><td colspan="6" class="text-center text-muted py-5">Belum ada pendaftaran sidang. Pendaftaran dari mahasiswa akan muncul di sini[cite: 44].</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
         </div>
 
-        <!-- Modal Verifikasi & Plotting Sidang KP -->
         {% for ps in pendaftaran if ps.status_verifikasi == 'pending' %}
         <div class="modal fade" id="modalVerifikasi{{ ps.id_sidang }}" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content" style="border-radius: 16px;">
                     <div class="modal-header border-bottom-0 pb-0">
                         <h6 class="modal-title fw-bold text-dark d-flex align-items-center">
-                            <i class="bi bi-shield-check text-primary me-2 fs-5"></i> Proses Pendaftaran {{ ps.nama_mahasiswa }}
+                            <i class="bi bi-shield-check text-primary me-2 fs-5"></i> Proses Pendaftaran {{ ps.nama_mahasiswa }}[cite: 44]
                         </h6>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
                     </div>
                     <div class="modal-body p-4 small">
-                        <!-- Form Setujui & Plotting -->
                         <form action="/admin/verifikasi_sidang" method="POST" class="mb-4">
                             <input type="hidden" name="id_sidang" value="{{ ps.id_sidang }}">
                             <input type="hidden" name="aksi" value="terima">
-                            <p class="fw-bold mb-3 text-secondary">Setujui berkas dan atur jadwal sidang</p>
+                            <p class="fw-bold mb-3 text-secondary">Setujui berkas dan atur jadwal sidang[cite: 44]</p>
                             
                             <div class="mb-3">
-                                <label class="form-label fw-semibold text-secondary">Dosen Penguji</label>
+                                <label class="form-label fw-semibold text-secondary">Dosen Penguji[cite: 44]</label>
                                 <select name="id_penguji" class="form-select rounded-3" required>
-                                    <option value="" disabled selected>Pilih dosen penguji</option>
+                                    <option value="" disabled selected>Pilih dosen penguji[cite: 44]</option>
                                     {% for d in dosen %}
-                                        <option value="{{ d.id }}">{{ d.nama }}</option>
+                                        <option value="{{ d.id }}">{{ d.nama }}[cite: 44]</option>
                                     {% endfor %}
                                 </select>
                             </div>
 
                             <div class="row g-3 mb-3">
                                 <div class="col-6">
-                                    <label class="form-label fw-semibold text-secondary">Tanggal Sidang</label>
+                                    <label class="form-label fw-semibold text-secondary">Tanggal Sidang[cite: 44]</label>
                                     <input type="date" name="tanggal_sidang" class="form-control rounded-3" required>
                                 </div>
                                 <div class="col-6">
-                                    <label class="form-label fw-semibold text-secondary">Waktu Sidang</label>
+                                    <label class="form-label fw-semibold text-secondary">Waktu Sidang[cite: 44]</label>
                                     <input type="time" name="waktu_sidang" class="form-control rounded-3" required>
                                 </div>
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label fw-semibold text-secondary">Ruangan / Tautan Rapat</label>
-                                <input type="text" name="ruangan" class="form-control rounded-3" placeholder="Contoh: Lab Komputer 1 / Zoom Link" required>
+                                <label class="form-label fw-semibold text-secondary">Ruangan / Tautan Rapat[cite: 44]</label>
+                                <input type="text" name="ruangan" class="form-control rounded-3" placeholder="Contoh: Lab Komputer 1 / Zoom Link" required[cite: 44]>
                             </div>
 
                             <button type="submit" class="btn btn-indigo w-100 fw-bold rounded-3 py-2 shadow-sm">
-                                Setujui dan Simpan Jadwal
+                                Setujui dan Simpan Jadwal[cite: 44]
                             </button>
                         </form>
 
                         <hr class="opacity-25">
 
-                        <!-- Form Tolak Berkas -->
                         <form action="/admin/verifikasi_sidang" method="POST">
                             <input type="hidden" name="id_sidang" value="{{ ps.id_sidang }}">
                             <input type="hidden" name="aksi" value="tolak">
-                            <label class="form-label fw-semibold text-danger">Tolak Berkas & Minta Revisi</label>
-                            <textarea name="catatan_admin" class="form-control rounded-3 mb-3" rows="2" placeholder="Jelaskan alasan penolakan, mis. transkrip nilai buram" required></textarea>
+                            <label class="form-label fw-semibold text-danger">Tolak Berkas & Minta Revisi[cite: 44]</label>
+                            <textarea name="catatan_admin" class="form-control rounded-3 mb-3" rows="2" placeholder="Jelaskan alasan penolakan, mis. transkrip nilai buram" required[cite: 44]></textarea>
                             <button type="submit" class="btn btn-outline-danger w-100 fw-semibold rounded-3 py-2">
-                                Tolak Pendaftaran
+                                Tolak Pendaftaran[cite: 44]
                             </button>
                         </form>
                     </div>
@@ -550,45 +541,29 @@
     </div></div>
 
     <script src="{{ url_for('static', filename='js/layout.js') }}"></script>
-
-    <!-- Skrip Animasi Matrix Code Rain (Aksen Indigo Admin) -->
     <script>
     document.addEventListener('DOMContentLoaded', () => {
         const canvas = document.getElementById('matrixCanvas');
         if (!canvas) return;
-
         const ctx = canvas.getContext('2d');
-
-        function resizeCanvas() {
-            canvas.width = canvas.parentElement.offsetWidth;
-            canvas.height = canvas.parentElement.offsetHeight;
-        }
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
-
+        function resizeCanvas() { canvas.width = canvas.parentElement.offsetWidth; canvas.height = canvas.parentElement.offsetHeight; }
+        resizeCanvas(); window.addEventListener('resize', resizeCanvas);
         const characters = '011001010{}<>/=+$#@;*ADM';
         const fontSize = 13;
         let columns = Math.floor(canvas.width / fontSize);
         let drops = Array(columns).fill(1);
-
         function drawMatrix() {
-            ctx.fillStyle = 'rgba(15, 23, 42, 0.15)'; // Slate dark background trail
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.15)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            ctx.fillStyle = '#818cf8'; // Indigo light neon text
+            ctx.fillStyle = '#818cf8';
             ctx.font = `${fontSize}px monospace`;
-
             for (let i = 0; i < drops.length; i++) {
                 const text = characters.charAt(Math.floor(Math.random() * characters.length));
                 ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-
-                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
-                    drops[i] = 0;
-                }
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) { drops[i] = 0; }
                 drops[i]++;
             }
         }
-
         setInterval(drawMatrix, 50);
     });
     </script>

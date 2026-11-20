@@ -29,6 +29,7 @@ UPLOAD_PROFIL = os.path.join(UPLOAD_ROOT, 'profil')
 os.makedirs(UPLOAD_PROFIL, exist_ok=True)
 ALLOWED_EXTENSIONS = {'pdf'}
 
+
 # Buat folder penyimpanan jika belum ada
 for folder in (UPLOAD_FOLDER, UPLOAD_LOGBOOK, UPLOAD_SIDANG, UPLOAD_PROFIL):
     os.makedirs(folder, exist_ok=True)
@@ -311,6 +312,7 @@ async def mahasiswa_pengajuan_post(
     request: Request,
     id_dosen_p1: int = Form(...),
     id_dosen_p2: int = Form(...),
+    id_dosen_p3: int = Form(...),
     judul_kp: str = Form(...),
     topik_kp: str = Form(...),
     file_proposal: UploadFile = File(...)
@@ -319,8 +321,10 @@ async def mahasiswa_pengajuan_post(
         return RedirectResponse(url='/login', status_code=303)
 
     user_id = request.session['user_id']
-    if id_dosen_p1 == id_dosen_p2:
-        flash(request, "Dosen Prioritas 1 dan Prioritas 2 tidak boleh orang yang sama!", "danger")
+    
+    # Validasi agar tidak ada dosen yang dipilih dua atau tiga kali
+    if id_dosen_p1 == id_dosen_p2 or id_dosen_p1 == id_dosen_p3 or id_dosen_p2 == id_dosen_p3:
+        flash(request, "Pilihan Dosen Pembimbing 1, 2, dan 3 tidak boleh ada yang sama!", "danger")
         return RedirectResponse(url='/mahasiswa/pengajuan', status_code=303)
 
     if file_proposal and allowed_file(file_proposal.filename):
@@ -334,9 +338,9 @@ async def mahasiswa_pengajuan_post(
         with conn.cursor() as cursor:
             cursor.execute("""
                 INSERT INTO pengajuan_pembimbing 
-                (id_mahasiswa, id_dosen_p1, id_dosen_p2, judul_kp, topik_kp, file_proposal, status_p1, status_p2, status_final)
-                VALUES (%s, %s, %s, %s, %s, %s, 'pending', 'in_queue', 'waiting')
-            """, (user_id, id_dosen_p1, id_dosen_p2, judul_kp, topik_kp, filename))
+                (id_mahasiswa, id_dosen_p1, id_dosen_p2, id_dosen_p3, judul_kp, topik_kp, file_proposal, pilihan_aktif, status_p1, status_p2, status_p3, status_final)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, 1, 'pending', 'in_queue', 'in_queue', 'waiting')
+            """, (user_id, id_dosen_p1, id_dosen_p2, id_dosen_p3, judul_kp, topik_kp, filename))
             conn.commit()
         conn.close()
 
@@ -344,6 +348,22 @@ async def mahasiswa_pengajuan_post(
     else:
         flash(request, "Format file proposal harus berupa file .PDF!", "danger")
 
+    return RedirectResponse(url='/mahasiswa/pengajuan', status_code=303)
+
+@app.get('/mahasiswa/pengajuan/reset', name='mahasiswa_pengajuan_reset')
+async def mahasiswa_pengajuan_reset(request: Request):
+    if request.session.get('role') != 'mahasiswa':
+        return RedirectResponse(url='/login', status_code=303)
+        
+    user_id = request.session['user_id']
+    conn = get_db_connection()
+    with conn.cursor() as cursor:
+        # Menghapus pengajuan KP yang sebelumnya ditolak agar mahasiswa bisa mengajukan baru
+        cursor.execute("DELETE FROM pengajuan_pembimbing WHERE id_mahasiswa = %s AND status_final IN ('rejected', 'unassigned')", (user_id,))
+        conn.commit()
+    conn.close()
+    
+    flash(request, "Silakan ajukan kembali dosen pembimbing Kerja Praktek dengan pilihan yang baru.", "info")
     return RedirectResponse(url='/mahasiswa/pengajuan', status_code=303)
 
 @app.get('/mahasiswa/logbook', name='mahasiswa_logbook')
@@ -425,45 +445,70 @@ async def mahasiswa_sidang_get(request: Request):
 @app.post('/mahasiswa/sidang')
 async def mahasiswa_sidang_post(
     request: Request,
-    file_laporan: UploadFile = File(...),
-    file_transkrip: UploadFile = File(...),
-    file_krs: UploadFile = File(...)
+    file_laporan: UploadFile = File(None),
+    file_transkrip: UploadFile = File(None),
+    file_krs: UploadFile = File(None)
 ):
     if request.session.get('role') != 'mahasiswa':
         return RedirectResponse(url='/login', status_code=303)
 
+    # Validasi apakah berkas benar-benar terunggah dan memiliki nama file
+    if not file_laporan or not file_laporan.filename:
+        flash(request, "File Laporan Final wajib diunggah!", "danger")
+        return RedirectResponse(url='/mahasiswa/sidang', status_code=303)
+        
+    if not file_transkrip or not file_transkrip.filename:
+        flash(request, "File Transkrip Nilai wajib diunggah!", "danger")
+        return RedirectResponse(url='/mahasiswa/sidang', status_code=303)
+        
+    if not file_krs or not file_krs.filename:
+        flash(request, "File KRS wajib diunggah!", "danger")
+        return RedirectResponse(url='/mahasiswa/sidang', status_code=303)
+
     user_id = request.session['user_id']
-    if file_laporan and file_transkrip and file_krs:
-        fn_laporan = secure_filename(f"{request.session['username']}_laporan.pdf")
-        fn_transkrip = secure_filename(f"{request.session['username']}_transkrip.pdf")
-        fn_krs = secure_filename(f"{request.session['username']}_krs.pdf")
+    username = request.session['username']
 
-        for f_obj, f_name in [(file_laporan, fn_laporan), (file_transkrip, fn_transkrip), (file_krs, fn_krs)]:
-            path = os.path.join(UPLOAD_SIDANG, f_name)
-            with open(path, "wb") as buffer:
-                buffer.write(await f_obj.read())
+    # Buat nama file aman
+    fn_laporan = secure_filename(f"{username}_laporan.pdf")
+    fn_transkrip = secure_filename(f"{username}_transkrip.pdf")
+    fn_krs = secure_filename(f"{username}_krs.pdf")
 
-        conn = get_db_connection()
-        with conn.cursor() as cursor:
-            cursor.execute("SELECT id_sidang FROM pendaftaran_sidang WHERE id_mahasiswa = %s", (user_id,))
-            cek_sidang = cursor.fetchone()
+    # Simpan file ke direktori UPLOAD_SIDANG
+    files_to_save = [
+        (file_laporan, fn_laporan),
+        (file_transkrip, fn_transkrip),
+        (file_krs, fn_krs)
+    ]
+    
+    os.makedirs(UPLOAD_SIDANG, exist_ok=True)
 
-            if cek_sidang:
-                cursor.execute("""
-                    UPDATE pendaftaran_sidang 
-                    SET file_laporan_final=%s, file_transkrip=%s, file_krs=%s, status_verifikasi='pending'
-                    WHERE id_mahasiswa=%s
-                """, (fn_laporan, fn_transkrip, fn_krs, user_id))
-            else:
-                cursor.execute("""
-                    INSERT INTO pendaftaran_sidang (id_mahasiswa, file_laporan_final, file_transkrip, file_krs)
-                    VALUES (%s, %s, %s, %s)
-                """, (user_id, fn_laporan, fn_transkrip, fn_krs))
-            conn.commit()
-        conn.close()
+    for f_obj, f_name in files_to_save:
+        path = os.path.join(UPLOAD_SIDANG, f_name)
+        content = await f_obj.read()
+        with open(path, "wb") as buffer:
+            buffer.write(content)
 
-        flash(request, "Berkas pendaftaran sidang berhasil dikirim!", "success")
+    # Simpan/Update Database
+    conn = get_db_connection()
+    with conn.cursor() as cursor:
+        cursor.execute("SELECT id_sidang FROM pendaftaran_sidang WHERE id_mahasiswa = %s", (user_id,))
+        cek_sidang = cursor.fetchone()
 
+        if cek_sidang:
+            cursor.execute("""
+                UPDATE pendaftaran_sidang 
+                SET file_laporan_final=%s, file_transkrip=%s, file_krs=%s, status_verifikasi='pending'
+                WHERE id_mahasiswa=%s
+            """, (fn_laporan, fn_transkrip, fn_krs, user_id))
+        else:
+            cursor.execute("""
+                INSERT INTO pendaftaran_sidang (id_mahasiswa, file_laporan_final, file_transkrip, file_krs)
+                VALUES (%s, %s, %s, %s)
+            """, (user_id, fn_laporan, fn_transkrip, fn_krs))
+        conn.commit()
+    conn.close()
+
+    flash(request, "Berkas pendaftaran sidang berhasil dikirim!", "success")
     return RedirectResponse(url='/mahasiswa/sidang', status_code=303)
 
 # --- MODUL TUGAS AKHIR (TA) MAHASISWA ---
@@ -567,6 +612,8 @@ async def mahasiswa_ta_logbook_get(request: Request):
 
     conn = get_db_connection()
     with conn.cursor() as cursor:
+        cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
+        user = cursor.fetchone()
         cursor.execute("SELECT * FROM logbook_ta WHERE id_mahasiswa = %s ORDER BY tanggal_bimbingan DESC", (user_id,))
         logbook_list = cursor.fetchall()
     conn.close()
@@ -574,7 +621,7 @@ async def mahasiswa_ta_logbook_get(request: Request):
     return templates.TemplateResponse(
         request=request, 
         name='mahasiswa_ta_logbook.html', 
-        context={'logbook': logbook_list}
+        context={'user': user, 'logbook': logbook_list}
     )
 
 @app.post('/mahasiswa/ta/logbook')
@@ -618,35 +665,72 @@ async def dashboard_dosen(request: Request):
     user_id = request.session['user_id']
     conn = get_db_connection()
     with conn.cursor() as cursor:
+        # Ambil data profil user (untuk sidebar)
+        cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
+        user_info = cursor.fetchone()
+
+        # Ambil data kuota dosen
         cursor.execute("SELECT * FROM dosen WHERE id_dosen = %s", (user_id,))
         data_dosen = cursor.fetchone()
 
+        # Ambil pengajuan masuk (LOGIKA BERJENJANG)
         cursor.execute("""
             SELECT p.*, u.nama AS nama_mahasiswa, u.username AS npm
             FROM pengajuan_pembimbing p
             JOIN users u ON p.id_mahasiswa = u.id
-            WHERE (p.id_dosen_p1 = %s AND p.status_p1 = 'pending')
-               OR (p.id_dosen_p2 = %s AND p.status_p2 = 'pending')
-        """, (user_id, user_id))
+            WHERE (p.pilihan_aktif = 1 AND p.id_dosen_p1 = %s AND p.status_p1 = 'pending')
+               OR (p.pilihan_aktif = 2 AND p.id_dosen_p2 = %s AND p.status_p2 = 'pending')
+               OR (p.pilihan_aktif = 3 AND p.id_dosen_p3 = %s AND p.status_p3 = 'pending')
+        """, (user_id, user_id, user_id))
         pengajuan_masuk = cursor.fetchall()
 
+        # Ambil mahasiswa bimbingan aktif
         cursor.execute("""
             SELECT p.*, u.nama AS nama_mahasiswa, u.username AS npm
             FROM pengajuan_pembimbing p
             JOIN users u ON p.id_mahasiswa = u.id
             WHERE (p.id_dosen_p1 = %s AND p.status_p1 = 'accepted')
                OR (p.id_dosen_p2 = %s AND p.status_p2 = 'accepted')
-        """, (user_id, user_id))
+               OR (p.id_dosen_p3 = %s AND p.status_p3 = 'accepted')
+        """, (user_id, user_id, user_id)) 
         mahasiswa_bimbingan = cursor.fetchall()
+
+        # --- KODE YANG DIPERBAIKI (SESUAI DATABASE) ---
+        # 1. Hitung pengajuan TA yang menunggu persetujuan (pending) berdasarkan logika berjenjang
+        cursor.execute("""
+            SELECT 1 FROM pengajuan_ta 
+            WHERE (pilihan_aktif = 1 AND id_dosen_p1 = %s AND status_p1 = 'pending')
+               OR (pilihan_aktif = 2 AND id_dosen_p2 = %s AND status_p2 = 'pending')
+               OR (pilihan_aktif = 3 AND id_dosen_p3 = %s AND status_p3 = 'pending')
+        """, (user_id, user_id, user_id))
+        pengajuan_ta_pending_count = len(cursor.fetchall())
+
+        # 2. Hitung jumlah mahasiswa TA yang sudah aktif (accepted)
+        cursor.execute("""
+            SELECT 1 FROM pengajuan_ta 
+            WHERE (id_dosen_p1 = %s AND status_p1 = 'accepted')
+               OR (id_dosen_p2 = %s AND status_p2 = 'accepted')
+               OR (id_dosen_p3 = %s AND status_p3 = 'accepted')
+        """, (user_id, user_id, user_id))
+        stat_ta = len(cursor.fetchall())
+
+        # 3. Hitung jadwal menguji sidang KP yang belum dinilai
+        cursor.execute("SELECT 1 FROM pendaftaran_sidang WHERE id_penguji = %s AND nilai_akhir IS NULL", (user_id,))
+        stat_sidang = len(cursor.fetchall())
+
     conn.close()
 
     return templates.TemplateResponse(
         request=request, 
         name='dashboard_dosen.html', 
         context={
+            'user': user_info,          
             'dosen': data_dosen, 
             'pengajuan': pengajuan_masuk, 
-            'bimbingan': mahasiswa_bimbingan
+            'bimbingan': mahasiswa_bimbingan,
+            'pengajuan_ta_pending_count': pengajuan_ta_pending_count,
+            'stat_ta': stat_ta,
+            'stat_sidang': stat_sidang
         }
     )
 
@@ -669,50 +753,58 @@ async def dosen_aksi_pengajuan(request: Request, id_pengajuan: int, aksi: str):
             conn.close()
             return RedirectResponse(url='/dashboard/dosen', status_code=303)
 
-        # Gunakan int() untuk memastikan perbandingan Integer == Integer
+        aktif = pengajuan.get('pilihan_aktif', 1)
         is_p1 = (int(pengajuan['id_dosen_p1']) == int(user_id))
+        is_p2 = (int(pengajuan['id_dosen_p2']) == int(user_id))
+        is_p3 = (int(pengajuan['id_dosen_p3']) == int(user_id))
 
         if aksi == 'terima':
             if data_dosen['kuota_terpakai'] >= data_dosen['max_kuota']:
                 flash(request, "Gagal menerima! Kuota bimbingan Anda sudah penuh.", "danger")
             else:
                 cursor.execute("UPDATE dosen SET kuota_terpakai = kuota_terpakai + 1 WHERE id_dosen = %s", (user_id,))
-                
+                cursor.execute("""
+                    UPDATE pengajuan_pembimbing 
+                    SET status_final = 'accepted' 
+                    WHERE id_pengajuan = %s
+                """, (id_pengajuan,))
                 if is_p1:
-                    cursor.execute("""
-                        UPDATE pengajuan_pembimbing 
-                        SET status_p1 = 'accepted', status_p2 = 'rejected', status_final = 'accepted' 
-                        WHERE id_pengajuan = %s
-                    """, (id_pengajuan,))
-                else:
-                    cursor.execute("""
-                        UPDATE pengajuan_pembimbing 
-                        SET status_p2 = 'accepted', status_final = 'accepted' 
-                        WHERE id_pengajuan = %s
-                    """, (id_pengajuan,))
+                    cursor.execute("UPDATE pengajuan_pembimbing SET status_p1 = 'accepted' WHERE id_pengajuan = %s", (id_pengajuan,))
+                elif is_p2:
+                    cursor.execute("UPDATE pengajuan_pembimbing SET status_p2 = 'accepted' WHERE id_pengajuan = %s", (id_pengajuan,))
+                elif is_p3:
+                    cursor.execute("UPDATE pengajuan_pembimbing SET status_p3 = 'accepted' WHERE id_pengajuan = %s", (id_pengajuan,))
 
                 flash(request, "Pengajuan bimbingan berhasil disetujui!", "success")
 
         elif aksi == 'tolak':
-            if is_p1:
+            if aktif == 1 and is_p1:
                 cursor.execute("""
                     UPDATE pengajuan_pembimbing 
-                    SET status_p1 = 'rejected', status_p2 = 'pending' 
+                    SET status_p1 = 'rejected', pilihan_aktif = 2, status_p2 = 'pending' 
                     WHERE id_pengajuan = %s
                 """, (id_pengajuan,))
-            else:
+                flash(request, "Pengajuan ditolak dan otomatis diteruskan ke Dosen Pilihan ke-2.", "warning")
+            elif aktif == 2 and is_p2:
                 cursor.execute("""
                     UPDATE pengajuan_pembimbing 
-                    SET status_p2 = 'rejected', status_final = 'unassigned' 
+                    SET status_p2 = 'rejected', pilihan_aktif = 3, status_p3 = 'pending' 
                     WHERE id_pengajuan = %s
                 """, (id_pengajuan,))
-
-            flash(request, "Pengajuan bimbingan telah ditolak.", "warning")
+                flash(request, "Pengajuan ditolak dan otomatis diteruskan ke Dosen Pilihan ke-3.", "warning")
+            elif aktif == 3 and is_p3:
+                cursor.execute("""
+                    UPDATE pengajuan_pembimbing 
+                    SET status_p3 = 'rejected', status_final = 'rejected' 
+                    WHERE id_pengajuan = %s
+                """, (id_pengajuan,))
+                flash(request, "Pengajuan ditolak oleh seluruh pilihan dosen.", "danger")
 
         conn.commit()
     conn.close()
 
     return RedirectResponse(url='/dashboard/dosen', status_code=303)
+
 
 @app.get('/dosen/logbook', name='dosen_logbook')
 async def dosen_logbook(request: Request):
@@ -722,6 +814,12 @@ async def dosen_logbook(request: Request):
     user_id = request.session['user_id']
     conn = get_db_connection()
     with conn.cursor() as cursor:
+        cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
+        user_info = cursor.fetchone()
+        
+                # Ambil data kuota dosen
+        cursor.execute("SELECT * FROM dosen WHERE id_dosen = %s", (user_id,))
+        data_dosen = cursor.fetchone()
         cursor.execute("""
             SELECT l.*, u.nama AS nama_mahasiswa, u.username AS npm
             FROM logbook l
@@ -737,7 +835,7 @@ async def dosen_logbook(request: Request):
     return templates.TemplateResponse(
         request=request, 
         name='dosen_logbook.html', 
-        context={'logbook': daftar_logbook}
+        context={'logbook': daftar_logbook, 'user': user_info, 'dosen': data_dosen}
     )
 
 @app.get('/dosen/logbook/{id_logbook}/{aksi}', name='dosen_aksi_logbook')
@@ -764,6 +862,11 @@ async def dosen_jadwal_menguji_get(request: Request):
     user_id = request.session['user_id']
     conn = get_db_connection()
     with conn.cursor() as cursor:
+        # 1. Ambil data profil dosen aktif
+        cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
+        user_info = cursor.fetchone()
+
+        # 2. Ambil daftar jadwal menguji
         cursor.execute("""
             SELECT ps.*, u.nama AS nama_mahasiswa, u.username AS npm, p.judul_kp 
             FROM pendaftaran_sidang ps
@@ -778,7 +881,10 @@ async def dosen_jadwal_menguji_get(request: Request):
     return templates.TemplateResponse(
         request=request, 
         name='dosen_jadwal_menguji.html', 
-        context={'jadwal': jadwal_menguji}
+        context={
+            'user': user_info,        # <--- Wajib ditambahkan
+            'jadwal': jadwal_menguji
+        }
     )
 
 # 2. RUTE POST: Untuk memproses form input/edit nilai akhir dari modal
@@ -792,18 +898,23 @@ async def dosen_jadwal_menguji_post(
     if request.session.get('role') != 'dosen':
         return RedirectResponse(url='/login', status_code=303)
         
-    user_id = request.session['user_id']
     conn = get_db_connection()
     with conn.cursor() as cursor:
+        # Update nilai sidang berdasarkan id_sidang
         cursor.execute("""
             UPDATE pendaftaran_sidang 
             SET nilai_akhir = %s, catatan_revisi = %s 
-            WHERE id_sidang = %s AND id_penguji = %s
-        """, (nilai_akhir, catatan_revisi, id_sidang, user_id))
+            WHERE id_sidang = %s
+        """, (nilai_akhir, catatan_revisi, id_sidang))
+        
         conn.commit()
-    conn.close()
 
-    flash(request, "Nilai dan catatan revisi berhasil disimpan!", "success")
+        if cursor.rowcount > 0:
+            flash(request, "Nilai dan catatan revisi berhasil disimpan!", "success")
+        else:
+            flash(request, "Gagal meng-update nilai. ID Sidang tidak ditemukan.", "danger")
+
+    conn.close()
     return RedirectResponse(url='/dosen/jadwal_menguji', status_code=303)
 
 @app.get('/dosen/ta', name='dosen_ta')
@@ -814,6 +925,13 @@ async def dosen_ta(request: Request):
     user_id = request.session['user_id']
     conn = get_db_connection()
     with conn.cursor() as cursor:
+        cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
+        user_info = cursor.fetchone()
+                
+        # Ambil data kuota dosen
+        cursor.execute("SELECT * FROM dosen WHERE id_dosen = %s", (user_id,))
+        data_dosen = cursor.fetchone()
+        
         cursor.execute("""
             SELECT p.*, m.nama AS nama_mahasiswa, m.username AS npm,
                    d1.nama AS nama_p1, d2.nama AS nama_p2, d3.nama AS nama_p3
@@ -825,12 +943,24 @@ async def dosen_ta(request: Request):
             WHERE p.id_dosen_p1 = %s OR p.id_dosen_p2 = %s OR p.id_dosen_p3 = %s
         """, (user_id, user_id, user_id))
         pengajuan_ta = cursor.fetchall()
+        
+        # --- LOGIKA TAMBAHAN UNTUK MENGETAHUI STATUS SPESIFIK DOSEN INI ---
+        for p in pengajuan_ta:
+            if p['id_dosen_p1'] == user_id:
+                p['status_dosen_ini'] = p['status_p1']
+            elif p['id_dosen_p2'] == user_id:
+                p['status_dosen_ini'] = p['status_p2']
+            elif p['id_dosen_p3'] == user_id:
+                p['status_dosen_ini'] = p['status_p3']
+            else:
+                p['status_dosen_ini'] = 'pending'
+
     conn.close()
 
     return templates.TemplateResponse(
         request=request, 
         name='dosen_ta.html', 
-        context={'pengajuan_ta': pengajuan_ta, 'user_id': user_id}
+        context={'pengajuan_ta': pengajuan_ta, 'user_id': user_id, 'user': user_info, 'dosen': data_dosen}
     )
 
 @app.get('/dosen/ta/{id_pengajuan}/{aksi}', name='dosen_aksi_ta_pengajuan')
@@ -884,6 +1014,12 @@ async def dosen_ta_logbook(request: Request):
     user_id = request.session['user_id']
     conn = get_db_connection()
     with conn.cursor() as cursor:
+        cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
+        user_info = cursor.fetchone()
+                
+                        # Ambil data kuota dosen
+        cursor.execute("SELECT * FROM dosen WHERE id_dosen = %s", (user_id,))
+        data_dosen = cursor.fetchone()
         cursor.execute("""
             SELECT l.*, m.nama AS nama_mahasiswa, m.username AS npm
             FROM logbook_ta l
@@ -898,7 +1034,7 @@ async def dosen_ta_logbook(request: Request):
     return templates.TemplateResponse(
         request=request, 
         name='dosen_ta_logbook.html', 
-        context={'logbook': logbook_ta}
+        context={'logbook': logbook_ta, 'user': user_info, 'dosen': data_dosen}
     )
 
 @app.get('/dosen/ta/logbook/{id_logbook}/acc', name='dosen_ta_logbook_acc')
@@ -915,6 +1051,42 @@ async def dosen_ta_logbook_acc(request: Request, id_logbook: int):
     flash(request, "Logbook TA berhasil disetujui!", "success")
     return RedirectResponse(url='/dosen/ta/logbook', status_code=303)
 
+@app.get('/dosen/arsip', name='dosen_arsip')
+async def dosen_arsip(request: Request):
+    if request.session.get('role') != 'dosen':
+        return RedirectResponse(url='/login', status_code=303)
+        
+    user_id = request.session['user_id']
+    conn = get_db_connection()
+    with conn.cursor() as cursor:
+        # Data profil untuk sidebar
+        cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
+        user_info = cursor.fetchone()
+        
+        # Ambil gabungan data mahasiswa bimbingan KP beserta nilai sidangnya jika ada
+        cursor.execute("""
+            SELECT p.id_pengajuan, u.nama AS nama_mahasiswa, u.username AS npm, 
+                   p.judul_kp, p.file_proposal, ps.nilai_akhir, ps.file_laporan_final
+            FROM pengajuan_pembimbing p
+            JOIN users u ON p.id_mahasiswa = u.id
+            LEFT JOIN pendaftaran_sidang ps ON u.id = ps.id_mahasiswa
+            WHERE (p.id_dosen_p1 = %s AND p.status_p1 = 'accepted')
+               OR (p.id_dosen_p2 = %s AND p.status_p2 = 'accepted')
+               OR (p.id_dosen_p3 = %s AND p.status_p3 = 'accepted')
+            ORDER BY u.nama ASC
+        """, (user_id, user_id, user_id))
+        arsip_bimbingan = cursor.fetchall()
+
+    conn.close()
+
+    return templates.TemplateResponse(
+        request=request, 
+        name='dosen_arsip.html', 
+        context={
+            'user': user_info,
+            'arsip': arsip_bimbingan
+        }
+    )
 
 # --- DASHBOARD & FITUR ADMIN & KAPRODI ---
 
@@ -923,8 +1095,11 @@ async def dashboard_admin(request: Request):
     if request.session.get('role') != 'admin':
         return RedirectResponse(url='/login', status_code=303)
 
+    user_id = request.session.get('user_id')
     conn = get_db_connection()
     with conn.cursor() as cursor:
+        cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
+        user_info = cursor.fetchone()
         cursor.execute("""
             SELECT ps.*, u.nama AS nama_mahasiswa, u.username AS npm,
                    p.judul_kp, u_penguji.nama AS nama_penguji
@@ -943,7 +1118,7 @@ async def dashboard_admin(request: Request):
     return templates.TemplateResponse(
         request=request, 
         name='dashboard_admin.html', 
-        context={'pendaftaran': daftar_sidang, 'dosen': daftar_dosen}
+        context={'pendaftaran': daftar_sidang, 'dosen': daftar_dosen, 'user': user_info}
     )
 
 @app.post('/admin/verifikasi_sidang', name='admin_verifikasi_sidang')

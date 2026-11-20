@@ -1593,3 +1593,89 @@ body #sidebar.sidebar-mahasiswa .nav-link-custom.active {
     transform: translateY(-2px);
     opacity: 0.9;
 }
+
+/* ==========================================
+   TEMA KHUSUS SIDEBAR & HERO BANNER DOSEN (DISAMAKAN DENGAN MAHASISWA)
+   ========================================== */
+body #sidebar.sidebar-dosen {
+    background: linear-gradient(180deg, #0b1f40 0%, #061226 100%) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+body #sidebar.sidebar-dosen .fw-bold.fs-5 {
+    color: #ffffff !important;
+    font-family: 'Sora', sans-serif;
+}
+
+/* Mengubah aksen teks "Dosen" dan ikon menjadi biru terang/putih */
+body #sidebar.sidebar-dosen .fw-bold .text-primary {
+    color: #38bdf8 !important; 
+}
+
+body #sidebar.sidebar-dosen .bg-primary {
+    background-color: #0F5BB9 !important;
+    color: #ffffff !important;
+    border-radius: 12px !important;
+}
+
+body #sidebar.sidebar-dosen .nav-link-custom {
+    color: rgba(255, 255, 255, 0.85) !important;
+}
+
+body #sidebar.sidebar-dosen .nav-link-custom:hover {
+    background: rgba(255, 255, 255, 0.12) !important;
+    color: #ffffff !important;
+    transform: translateX(3px);
+}
+
+body #sidebar.sidebar-dosen .nav-link-custom.active {
+    background: #0F5BB9 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    box-shadow: 0 6px 18px rgba(15, 91, 185, 0.45) !important;
+    transform: translateX(5px);
+}
+
+body #sidebar.sidebar-dosen .nav-link-custom.active i {
+    color: #ffffff !important;
+}
+
+/* Hero Banner Sub-Page Dosen (Navy Theme) */
+.hero-banner-sub-dosen {
+    background: linear-gradient(135deg, #0b1f40 0%, #061226 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 20px;
+    padding: 2rem;
+    color: #ffffff !important;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+    box-shadow: 0 10px 25px -5px rgba(6, 18, 38, 0.25) !important;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 1.75rem;
+}
+
+.hero-banner-sub-dosen::after {
+    content: '';
+    position: absolute;
+    right: -20px;
+    bottom: -40px;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(15, 91, 185, 0.4) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.badge-dosen-hero {
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(4px);
+    color: #ffffff;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 5px 14px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
