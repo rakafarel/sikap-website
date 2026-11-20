@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request, Form, File, UploadFile, HTTPException, status
+from fastapi import FastAPI, Request, Form, File, UploadFile, HTTPException
 from fastapi.responses import RedirectResponse, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -10,7 +10,15 @@ import pymysql
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 
-load_dotenv()  # baca file .env
+# Baca .env dari direktori saat ini atau folder induk (sikap-website/.env)
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+PARENT_ENV = os.path.join(BASE_DIR, '..', '.env')
+if os.path.exists(os.path.join(BASE_DIR, '.env')):
+    load_dotenv(os.path.join(BASE_DIR, '.env'))
+elif os.path.exists(PARENT_ENV):
+    load_dotenv(PARENT_ENV)
+else:
+    load_dotenv()
 
 app = FastAPI()
 
@@ -19,36 +27,29 @@ app.secret_key = os.getenv('SECRET_KEY', 'default_secret_key')
 app.add_middleware(SessionMiddleware, secret_key=app.secret_key)
 
 # --- Konfigurasi folder upload (src/uploads) ---
-BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 UPLOAD_ROOT = os.path.join(BASE_DIR, 'uploads')
-
 UPLOAD_FOLDER = os.path.join(UPLOAD_ROOT, 'proposal')
 UPLOAD_LOGBOOK = os.path.join(UPLOAD_ROOT, 'logbook')
 UPLOAD_SIDANG = os.path.join(UPLOAD_ROOT, 'sidang')
 UPLOAD_PROFIL = os.path.join(UPLOAD_ROOT, 'profil')
-os.makedirs(UPLOAD_PROFIL, exist_ok=True)
 ALLOWED_EXTENSIONS = {'pdf'}
 
-
-# Buat folder penyimpanan jika belum ada
 for folder in (UPLOAD_FOLDER, UPLOAD_LOGBOOK, UPLOAD_SIDANG, UPLOAD_PROFIL):
     os.makedirs(folder, exist_ok=True)
 
 # Mount Static Files
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
 
 # --- CONTEXT PROCESSOR & JINJA2 GLOBALS (KOMPATIBILITAS FLASK) ---
 
-# 1. Otomatis menyuntikkan 'session' ke seluruh template HTML
 def session_context_processor(request: Request):
     return {"session": request.session}
 
 templates = Jinja2Templates(
-    directory="templates",
+    directory=os.path.join(BASE_DIR, "templates"),
     context_processors=[session_context_processor]
 )
 
-# 2. Custom url_for agar mendukung static filename='...' ala Flask dan route FastAPI
 def custom_url_for(name: str, **path_params):
     try:
         if name == 'static' and 'filename' in path_params:
@@ -59,7 +60,6 @@ def custom_url_for(name: str, **path_params):
 
 templates.env.globals['url_for'] = custom_url_for
 
-# 3. Custom Flash Message Bridge dengan @pass_context agar mendukung {{ get_flashed_messages(...) }}
 @pass_context
 def get_flashed_messages(context, **kwargs):
     request = context.get("request")
@@ -85,9 +85,9 @@ def allowed_file(filename: str):
 def get_db_connection():
     return pymysql.connect(
         host=os.getenv('DB_HOST', 'localhost'),
-        user=os.getenv('DB_USER'),
+        user=os.getenv('DB_USER', 'root'),
         password=os.getenv('DB_PASSWORD', ''),
-        database=os.getenv('DB_NAME'),
+        database=os.getenv('DB_NAME', 'db_sidang_kp'),
         cursorclass=pymysql.cursors.DictCursor
     )
 
@@ -108,6 +108,7 @@ async def api_status_kp(request: Request):
     if request.session.get('role') != 'mahasiswa':
         return JSONResponse({'lulus': False}, status_code=401)
     return JSONResponse({'lulus': cek_sudah_lulus_kp(request.session['user_id'])})
+
 
 # --- ROUTE UTAMA & AUTENTIKASI ---
 
@@ -189,7 +190,9 @@ async def logout(request: Request):
     flash(request, "Anda berhasil keluar dari SIKAP.", "info")
     return RedirectResponse(url='/login', status_code=303)
 
-# --- BUKA BERKAS UPLOAD (proposal, logbook, sidang) ---
+
+# --- BUKA BERKAS UPLOAD ---
+
 @app.get('/uploads/{folder}/{filename}', name='buka_berkas')
 async def buka_berkas(request: Request, folder: str, filename: str):
     if 'user_id' not in request.session:
@@ -210,6 +213,7 @@ async def buka_berkas(request: Request, folder: str, filename: str):
         
     return FileResponse(file_path)
 
+
 # --- ROUTE DASHBOARD MULTI-ROLE & FITUR MAHASISWA ---
 
 @app.get('/dashboard/mahasiswa', name='dashboard_mahasiswa')
@@ -221,15 +225,15 @@ async def dashboard_mahasiswa(request: Request):
     conn = get_db_connection()
     
     with conn.cursor() as cursor:
-        # TAMBAHKAN INI: Ambil data user yang sedang login (termasuk foto_profil)
         cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
         user = cursor.fetchone()
 
         cursor.execute("""
-            SELECT p.*, u1.nama AS nama_p1, u2.nama AS nama_p2 
+            SELECT p.*, u1.nama AS nama_p1, u2.nama AS nama_p2, u3.nama AS nama_p3
             FROM pengajuan_pembimbing p
             LEFT JOIN users u1 ON p.id_dosen_p1 = u1.id
             LEFT JOIN users u2 ON p.id_dosen_p2 = u2.id
+            LEFT JOIN users u3 ON p.id_dosen_p3 = u3.id
             WHERE p.id_mahasiswa = %s
             ORDER BY p.id_pengajuan DESC LIMIT 1
         """, (user_id,))
@@ -241,9 +245,9 @@ async def dashboard_mahasiswa(request: Request):
         cursor.execute("""
             SELECT p.*, d1.nama AS nama_p1, d2.nama AS nama_p2, d3.nama AS nama_p3 
             FROM pengajuan_ta p
-            JOIN users d1 ON p.id_dosen_p1 = d1.id
-            JOIN users d2 ON p.id_dosen_p2 = d2.id
-            JOIN users d3 ON p.id_dosen_p3 = d3.id
+            LEFT JOIN users d1 ON p.id_dosen_p1 = d1.id
+            LEFT JOIN users d2 ON p.id_dosen_p2 = d2.id
+            LEFT JOIN users d3 ON p.id_dosen_p3 = d3.id
             WHERE p.id_mahasiswa = %s
             ORDER BY p.id_pengajuan DESC LIMIT 1
         """, (user_id,))
@@ -262,7 +266,7 @@ async def dashboard_mahasiswa(request: Request):
         request=request, 
         name='dashboard_mahasiswa.html', 
         context={
-            'user': user,  # <--- WAJIB ADA AGAR TERBACA DI HTML SIDEBAR
+            'user': user,
             'pengajuan': pengajuan, 
             'pengajuan_ta': pengajuan_ta, 
             'logbook_stat': logbook_stat, 
@@ -287,14 +291,16 @@ async def mahasiswa_pengajuan_get(request: Request):
             FROM dosen d 
             JOIN users u ON d.id_dosen = u.id 
             WHERE d.kuota_terpakai < d.max_kuota
+            ORDER BY u.nama ASC
         """)
         daftar_dosen = cursor.fetchall()
 
         cursor.execute("""
-            SELECT p.*, u1.nama AS nama_p1, u2.nama AS nama_p2 
+            SELECT p.*, u1.nama AS nama_p1, u2.nama AS nama_p2, u3.nama AS nama_p3
             FROM pengajuan_pembimbing p
             LEFT JOIN users u1 ON p.id_dosen_p1 = u1.id
             LEFT JOIN users u2 ON p.id_dosen_p2 = u2.id
+            LEFT JOIN users u3 ON p.id_dosen_p3 = u3.id
             WHERE p.id_mahasiswa = %s
             ORDER BY p.id_pengajuan DESC LIMIT 1
         """, (user_id,))
@@ -322,7 +328,6 @@ async def mahasiswa_pengajuan_post(
 
     user_id = request.session['user_id']
     
-    # Validasi agar tidak ada dosen yang dipilih dua atau tiga kali
     if id_dosen_p1 == id_dosen_p2 or id_dosen_p1 == id_dosen_p3 or id_dosen_p2 == id_dosen_p3:
         flash(request, "Pilihan Dosen Pembimbing 1, 2, dan 3 tidak boleh ada yang sama!", "danger")
         return RedirectResponse(url='/mahasiswa/pengajuan', status_code=303)
@@ -358,7 +363,6 @@ async def mahasiswa_pengajuan_reset(request: Request):
     user_id = request.session['user_id']
     conn = get_db_connection()
     with conn.cursor() as cursor:
-        # Menghapus pengajuan KP yang sebelumnya ditolak agar mahasiswa bisa mengajukan baru
         cursor.execute("DELETE FROM pengajuan_pembimbing WHERE id_mahasiswa = %s AND status_final IN ('rejected', 'unassigned')", (user_id,))
         conn.commit()
     conn.close()
@@ -452,7 +456,6 @@ async def mahasiswa_sidang_post(
     if request.session.get('role') != 'mahasiswa':
         return RedirectResponse(url='/login', status_code=303)
 
-    # Validasi apakah berkas benar-benar terunggah dan memiliki nama file
     if not file_laporan or not file_laporan.filename:
         flash(request, "File Laporan Final wajib diunggah!", "danger")
         return RedirectResponse(url='/mahasiswa/sidang', status_code=303)
@@ -468,12 +471,10 @@ async def mahasiswa_sidang_post(
     user_id = request.session['user_id']
     username = request.session['username']
 
-    # Buat nama file aman
     fn_laporan = secure_filename(f"{username}_laporan.pdf")
     fn_transkrip = secure_filename(f"{username}_transkrip.pdf")
     fn_krs = secure_filename(f"{username}_krs.pdf")
 
-    # Simpan file ke direktori UPLOAD_SIDANG
     files_to_save = [
         (file_laporan, fn_laporan),
         (file_transkrip, fn_transkrip),
@@ -488,7 +489,6 @@ async def mahasiswa_sidang_post(
         with open(path, "wb") as buffer:
             buffer.write(content)
 
-    # Simpan/Update Database
     conn = get_db_connection()
     with conn.cursor() as cursor:
         cursor.execute("SELECT id_sidang FROM pendaftaran_sidang WHERE id_mahasiswa = %s", (user_id,))
@@ -511,6 +511,7 @@ async def mahasiswa_sidang_post(
     flash(request, "Berkas pendaftaran sidang berhasil dikirim!", "success")
     return RedirectResponse(url='/mahasiswa/sidang', status_code=303)
 
+
 # --- MODUL TUGAS AKHIR (TA) MAHASISWA ---
 
 @app.get('/mahasiswa/ta/pengajuan', name='mahasiswa_ta_pengajuan')
@@ -530,9 +531,9 @@ async def mahasiswa_ta_pengajuan_get(request: Request):
         cursor.execute("""
             SELECT p.*, d1.nama AS nama_p1, d2.nama AS nama_p2, d3.nama AS nama_p3 
             FROM pengajuan_ta p
-            JOIN users d1 ON p.id_dosen_p1 = d1.id
-            JOIN users d2 ON p.id_dosen_p2 = d2.id
-            JOIN users d3 ON p.id_dosen_p3 = d3.id
+            LEFT JOIN users d1 ON p.id_dosen_p1 = d1.id
+            LEFT JOIN users d2 ON p.id_dosen_p2 = d2.id
+            LEFT JOIN users d3 ON p.id_dosen_p3 = d3.id
             WHERE p.id_mahasiswa = %s
             ORDER BY p.id_pengajuan DESC LIMIT 1
         """, (user_id,))
@@ -665,15 +666,16 @@ async def dashboard_dosen(request: Request):
     user_id = request.session['user_id']
     conn = get_db_connection()
     with conn.cursor() as cursor:
-        # Ambil data profil user (untuk sidebar)
         cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
         user_info = cursor.fetchone()
 
-        # Ambil data kuota dosen
         cursor.execute("SELECT * FROM dosen WHERE id_dosen = %s", (user_id,))
         data_dosen = cursor.fetchone()
+        if not data_dosen:
+            cursor.execute("INSERT INTO dosen (id_dosen, max_kuota, kuota_terpakai) VALUES (%s, 2, 0)", (user_id,))
+            conn.commit()
+            data_dosen = {'id_dosen': user_id, 'max_kuota': 2, 'kuota_terpakai': 0}
 
-        # Ambil pengajuan masuk (LOGIKA BERJENJANG)
         cursor.execute("""
             SELECT p.*, u.nama AS nama_mahasiswa, u.username AS npm
             FROM pengajuan_pembimbing p
@@ -684,7 +686,6 @@ async def dashboard_dosen(request: Request):
         """, (user_id, user_id, user_id))
         pengajuan_masuk = cursor.fetchall()
 
-        # Ambil mahasiswa bimbingan aktif
         cursor.execute("""
             SELECT p.*, u.nama AS nama_mahasiswa, u.username AS npm
             FROM pengajuan_pembimbing p
@@ -695,17 +696,16 @@ async def dashboard_dosen(request: Request):
         """, (user_id, user_id, user_id)) 
         mahasiswa_bimbingan = cursor.fetchall()
 
-        # --- KODE YANG DIPERBAIKI (SESUAI DATABASE) ---
-        # 1. Hitung pengajuan TA yang menunggu persetujuan (pending) berdasarkan logika berjenjang
         cursor.execute("""
             SELECT 1 FROM pengajuan_ta 
-            WHERE (pilihan_aktif = 1 AND id_dosen_p1 = %s AND status_p1 = 'pending')
-               OR (pilihan_aktif = 2 AND id_dosen_p2 = %s AND status_p2 = 'pending')
-               OR (pilihan_aktif = 3 AND id_dosen_p3 = %s AND status_p3 = 'pending')
+            WHERE status_final = 'pending' AND (
+                (pilihan_aktif = 1 AND id_dosen_p1 = %s AND status_p1 = 'pending')
+                OR (pilihan_aktif = 2 AND id_dosen_p2 = %s AND status_p2 = 'pending')
+                OR (pilihan_aktif = 3 AND id_dosen_p3 = %s AND status_p3 = 'pending')
+            )
         """, (user_id, user_id, user_id))
         pengajuan_ta_pending_count = len(cursor.fetchall())
 
-        # 2. Hitung jumlah mahasiswa TA yang sudah aktif (accepted)
         cursor.execute("""
             SELECT 1 FROM pengajuan_ta 
             WHERE (id_dosen_p1 = %s AND status_p1 = 'accepted')
@@ -714,7 +714,6 @@ async def dashboard_dosen(request: Request):
         """, (user_id, user_id, user_id))
         stat_ta = len(cursor.fetchall())
 
-        # 3. Hitung jadwal menguji sidang KP yang belum dinilai
         cursor.execute("SELECT 1 FROM pendaftaran_sidang WHERE id_penguji = %s AND nilai_akhir IS NULL", (user_id,))
         stat_sidang = len(cursor.fetchall())
 
@@ -748,8 +747,8 @@ async def dosen_aksi_pengajuan(request: Request, id_pengajuan: int, aksi: str):
         cursor.execute("SELECT * FROM pengajuan_pembimbing WHERE id_pengajuan = %s", (id_pengajuan,))
         pengajuan = cursor.fetchone()
 
-        if not pengajuan:
-            flash(request, "Data pengajuan tidak ditemukan!", "danger")
+        if not pengajuan or not data_dosen:
+            flash(request, "Data pengajuan atau profil dosen tidak ditemukan!", "danger")
             conn.close()
             return RedirectResponse(url='/dashboard/dosen', status_code=303)
 
@@ -763,11 +762,7 @@ async def dosen_aksi_pengajuan(request: Request, id_pengajuan: int, aksi: str):
                 flash(request, "Gagal menerima! Kuota bimbingan Anda sudah penuh.", "danger")
             else:
                 cursor.execute("UPDATE dosen SET kuota_terpakai = kuota_terpakai + 1 WHERE id_dosen = %s", (user_id,))
-                cursor.execute("""
-                    UPDATE pengajuan_pembimbing 
-                    SET status_final = 'accepted' 
-                    WHERE id_pengajuan = %s
-                """, (id_pengajuan,))
+                cursor.execute("UPDATE pengajuan_pembimbing SET status_final = 'accepted' WHERE id_pengajuan = %s", (id_pengajuan,))
                 if is_p1:
                     cursor.execute("UPDATE pengajuan_pembimbing SET status_p1 = 'accepted' WHERE id_pengajuan = %s", (id_pengajuan,))
                 elif is_p2:
@@ -805,7 +800,6 @@ async def dosen_aksi_pengajuan(request: Request, id_pengajuan: int, aksi: str):
 
     return RedirectResponse(url='/dashboard/dosen', status_code=303)
 
-
 @app.get('/dosen/logbook', name='dosen_logbook')
 async def dosen_logbook(request: Request):
     if request.session.get('role') != 'dosen':
@@ -817,18 +811,19 @@ async def dosen_logbook(request: Request):
         cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
         user_info = cursor.fetchone()
         
-                # Ambil data kuota dosen
         cursor.execute("SELECT * FROM dosen WHERE id_dosen = %s", (user_id,))
         data_dosen = cursor.fetchone()
+
         cursor.execute("""
             SELECT l.*, u.nama AS nama_mahasiswa, u.username AS npm
             FROM logbook l
             JOIN users u ON l.id_mahasiswa = u.id
             JOIN pengajuan_pembimbing p ON l.id_mahasiswa = p.id_mahasiswa
-            WHERE ((p.id_dosen_p1 = %s AND p.status_p1 = 'accepted') 
-               OR (p.id_dosen_p2 = %s AND p.status_p2 = 'accepted'))
+            WHERE (p.id_dosen_p1 = %s AND p.status_p1 = 'accepted') 
+               OR (p.id_dosen_p2 = %s AND p.status_p2 = 'accepted')
+               OR (p.id_dosen_p3 = %s AND p.status_p3 = 'accepted')
             ORDER BY l.created_at DESC
-        """, (user_id, user_id))
+        """, (user_id, user_id, user_id))
         daftar_logbook = cursor.fetchall()
     conn.close()
 
@@ -853,7 +848,6 @@ async def dosen_aksi_logbook(request: Request, id_logbook: int, aksi: str):
     flash(request, f"Status logbook berhasil diubah menjadi {status_val}.", "success")
     return RedirectResponse(url='/dosen/logbook', status_code=303)
 
-# 1. RUTE GET: Untuk membuka/menampilkan halaman jadwal menguji
 @app.get('/dosen/jadwal_menguji', name='dosen_jadwal_menguji')
 async def dosen_jadwal_menguji_get(request: Request):
     if request.session.get('role') != 'dosen':
@@ -862,11 +856,9 @@ async def dosen_jadwal_menguji_get(request: Request):
     user_id = request.session['user_id']
     conn = get_db_connection()
     with conn.cursor() as cursor:
-        # 1. Ambil data profil dosen aktif
         cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
         user_info = cursor.fetchone()
 
-        # 2. Ambil daftar jadwal menguji
         cursor.execute("""
             SELECT ps.*, u.nama AS nama_mahasiswa, u.username AS npm, p.judul_kp 
             FROM pendaftaran_sidang ps
@@ -881,13 +873,9 @@ async def dosen_jadwal_menguji_get(request: Request):
     return templates.TemplateResponse(
         request=request, 
         name='dosen_jadwal_menguji.html', 
-        context={
-            'user': user_info,        # <--- Wajib ditambahkan
-            'jadwal': jadwal_menguji
-        }
+        context={'user': user_info, 'jadwal': jadwal_menguji}
     )
 
-# 2. RUTE POST: Untuk memproses form input/edit nilai akhir dari modal
 @app.post('/dosen/jadwal_menguji', name='dosen_jadwal_menguji_post')
 async def dosen_jadwal_menguji_post(
     request: Request,
@@ -900,13 +888,11 @@ async def dosen_jadwal_menguji_post(
         
     conn = get_db_connection()
     with conn.cursor() as cursor:
-        # Update nilai sidang berdasarkan id_sidang
         cursor.execute("""
             UPDATE pendaftaran_sidang 
             SET nilai_akhir = %s, catatan_revisi = %s 
             WHERE id_sidang = %s
         """, (nilai_akhir, catatan_revisi, id_sidang))
-        
         conn.commit()
 
         if cursor.rowcount > 0:
@@ -928,7 +914,6 @@ async def dosen_ta(request: Request):
         cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
         user_info = cursor.fetchone()
                 
-        # Ambil data kuota dosen
         cursor.execute("SELECT * FROM dosen WHERE id_dosen = %s", (user_id,))
         data_dosen = cursor.fetchone()
         
@@ -937,14 +922,13 @@ async def dosen_ta(request: Request):
                    d1.nama AS nama_p1, d2.nama AS nama_p2, d3.nama AS nama_p3
             FROM pengajuan_ta p
             JOIN users m ON p.id_mahasiswa = m.id
-            JOIN users d1 ON p.id_dosen_p1 = d1.id
-            JOIN users d2 ON p.id_dosen_p2 = d2.id
-            JOIN users d3 ON p.id_dosen_p3 = d3.id
+            LEFT JOIN users d1 ON p.id_dosen_p1 = d1.id
+            LEFT JOIN users d2 ON p.id_dosen_p2 = d2.id
+            LEFT JOIN users d3 ON p.id_dosen_p3 = d3.id
             WHERE p.id_dosen_p1 = %s OR p.id_dosen_p2 = %s OR p.id_dosen_p3 = %s
         """, (user_id, user_id, user_id))
         pengajuan_ta = cursor.fetchall()
         
-        # --- LOGIKA TAMBAHAN UNTUK MENGETAHUI STATUS SPESIFIK DOSEN INI ---
         for p in pengajuan_ta:
             if p['id_dosen_p1'] == user_id:
                 p['status_dosen_ini'] = p['status_p1']
@@ -976,25 +960,35 @@ async def dosen_aksi_ta_pengajuan(request: Request, id_pengajuan: int, aksi: str
         
         if p:
             aktif = p['pilihan_aktif']
+            is_p1 = (int(p['id_dosen_p1']) == int(user_id))
+            is_p2 = (int(p['id_dosen_p2']) == int(user_id))
+            is_p3 = (int(p['id_dosen_p3']) == int(user_id))
+
             if aksi == 'terima':
                 cursor.execute("UPDATE pengajuan_ta SET status_final = 'accepted' WHERE id_pengajuan = %s", (id_pengajuan,))
+                if is_p1:
+                    cursor.execute("UPDATE pengajuan_ta SET status_p1 = 'accepted' WHERE id_pengajuan = %s", (id_pengajuan,))
+                elif is_p2:
+                    cursor.execute("UPDATE pengajuan_ta SET status_p2 = 'accepted' WHERE id_pengajuan = %s", (id_pengajuan,))
+                elif is_p3:
+                    cursor.execute("UPDATE pengajuan_ta SET status_p3 = 'accepted' WHERE id_pengajuan = %s", (id_pengajuan,))
                 flash(request, "Pengajuan Tugas Akhir berhasil diterima!", "success")
             else:
-                if aktif == 1 and p['id_dosen_p1'] == user_id:
+                if aktif == 1 and is_p1:
                     cursor.execute("""
                         UPDATE pengajuan_ta 
                         SET status_p1 = 'rejected', pilihan_aktif = 2, status_p2 = 'pending' 
                         WHERE id_pengajuan = %s
                     """, (id_pengajuan,))
                     flash(request, "Pengajuan ditolak dan otomatis diteruskan ke Dosen Pilihan ke-2.", "warning")
-                elif aktif == 2 and p['id_dosen_p2'] == user_id:
+                elif aktif == 2 and is_p2:
                     cursor.execute("""
                         UPDATE pengajuan_ta 
                         SET status_p2 = 'rejected', pilihan_aktif = 3, status_p3 = 'pending' 
                         WHERE id_pengajuan = %s
                     """, (id_pengajuan,))
                     flash(request, "Pengajuan ditolak dan otomatis diteruskan ke Dosen Pilihan ke-3.", "warning")
-                elif aktif == 3 and p['id_dosen_p3'] == user_id:
+                elif aktif == 3 and is_p3:
                     cursor.execute("""
                         UPDATE pengajuan_ta 
                         SET status_p3 = 'rejected', status_final = 'rejected' 
@@ -1017,15 +1011,17 @@ async def dosen_ta_logbook(request: Request):
         cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
         user_info = cursor.fetchone()
                 
-                        # Ambil data kuota dosen
         cursor.execute("SELECT * FROM dosen WHERE id_dosen = %s", (user_id,))
         data_dosen = cursor.fetchone()
+
         cursor.execute("""
             SELECT l.*, m.nama AS nama_mahasiswa, m.username AS npm
             FROM logbook_ta l
             JOIN users m ON l.id_mahasiswa = m.id
             JOIN pengajuan_ta p ON m.id = p.id_mahasiswa
-            WHERE p.id_dosen_p1 = %s OR p.id_dosen_p2 = %s OR p.id_dosen_p3 = %s
+            WHERE (p.id_dosen_p1 = %s AND p.status_p1 = 'accepted')
+               OR (p.id_dosen_p2 = %s AND p.status_p2 = 'accepted')
+               OR (p.id_dosen_p3 = %s AND p.status_p3 = 'accepted')
             ORDER BY l.tanggal_bimbingan DESC
         """, (user_id, user_id, user_id))
         logbook_ta = cursor.fetchall()
@@ -1059,11 +1055,9 @@ async def dosen_arsip(request: Request):
     user_id = request.session['user_id']
     conn = get_db_connection()
     with conn.cursor() as cursor:
-        # Data profil untuk sidebar
         cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
         user_info = cursor.fetchone()
         
-        # Ambil gabungan data mahasiswa bimbingan KP beserta nilai sidangnya jika ada
         cursor.execute("""
             SELECT p.id_pengajuan, u.nama AS nama_mahasiswa, u.username AS npm, 
                    p.judul_kp, p.file_proposal, ps.nilai_akhir, ps.file_laporan_final
@@ -1082,11 +1076,9 @@ async def dosen_arsip(request: Request):
     return templates.TemplateResponse(
         request=request, 
         name='dosen_arsip.html', 
-        context={
-            'user': user_info,
-            'arsip': arsip_bimbingan
-        }
+        context={'user': user_info, 'arsip': arsip_bimbingan}
     )
+
 
 # --- DASHBOARD & FITUR ADMIN & KAPRODI ---
 
@@ -1244,12 +1236,13 @@ async def admin_mahasiswa(request: Request):
         cursor.execute("""
             SELECT u.id, u.nama, u.username AS npm,
                    p.status_final, p.judul_kp,
-                   u_p1.nama AS nama_p1, u_p2.nama AS nama_p2,
+                   u_p1.nama AS nama_p1, u_p2.nama AS nama_p2, u_p3.nama AS nama_p3,
                    ps.status_verifikasi AS status_sidang, ps.nilai_akhir
             FROM users u
             LEFT JOIN pengajuan_pembimbing p ON u.id = p.id_mahasiswa
             LEFT JOIN users u_p1 ON p.id_dosen_p1 = u_p1.id
             LEFT JOIN users u_p2 ON p.id_dosen_p2 = u_p2.id
+            LEFT JOIN users u_p3 ON p.id_dosen_p3 = u_p3.id
             LEFT JOIN pendaftaran_sidang ps ON u.id = ps.id_mahasiswa
             WHERE u.role = 'mahasiswa'
             ORDER BY u.nama ASC
@@ -1359,11 +1352,9 @@ async def admin_hapus_akun(request: Request, id_user: int):
     flash(request, "Akun berhasil dihapus dari sistem.", "success")
     return RedirectResponse(url='/admin/akun', status_code=303)
 
+
 # --- ROUTE PROFIL PENGGUNA (MULTI-ROLE) ---
 
-# ==========================================
-# 1. RUTE MENAMPILKAN HALAMAN PROFIL (GET /profil)
-# ==========================================
 @app.get('/profil', name='profil_get')
 async def profil_get(request: Request):
     if 'user_id' not in request.session:
@@ -1380,51 +1371,41 @@ async def profil_get(request: Request):
 
     try:
         with conn.cursor() as cursor:
-            # 1. Ambil data user
             cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
             user = cursor.fetchone()
 
             if role == 'mahasiswa':
-                # 2. Ambil data KP secara aman
-                try:
-                    cursor.execute("""
-                        SELECT p.*, d1.nama AS nama_dosen_p1, d2.nama AS nama_dosen_p2 
-                        FROM pengajuan_kp p
-                        LEFT JOIN dosen d1 ON p.id_dosen_p1 = d1.id_dosen
-                        LEFT JOIN dosen d2 ON p.id_dosen_p2 = d2.id_dosen
-                        WHERE p.id_mahasiswa = %s
-                    """, (user_id,))
-                    pengajuan_kp = cursor.fetchone()
-                except Exception:
-                    # Jika tabel pengajuan_kp belum ada / nama beda, bypass tanpa melempar error
-                    pengajuan_kp = None
+                cursor.execute("""
+                    SELECT p.*, u1.nama AS nama_dosen_p1, u2.nama AS nama_dosen_p2, u3.nama AS nama_dosen_p3
+                    FROM pengajuan_pembimbing p
+                    LEFT JOIN users u1 ON p.id_dosen_p1 = u1.id
+                    LEFT JOIN users u2 ON p.id_dosen_p2 = u2.id
+                    LEFT JOIN users u3 ON p.id_dosen_p3 = u3.id
+                    WHERE p.id_mahasiswa = %s
+                    ORDER BY p.id_pengajuan DESC LIMIT 1
+                """, (user_id,))
+                pengajuan_kp = cursor.fetchone()
 
-                # 3. Ambil data TA secara aman
-                try:
-                    cursor.execute("""
-                        SELECT t.*, d1.nama AS nama_dosen_p1, d2.nama AS nama_dosen_p2 
-                        FROM pengajuan_ta t
-                        LEFT JOIN dosen d1 ON t.id_dosen_p1 = d1.id_dosen
-                        LEFT JOIN dosen d2 ON t.id_dosen_p2 = d2.id_dosen
-                        WHERE t.id_mahasiswa = %s
-                    """, (user_id,))
-                    pengajuan_ta = cursor.fetchone()
-                except Exception:
-                    pengajuan_ta = None
+                cursor.execute("""
+                    SELECT t.*, u1.nama AS nama_dosen_p1, u2.nama AS nama_dosen_p2, u3.nama AS nama_dosen_p3
+                    FROM pengajuan_ta t
+                    LEFT JOIN users u1 ON t.id_dosen_p1 = u1.id
+                    LEFT JOIN users u2 ON t.id_dosen_p2 = u2.id
+                    LEFT JOIN users u3 ON t.id_dosen_p3 = u3.id
+                    WHERE t.id_mahasiswa = %s
+                    ORDER BY t.id_pengajuan DESC LIMIT 1
+                """, (user_id,))
+                pengajuan_ta = cursor.fetchone()
 
             elif role == 'dosen':
-                try:
-                    cursor.execute("SELECT * FROM dosen WHERE id_dosen = %s", (user_id,))
-                    dosen_info = cursor.fetchone()
-                except Exception:
-                    dosen_info = None
+                cursor.execute("SELECT * FROM dosen WHERE id_dosen = %s", (user_id,))
+                dosen_info = cursor.fetchone()
 
     except Exception as e:
         flash(request, f"Gagal memuat data profil: {e}", "danger")
     finally:
         conn.close()
 
-    # Fallback jika user tidak ditemukan di DB
     if not user:
         user = {
             'id': user_id,
@@ -1433,6 +1414,7 @@ async def profil_get(request: Request):
             'role': role,
             'email': '',
             'no_hp': '',
+            'alamat': '',
             'foto_profil': None
         }
 
@@ -1447,10 +1429,6 @@ async def profil_get(request: Request):
         }
     )
 
-
-# ==========================================
-# 2. RUTE UPLOAD FOTO PROFIL (POST)
-# ==========================================
 @app.post('/profil/upload-foto')
 async def profil_upload_foto(
     request: Request,
@@ -1467,11 +1445,9 @@ async def profil_upload_foto(
             filename_foto = secure_filename(f"user_{user_id}_profile.{ext}")
             file_path = os.path.join(UPLOAD_PROFIL, filename_foto)
             
-            # Simpan file ke folder uploads/profil
             with open(file_path, "wb") as buffer:
                 buffer.write(await foto_profil.read())
             
-            # Update database
             conn = get_db_connection()
             with conn.cursor() as cursor:
                 cursor.execute("UPDATE users SET foto_profil = %s WHERE id = %s", (filename_foto, user_id))
@@ -1484,10 +1460,6 @@ async def profil_upload_foto(
             
     return RedirectResponse(url='/profil', status_code=303)
 
-
-# ==========================================
-# 3. RUTE UPDATE BIODATA TAB 1 (POST)
-# ==========================================
 @app.post('/profil/update-biodata')
 async def profil_update_biodata(
     request: Request,
@@ -1517,10 +1489,6 @@ async def profil_update_biodata(
         
     return RedirectResponse(url='/profil', status_code=303)
 
-
-# ==========================================
-# 4. RUTE UPDATE PASSWORD TAB 3 (POST)
-# ==========================================
 @app.post('/profil/update-password')
 async def profil_update_password(
     request: Request,
@@ -1561,4 +1529,5 @@ async def profil_update_password(
 # --- JALANKAN SERVER ---
 if __name__ == '__main__':
     import uvicorn
-    uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=True)
+    module_name = os.path.splitext(os.path.basename(__file__))[0]
+    uvicorn.run(f"{module_name}:app", host="127.0.0.1", port=8000, reload=True)

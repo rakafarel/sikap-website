@@ -1147,25 +1147,6 @@ body {
    TEMA SIDEBAR DOSEN (HIJAU EMERALD & PUTIH)
    ========================================== */
 
-/* 1. Latar Belakang Sidebar Dosen (Gradasi Hijau Emerald Dark) */
-#sidebar.sidebar-dosen {
-    background: linear-gradient(180deg, #064e3b 0%, #022c22 100%) !important;
-    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
-}
-
-/* 2. Brand SIKAP Dosen */
-#sidebar.sidebar-dosen .fw-bold.fs-5 {
-    color: #10b981 !important; /* Teks "SIKAP" Hijau Emerald Segar */
-}
-
-#sidebar.sidebar-dosen .fw-bold .text-success {
-    color: #ffffff !important; /* Teks "Dosen" Putih Terang */
-}
-
-#sidebar.sidebar-dosen .bg-success {
-    background-color: #059669 !important; /* Kotak Ikon Hijau Emerald */
-    color: #ffffff !important;
-}
 
 /* 3. Tautan Menu Biasa (Teks Putih Semi-Transparan) */
 #sidebar.sidebar-dosen .nav-link-custom {
@@ -1188,19 +1169,6 @@ body {
     background: rgba(255, 255, 255, 0.12) !important;
     color: #ffffff !important;
     transform: translateX(3px);
-}
-
-/* 4. TAMPILAN MENU AKTIF DOSEN (Kartu Putih Melayang Teks Hijau) */
-#sidebar.sidebar-dosen .nav-link-custom.active {
-    background: #ffffff !important;
-    color: #046c4e !important;
-    font-weight: 700 !important;
-    box-shadow: 0 6px 20px rgba(5, 150, 105, 0.35) !important;
-    transform: translateX(5px);
-}
-
-#sidebar.sidebar-dosen .nav-link-custom.active i {
-    color: #046c4e !important;
 }
 
 /* 5. Garis Pemisah & Logout Dosen */
@@ -1677,5 +1645,425 @@ body #sidebar.sidebar-dosen .nav-link-custom.active i {
     padding: 5px 14px;
     border-radius: 20px;
     border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* ==========================================================================
+   PALET WARNA KHUSUS MODUL MAHASISWA
+   #0B132B | #1C2541 | #3A506B | #5BC0DE | #F4D6B0 | #D97706
+   ========================================================================== */
+:root {
+    --mhs-midnight: #0B132B;
+    --mhs-navy: #1C2541;
+    --mhs-slate: #3A506B;
+    --mhs-sky: #5BC0DE;
+    --mhs-sand: #F4D6B0;
+    --mhs-amber: #D97706;
+}
+
+/* 1. SIDEBAR MAHASISWA (#0B132B -> #1C2541) */
+#sidebar:not(.sidebar-dosen):not(.sidebar-admin):not(.sidebar-kaprodi) {
+    background: linear-gradient(180deg, var(--mhs-midnight) 0%, var(--mhs-navy) 100%) !important;
+    border-right: 1px solid rgba(91, 192, 222, 0.15) !important;
+}
+
+/* Judul Brand SIKAP Mahasiswa */
+#sidebar:not(.sidebar-dosen):not(.sidebar-admin):not(.sidebar-kaprodi) .fw-bold.fs-5 {
+    color: var(--mhs-sand) !important;
+}
+#sidebar:not(.sidebar-dosen):not(.sidebar-admin):not(.sidebar-kaprodi) .fw-bold .text-primary {
+    color: var(--mhs-sky) !important;
+}
+
+/* Menu Biasa & Hover (#3A506B) */
+#sidebar:not(.sidebar-dosen):not(.sidebar-admin):not(.sidebar-kaprodi) .nav-link-custom {
+    color: rgba(255, 255, 255, 0.82) !important;
+}
+#sidebar:not(.sidebar-dosen):not(.sidebar-admin):not(.sidebar-kaprodi) .nav-link-custom:hover {
+    background-color: rgba(58, 80, 107, 0.45) !important;
+    color: #ffffff !important;
+}
+
+/* Menu Aktif Sidebar (#3A506B + Aksen Kiri #5BC0DE) */
+#sidebar:not(.sidebar-dosen):not(.sidebar-admin):not(.sidebar-kaprodi) .nav-link-custom.active {
+    background: linear-gradient(90deg, var(--mhs-slate) 0%, rgba(58, 80, 107, 0.75) 100%) !important;
+    color: #ffffff !important;
+    border-left: 4px solid var(--mhs-sky) !important;
+    box-shadow: 0 6px 18px rgba(11, 19, 43, 0.45) !important;
+}
+#sidebar:not(.sidebar-dosen):not(.sidebar-admin):not(.sidebar-kaprodi) .nav-link-custom.active i {
+    color: var(--mhs-sky) !important;
+}
+
+/* 2. HERO BANNER MAHASISWA (#0B132B -> #1C2541) */
+.hero-banner,
+.hero-banner-sub {
+    background: linear-gradient(135deg, var(--mhs-midnight) 0%, var(--mhs-navy) 100%) !important;
+    border: 1px solid rgba(91, 192, 222, 0.2) !important;
+    box-shadow: 0 12px 28px -6px rgba(11, 19, 43, 0.35) !important;
+}
+.hero-banner::after,
+.hero-banner-sub::after {
+    background: radial-gradient(circle, rgba(91, 192, 222, 0.25) 0%, transparent 70%) !important;
+}
+
+/* Badge Hero (#3A506B & #F4D6B0) */
+.badge-hero {
+    background: rgba(58, 80, 107, 0.55) !important;
+    border: 1px solid rgba(91, 192, 222, 0.4) !important;
+    color: var(--mhs-sky) !important;
+}
+.badge-hero-outline {
+    background: rgba(244, 214, 176, 0.16) !important;
+    border: 1px solid rgba(244, 214, 176, 0.45) !important;
+    color: var(--mhs-sand) !important;
+}
+
+/* 3. TOMBOL AKSI UTAMA / CTA (#D97706 Amber Orange) */
+.btn-hero-action,
+.page .btn-primary,
+.page .btn-warning {
+    background: var(--mhs-amber) !important;
+    border-color: var(--mhs-amber) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(217, 119, 6, 0.3) !important;
+}
+.btn-hero-action:hover,
+.page .btn-primary:hover,
+.page .btn-warning:hover {
+    background: #b45309 !important;
+    border-color: #b45309 !important;
+    color: #ffffff !important;
+}
+
+/* Tombol Sekunder / Outline (#3A506B & #5BC0DE) */
+.page .btn-outline-primary {
+    color: var(--mhs-slate) !important;
+    border-color: var(--mhs-slate) !important;
+}
+.page .btn-outline-primary:hover {
+    background-color: var(--mhs-slate) !important;
+    color: #ffffff !important;
+}
+
+/* 4. KARTU, IKON, & RINGKASAN (#3A506B, #5BC0DE, #F4D6B0) */
+.page h1, .page h2, .page h3, .page h4, .page h5, .page h6,
+.page .text-dark {
+    color: var(--mhs-midnight) !important;
+}
+.page .text-primary {
+    color: var(--mhs-slate) !important;
+}
+
+/* Kotak Ikon & Metric Card */
+.metric-icon-box.bg-primary,
+.icon-avatar.bg-primary,
+.icon-avatar-lg.bg-primary,
+.icon-box.bg-primary {
+    background-color: rgba(91, 192, 222, 0.16) !important;
+    color: var(--mhs-navy) !important;
+}
+.icon-avatar.bg-primary.text-white,
+.icon-avatar-lg.bg-primary.text-white {
+    background-color: var(--mhs-navy) !important;
+    color: var(--mhs-sky) !important;
+}
+.metric-icon-box.bg-info {
+    background-color: rgba(91, 192, 222, 0.18) !important;
+    color: #0e7490 !important;
+}
+.metric-icon-box.bg-warning {
+    background-color: rgba(244, 214, 176, 0.45) !important;
+    color: var(--mhs-amber) !important;
+}
+
+/* Status Hero Box (Pengajuan & Sidang) */
+.status-hero-box {
+    background: linear-gradient(135deg, rgba(244, 214, 176, 0.35) 0%, rgba(91, 192, 222, 0.15) 100%) !important;
+    border: 1px solid rgba(58, 80, 107, 0.25) !important;
+}
+
+/* Badge Status Menunggu / Pending (#F4D6B0 + #D97706) */
+.page .badge.bg-warning.bg-opacity-10,
+.badge-pending {
+    background-color: var(--mhs-sand) !important;
+    color: #92400e !important;
+    border-color: rgba(217, 119, 6, 0.35) !important;
+}
+
+/* Upload Card & Form Focus (#5BC0DE) */
+.upload-field-card:hover {
+    border-color: var(--mhs-sky) !important;
+    box-shadow: 0 4px 14px rgba(91, 192, 222, 0.15) !important;
+}
+.page .form-control:focus,
+.page .form-select:focus {
+    border-color: var(--mhs-sky) !important;
+    box-shadow: 0 0 0 0.22rem rgba(91, 192, 222, 0.25) !important;
+}
+
+/* Step Journey di Dashboard Mahasiswa */
+.step.now {
+    background: rgba(244, 214, 176, 0.28) !important;
+}
+.step.now .step-n {
+    background: var(--mhs-amber) !important;
+    border-color: var(--mhs-amber) !important;
+    box-shadow: 0 0 0 6px rgba(217, 119, 6, 0.2) !important;
+}
+.step.done .step-n {
+    background: var(--mhs-slate) !important;
+    border-color: var(--mhs-slate) !important;
+}
+.notes li {
+    border-left-color: var(--mhs-amber) !important;
+}
+.notes a {
+    color: var(--mhs-slate) !important;
+}
+
+/* Tab Profil Mahasiswa */
+.custom-tab-pills.role-tab-mahasiswa .nav-link.active {
+    background-color: var(--mhs-navy) !important;
+    color: #ffffff !important;
+    border-bottom: 3px solid var(--mhs-sky) !important;
+}
+
+/* 5. PENYESUAIAN DARK MODE MAHASISWA (#0B132B & #1C2541) */
+[data-bs-theme="dark"] body,
+[data-bs-theme="dark"] .main-content,
+[data-bs-theme="dark"] .page {
+    background-color: var(--mhs-midnight) !important;
+    color: #f8fafc !important;
+}
+[data-bs-theme="dark"] .card-modern-v2,
+[data-bs-theme="dark"] .card-summary-modern,
+[data-bs-theme="dark"] .metric-mini-card,
+[data-bs-theme="dark"] .widget-card,
+[data-bs-theme="dark"] .panel {
+    background-color: var(--mhs-navy) !important;
+    border-color: rgba(91, 192, 222, 0.18) !important;
+}
+[data-bs-theme="dark"] .dosen-step-card,
+[data-bs-theme="dark"] .info-pill-box,
+[data-bs-theme="dark"] .upload-field-card {
+    background-color: var(--mhs-midnight) !important;
+    border-color: rgba(58, 80, 107, 0.5) !important;
+}
+[data-bs-theme="dark"] .page h1,
+[data-bs-theme="dark"] .page h2,
+[data-bs-theme="dark"] .page h3,
+[data-bs-theme="dark"] .page h4,
+[data-bs-theme="dark"] .page h5,
+[data-bs-theme="dark"] .page h6,
+[data-bs-theme="dark"] .page .text-dark {
+    color: #f8fafc !important;
+}
+[data-bs-theme="dark"] .page .text-primary {
+    color: var(--mhs-sky) !important;
+}
+
+/* ==========================================================================
+   RESPONSIVE NAVIGATION: SIDEBAR (DESKTOP) -> BOTTOM TAB BAR (MOBILE)
+   ========================================================================== */
+
+/* --- TAMPILAN MOBILE / HP (< 768px) --- */
+@media (max-width: 767.98px) {
+    /* 1. Ubah Sidebar menjadi Bottom Tab Bar tetap di bawah */
+    #sidebar:not(.sidebar-dosen):not(.sidebar-admin):not(.sidebar-kaprodi) {
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        top: auto !important;
+        width: 100% !important;
+        height: 65px !important;
+        min-height: auto !important;
+        z-index: 1050 !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-around !important;
+        padding: 0 4px !important;
+        background: var(--mhs-midnight) !important;
+        border-right: none !important;
+        border-top: 1px solid rgba(91, 192, 222, 0.25) !important;
+        box-shadow: 0 -4px 20px rgba(11, 19, 43, 0.45) !important;
+    }
+
+    /* 2. Sembunyikan Logo Brand, Header, & Tombol Toggle Sidebar di HP */
+    #sidebar .sidebar-header,
+    #sidebar .brand-wrapper,
+    #sidebar hr,
+    #sidebar .sidebar-footer {
+        display: none !important;
+    }
+
+    /* 3. Susun daftar menu secara horizontal (sejajar ke samping) */
+    #sidebar ul.nav,
+    #sidebar .sidebar-menu {
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: space-around !important;
+        align-items: center !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        gap: 2px !important;
+    }
+
+    #sidebar .nav-item {
+        flex: 1 !important;
+        text-align: center !important;
+    }
+
+    /* 4. Ubah tampilan tiap item menjadi Ikon di Atas + Teks Kecil di Bawah */
+    #sidebar:not(.sidebar-dosen):not(.sidebar-admin):not(.sidebar-kaprodi) .nav-link-custom {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 6px 2px !important;
+        font-size: 10px !important;
+        line-height: 1.2 !important;
+        border-radius: 8px !important;
+        gap: 3px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    #sidebar .nav-link-custom i {
+        font-size: 18px !important;
+        margin: 0 !important;
+    }
+
+    /* 5. Ubah indikator menu aktif dari garis kiri menjadi garis atas (#5BC0DE) */
+    #sidebar:not(.sidebar-dosen):not(.sidebar-admin):not(.sidebar-kaprodi) .nav-link-custom.active {
+        border-left: none !important;
+        border-top: 3px solid var(--mhs-sky) !important;
+        background: rgba(58, 80, 107, 0.45) !important;
+        border-radius: 0 0 8px 8px !important;
+        box-shadow: none !important;
+    }
+
+    /* 6. Beri ruang kosong di bawah halaman agar konten terbawah tidak tertutup Tab Bar */
+    .main-content,
+    .page,
+    body {
+        margin-left: 0 !important;
+        padding-bottom: 80px !important;
+    }
+}
+
+/* ==========================================================================
+   SLIDING SIDELINE (DESKTOP) & UNDERLINE (MOBILE) - BIRU VIBRANT & SMOOTH
+   ========================================================================== */
+@media (min-width: 768px) {
+    #sidebar .sidebar-menu {
+        position: relative !important;
+    }
+
+    #sidebar:not(.sidebar-dosen):not(.sidebar-admin):not(.sidebar-kaprodi) .nav-link-custom {
+        transition: color 0.3s ease, background-color 0.3s ease !important;
+    }
+
+    #sidebar:not(.sidebar-dosen):not(.sidebar-admin):not(.sidebar-kaprodi) .nav-link-custom.active {
+        background: linear-gradient(90deg, rgba(14, 165, 233, 0.2) 0%, rgba(37, 99, 235, 0.04) 100%) !important;
+        border-left: none !important;
+        box-shadow: none !important;
+        color: #38BDF8 !important;
+        font-weight: 600 !important;
+    }
+
+    #sidebar:not(.sidebar-dosen):not(.sidebar-admin):not(.sidebar-kaprodi) .nav-link-custom:hover {
+        background-color: rgba(56, 189, 248, 0.1) !important;
+        color: #ffffff !important;
+    }
+
+    /* Garis Sliding Sideline Biru Cerah + Transisi Smooth */
+    #sidebar .sidebar-sliding-sideline {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4.5px;
+        background: linear-gradient(180deg, #38BDF8 0%, #0284C7 100%);
+        border-radius: 0 99px 99px 0;
+        box-shadow: 0 0 14px rgba(14, 165, 233, 0.95), 0 0 4px #38BDF8;
+        transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+                    height 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+                    opacity 0.25s ease;
+        will-change: transform, height;
+        pointer-events: none;
+        z-index: 10;
+    }
+}
+
+@media (max-width: 767.98px) {
+    #sidebar .sliding-underline {
+        position: absolute;
+        bottom: 4px;
+        left: 0;
+        height: 3.5px;
+        background: linear-gradient(90deg, #38BDF8 0%, #0284C7 100%);
+        border-radius: 99px;
+        box-shadow: 0 0 12px rgba(14, 165, 233, 0.95);
+        transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+                    width 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+                    opacity 0.25s ease;
+        will-change: transform, width;
+        pointer-events: none;
+        z-index: 10;
+    }
+
+    #sidebar:not(.sidebar-dosen):not(.sidebar-admin):not(.sidebar-kaprodi) .nav-link-custom.active {
+        color: #38BDF8 !important;
+    }
+}
+
+/* Desktop Sideline */
+@media (min-width: 768px) {
+    #sidebar .sidebar-sliding-sideline {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4.5px;
+        background: linear-gradient(180deg, #38BDF8 0%, #0284C7 100%);
+        border-radius: 0 99px 99px 0;
+        box-shadow: 0 0 14px rgba(14, 165, 233, 0.95), 0 0 4px #38BDF8;
+        transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+                    height 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+                    opacity 0.3s ease;
+        will-change: transform, height;
+        pointer-events: none;
+        z-index: 10;
+    }
+}
+
+/* Mobile Underline */
+@media (max-width: 767.98px) {
+    #sidebar .sliding-underline {
+        position: absolute;
+        bottom: 4px;
+        left: 0;
+        height: 3.5px;
+        background: linear-gradient(90deg, #38BDF8 0%, #0284C7 100%);
+        border-radius: 99px;
+        box-shadow: 0 0 12px rgba(14, 165, 233, 0.95);
+        transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+                    width 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+                    opacity 0.3s ease;
+        will-change: transform, width;
+        pointer-events: none;
+        z-index: 10;
+    }
+}
+/* Transisi halus antar halaman (MPA View Transition) */
+@view-transition {
+    navigation: auto;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation-duration: 0.25s;
+    animation-timing-function: ease-in-out;
 }
 

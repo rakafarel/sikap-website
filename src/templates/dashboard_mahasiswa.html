@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Beranda - SIKAP</title>
     
-    <!-- Script untuk mencegah FOUC (Flash of Unstyled Content) saat reload di Dark Mode -->
+    <!-- Script untuk mencegah FOUC saat reload di Dark Mode -->
     <script>
         const savedTheme = localStorage.getItem('theme') || 'light';
         document.documentElement.setAttribute('data-bs-theme', savedTheme);
@@ -15,53 +15,472 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <style>
-        /* ==========================================
-           WIDGET & PANEL STYLING MODERN (BAGIAN BAWAH)
-           ========================================== */
+        /* ==========================================================================
+           PALET WARNA MAHASISWA: #0284C7 (BIRU UTAMA) + #D9541E (AKSEN ORANYE) + #0F1B3D + #FFFFFF
+           ========================================================================== */
+        :root {
+            --mhs-blue: #0284C7;
+            --mhs-blue-hover: #0369a1;
+            --mhs-blue-light: #38bdf8;
+            --mhs-orange: #D9541E;
+            --mhs-orange-light: #ff8c5a;
+            --mhs-navy: #0F1B3D;
+            --mhs-white: #FFFFFF;
+            --mhs-green: #16a34a;
+            --mhs-green-hover: #15803d;
+            --mhs-green-light: #4ade80;
+            --mhs-red: #dc2626;
+            --mhs-red-light: #f87171;
+        }
+
+        /* 1. SIDEBAR DESKTOP (#0F1B3D + Utama #0284C7) */
+        #sidebar.sidebar-mahasiswa {
+            background: var(--mhs-navy) !important;
+            border-right: 1px solid rgba(2, 132, 199, 0.25) !important;
+        }
+        #sidebar.sidebar-mahasiswa .fw-bold.fs-5 {
+            color: var(--mhs-white) !important;
+        }
+        #sidebar.sidebar-mahasiswa .fw-bold .text-primary {
+            color: var(--mhs-blue-light) !important;
+        }
+        #sidebar.sidebar-mahasiswa .bg-primary {
+            background-color: var(--mhs-blue) !important;
+        }
+        #sidebar.sidebar-mahasiswa .border-primary {
+            border-color: var(--mhs-blue) !important;
+        }
+
+        #sidebar.sidebar-mahasiswa .nav-link-custom {
+            color: rgba(255, 255, 255, 0.78) !important;
+        }
+        #sidebar.sidebar-mahasiswa .nav-link-custom:hover {
+            background-color: rgba(2, 132, 199, 0.18) !important;
+            color: var(--mhs-white) !important;
+        }
+
+        #sidebar.sidebar-mahasiswa .nav-link-custom.active {
+            background: linear-gradient(90deg, rgba(2, 132, 199, 0.28) 0%, rgba(2, 132, 199, 0.04) 100%) !important;
+            color: var(--mhs-white) !important;
+            font-weight: 700 !important;
+        }
+        #sidebar.sidebar-mahasiswa .nav-link-custom.active i {
+            color: var(--mhs-blue-light) !important;
+        }
+        #sidebar.sidebar-mahasiswa .sidebar-sliding-sideline {
+            background: linear-gradient(180deg, var(--mhs-blue-light) 0%, var(--mhs-blue) 100%) !important;
+            box-shadow: 0 0 14px rgba(2, 132, 199, 0.95), 0 0 4px var(--mhs-blue-light) !important;
+        }
+
+        .sidebar-menu .collapse .nav-link-custom {
+            color: rgba(255, 255, 255, 0.78) !important;
+            font-size: 0.88rem;
+        }
+        .sidebar-menu .collapse .nav-link-custom:hover {
+            color: var(--mhs-white) !important;
+            background: rgba(2, 132, 199, 0.18) !important;
+        }
+
+        [data-bs-toggle="collapse"][aria-expanded="true"] .transition-icon {
+            transform: rotate(180deg);
+        }
+        .transition-icon {
+            transition: transform 0.3s ease;
+        }
+        .cursor-pointer { cursor: pointer; }
+
+        /* ==========================================================================
+           2. MOBILE BOTTOM BAR PROFESIONAL (4 TAB SEJAJAR + BOTTOM SHEET)
+           ========================================================================== */
+        @media (min-width: 768px) {
+            .mobile-bottom-nav,
+            .mobile-sheet-backdrop,
+            .mobile-bottom-sheet {
+                display: none !important;
+            }
+        }
+
+        @media (max-width: 767.98px) {
+            #sidebar.sidebar-mahasiswa {
+                display: none !important;
+            }
+
+            body {
+                padding-bottom: calc(74px + env(safe-area-inset-bottom, 0px)) !important;
+            }
+            .main-content {
+                margin-left: 0 !important;
+                width: 100% !important;
+                padding: 1rem 0.9rem 1.5rem !important;
+            }
+
+            .mobile-bottom-nav {
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                height: calc(66px + env(safe-area-inset-bottom, 0px));
+                padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
+                background: rgba(15, 27, 61, 0.96);
+                backdrop-filter: blur(14px);
+                -webkit-backdrop-filter: blur(14px);
+                border-top: 1px solid rgba(56, 189, 248, 0.22);
+                box-shadow: 0 -6px 24px rgba(9, 17, 39, 0.32);
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                align-items: center;
+                z-index: 1045;
+            }
+
+            .m-tab-item {
+                position: relative;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 3px;
+                height: 52px;
+                border: none;
+                background: transparent;
+                color: rgba(255, 255, 255, 0.65);
+                text-decoration: none;
+                font-size: 0.7rem;
+                font-weight: 500;
+                letter-spacing: 0.1px;
+                border-radius: 12px;
+                padding: 0 4px;
+                cursor: pointer;
+                transition: color 0.2s ease, transform 0.15s ease;
+                -webkit-tap-highlight-color: transparent;
+            }
+            .m-tab-item:active {
+                transform: scale(0.94);
+            }
+            .m-tab-icon-wrap {
+                position: relative;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 44px;
+                height: 28px;
+                border-radius: 999px;
+                transition: background-color 0.25s ease, color 0.25s ease;
+            }
+            .m-tab-item i {
+                font-size: 1.2rem;
+                line-height: 1;
+            }
+            .m-tab-avatar {
+                width: 22px;
+                height: 22px;
+                border-radius: 50%;
+                object-fit: cover;
+                border: 1.5px solid rgba(255, 255, 255, 0.55);
+            }
+            .m-tab-avatar-initial {
+                width: 22px;
+                height: 22px;
+                border-radius: 50%;
+                background: var(--mhs-blue);
+                color: var(--mhs-white);
+                font-size: 0.68rem;
+                font-weight: 700;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .m-tab-item.active {
+                color: var(--mhs-white);
+                font-weight: 700;
+            }
+            .m-tab-item.active .m-tab-icon-wrap {
+                background: rgba(2, 132, 199, 0.28);
+                color: var(--mhs-blue-light);
+                box-shadow: inset 0 0 0 1px rgba(56, 189, 248, 0.35);
+            }
+            .m-tab-item.active .m-tab-avatar {
+                border-color: var(--mhs-blue-light);
+            }
+
+            .m-tab-indicator {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 28px;
+                height: 3px;
+                border-radius: 0 0 4px 4px;
+                background: linear-gradient(90deg, var(--mhs-blue-light), var(--mhs-blue));
+                box-shadow: 0 2px 10px rgba(56, 189, 248, 0.85);
+                transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+                pointer-events: none;
+            }
+
+            .mobile-sheet-backdrop {
+                position: fixed;
+                inset: 0;
+                background: rgba(9, 17, 39, 0.55);
+                backdrop-filter: blur(3px);
+                opacity: 0;
+                visibility: hidden;
+                transition: opacity 0.25s ease, visibility 0.25s ease;
+                z-index: 1042;
+            }
+            .mobile-sheet-backdrop.show {
+                opacity: 1;
+                visibility: visible;
+            }
+
+            .mobile-bottom-sheet {
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: calc(66px + env(safe-area-inset-bottom, 0px));
+                background: var(--mhs-white);
+                border-top-left-radius: 22px;
+                border-top-right-radius: 22px;
+                padding: 10px 16px 18px;
+                box-shadow: 0 -10px 35px rgba(15, 27, 61, 0.22);
+                border-top: 1px solid rgba(2, 132, 199, 0.16);
+                transform: translateY(105%);
+                transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+                z-index: 1044;
+            }
+            .mobile-bottom-sheet.show {
+                transform: translateY(0);
+            }
+            [data-bs-theme="dark"] .mobile-bottom-sheet {
+                background: var(--mhs-navy);
+                border-top-color: rgba(56, 189, 248, 0.28);
+            }
+
+            .sheet-handle {
+                width: 38px;
+                height: 4px;
+                border-radius: 99px;
+                background: #cbd5e1;
+                margin: 0 auto 12px;
+            }
+            [data-bs-theme="dark"] .sheet-handle {
+                background: rgba(255, 255, 255, 0.25);
+            }
+
+            .sheet-title {
+                font-size: 0.8rem;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.6px;
+                color: #64748b;
+                padding: 0 6px 10px;
+                border-bottom: 1px solid rgba(15, 27, 61, 0.08);
+                margin-bottom: 10px;
+            }
+            [data-bs-theme="dark"] .sheet-title {
+                color: rgba(255, 255, 255, 0.65);
+                border-bottom-color: rgba(255, 255, 255, 0.1);
+            }
+
+            .sheet-link {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                width: 100%;
+                padding: 12px 12px;
+                border-radius: 12px;
+                text-decoration: none;
+                background: transparent;
+                border: none;
+                color: var(--mhs-navy);
+                font-weight: 600;
+                font-size: 0.92rem;
+                margin-bottom: 4px;
+                transition: background-color 0.2s ease;
+            }
+            .sheet-link:hover, .sheet-link:active, .sheet-link.active-sheet-item {
+                background: rgba(2, 132, 199, 0.12);
+                color: var(--mhs-blue);
+            }
+            [data-bs-theme="dark"] .sheet-link {
+                color: var(--mhs-white);
+            }
+            [data-bs-theme="dark"] .sheet-link:hover,
+            [data-bs-theme="dark"] .sheet-link.active-sheet-item {
+                background: rgba(2, 132, 199, 0.24);
+                color: var(--mhs-blue-light);
+            }
+            .sheet-link-left {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+            .sheet-icon-badge {
+                width: 36px;
+                height: 36px;
+                border-radius: 10px;
+                background: rgba(2, 132, 199, 0.12);
+                color: var(--mhs-blue);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.05rem;
+            }
+            .sheet-icon-badge.orange {
+                background: rgba(217, 84, 30, 0.12);
+                color: var(--mhs-orange);
+            }
+            .sheet-icon-badge.danger {
+                background: rgba(220, 38, 38, 0.12);
+                color: #ef4444;
+            }
+        }
+
+        /* ==========================================================================
+           3. HERO BANNER (#0F1B3D + Tombol Utama #0284C7 + Aksen Glow Oranye #D9541E)
+           ========================================================================== */
+        .hero-banner, .hero-banner-sub {
+            background: linear-gradient(135deg, var(--mhs-navy) 0%, #15285b 100%) !important;
+            border: 1px solid rgba(2, 132, 199, 0.35) !important;
+            box-shadow: 0 12px 28px -6px rgba(15, 27, 61, 0.32) !important;
+        }
+        .hero-banner::after, .hero-banner-sub::after {
+            background: radial-gradient(circle, rgba(217, 84, 30, 0.25) 0%, rgba(2, 132, 199, 0.18) 45%, transparent 72%) !important;
+        }
+        .badge-hero-outline {
+            background: rgba(2, 132, 199, 0.22) !important;
+            border: 1px solid rgba(56, 189, 248, 0.5) !important;
+            color: var(--mhs-white) !important;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 0.25rem 0.65rem;
+            border-radius: 999px;
+            letter-spacing: 0.3px;
+        }
+        .badge-hero-orange {
+            background: rgba(217, 84, 30, 0.22);
+            border: 1px solid rgba(217, 84, 30, 0.6);
+            color: #ffbfa3;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 0.25rem 0.65rem;
+            border-radius: 999px;
+            letter-spacing: 0.3px;
+        }
+        .btn-hero-action,
+        .page .btn-primary {
+            background: var(--mhs-blue) !important;
+            border-color: var(--mhs-blue) !important;
+            color: var(--mhs-white) !important;
+            box-shadow: 0 4px 14px rgba(2, 132, 199, 0.38) !important;
+        }
+        .btn-hero-action:hover,
+        .page .btn-primary:hover {
+            background: var(--mhs-blue-hover) !important;
+            border-color: var(--mhs-blue-hover) !important;
+            color: var(--mhs-white) !important;
+            box-shadow: 0 6px 20px rgba(2, 132, 199, 0.52) !important;
+        }
+
+        /* ==========================================================================
+           4. JOURNEY STEPPER
+           ========================================================================== */
+        .journey {
+            background: var(--mhs-white) !important;
+            border: 1px solid #e2e8f0 !important;
+        }
+        .step b {
+            color: var(--mhs-navy) !important;
+        }
+        .step.done .step-n {
+            background: var(--mhs-green) !important;
+            border-color: var(--mhs-green) !important;
+            color: var(--mhs-white) !important;
+        }
+        .step.now {
+            background: linear-gradient(135deg, rgba(2, 132, 199, 0.07) 0%, rgba(217, 84, 30, 0.08) 100%) !important;
+            border: 1px solid rgba(217, 84, 30, 0.28) !important;
+        }
+        .step.now .step-n {
+            background: var(--mhs-orange) !important;
+            border-color: var(--mhs-orange) !important;
+            color: var(--mhs-white) !important;
+            box-shadow: 0 0 0 6px rgba(217, 84, 30, 0.2) !important;
+        }
+
+        /* ==========================================================================
+           5. PANEL, WIDGET & IKON SEMANTIK (SERAGAM LOGBOOK)
+           ========================================================================== */
         .panel-modern {
-            background: #ffffff;
+            background: var(--mhs-white);
             border-radius: 16px;
             border: 1px solid #e2e8f0;
-            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03);
+            box-shadow: 0 4px 20px -2px rgba(15, 27, 61, 0.04);
             padding: 1.75rem;
             height: 100%;
         }
 
         .widget-card {
-            background: #ffffff;
+            background: var(--mhs-white);
             border-radius: 16px;
             border: 1px solid #e2e8f0;
-            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03);
+            box-shadow: 0 4px 20px -2px rgba(15, 27, 61, 0.04);
             padding: 1.5rem;
             margin-bottom: 1.5rem;
         }
 
         .widget-header {
-            border-bottom: 1px solid #f1f5f9;
+            border-bottom: 1px solid rgba(15, 27, 61, 0.08);
             padding-bottom: 1rem;
             margin-bottom: 1.25rem;
         }
 
-        .widget-header h6 { margin: 0; font-weight: 700; color: #1e293b; }
+        .widget-header h6 { margin: 0; font-weight: 700; color: var(--mhs-navy); }
 
-        /* Progress Box Widget */
+        .page h1, .page h2, .page h3, .page h4, .page h5, .page h6,
+        .page .text-dark {
+            color: var(--mhs-navy) !important;
+        }
+        .page .text-primary {
+            color: var(--mhs-blue) !important;
+        }
+        .page .text-green-accent {
+            color: var(--mhs-green) !important;
+        }
+        .icon-box-blue {
+            background-color: rgba(2, 132, 199, 0.12);
+            color: var(--mhs-blue);
+        }
+        .icon-box-green {
+            background-color: rgba(22, 163, 74, 0.12);
+            color: var(--mhs-green);
+        }
+        .icon-box-orange {
+            background-color: rgba(217, 84, 30, 0.12);
+            color: var(--mhs-orange);
+        }
+        .text-orange-accent {
+            color: var(--mhs-orange) !important;
+        }
+
         .widget-progress-box {
             text-align: center;
             padding: 1.5rem;
-            background: #f8fafc;
+            background: linear-gradient(180deg, rgba(22, 163, 74, 0.05) 0%, rgba(2, 132, 199, 0.05) 100%);
             border-radius: 12px;
-            border: 1px dashed #cbd5e1;
+            border: 1.5px dashed rgba(22, 163, 74, 0.42);
         }
         .progress-count {
-            font-size: 2.5rem;
+            font-size: 2.6rem;
             font-weight: 800;
-            color: #0f5bb9;
+            color: var(--mhs-navy);
             line-height: 1;
             margin-bottom: 0.5rem;
         }
-        .progress-count small { font-size: 1.25rem; color: #94a3b8; font-weight: 600; }
+        .progress-count small {
+            font-size: 1.4rem;
+            color: var(--mhs-navy);
+            font-weight: 800;
+        }
 
-        /* Timeline Mini Widget */
         .timeline-mini {
             display: flex;
             flex-direction: column;
@@ -73,143 +492,194 @@
             gap: 1rem;
         }
         .timeline-badge {
-            background: #e0f2fe;
-            color: #0284c7;
+            background: rgba(2, 132, 199, 0.12);
+            color: var(--mhs-blue);
             font-size: 0.75rem;
             font-weight: 700;
             padding: 0.35rem 0.65rem;
             border-radius: 6px;
             white-space: nowrap;
         }
-        .timeline-info strong { display: block; font-size: 0.9rem; color: #334155; margin-bottom: 0.2rem; }
+        .timeline-badge.badge-orange {
+            background: rgba(217, 84, 30, 0.14);
+            color: var(--mhs-orange);
+        }
+        .timeline-info strong { display: block; font-size: 0.9rem; color: var(--mhs-navy); margin-bottom: 0.2rem; }
         .timeline-info span { display: block; font-size: 0.8rem; color: #64748b; }
-        
-        /* Styling untuk sub-menu agar pas di sidebar */
-        .sidebar-menu .collapse .nav-link-custom {
-            color: rgba(255, 255, 255, 0.75) !important;
-            font-size: 0.88rem;
-        }
-        .sidebar-menu .collapse .nav-link-custom:hover {
-            color: #ffffff !important;
-            background: rgba(255, 255, 255, 0.08) !important;
-        }
 
-        /* Efek putar panah saat dropdown terbuka */
-        [data-bs-toggle="collapse"][aria-expanded="true"] .transition-icon {
-            transform: rotate(180deg);
+        .notes li {
+            border-left: 3px solid rgba(2, 132, 199, 0.35);
+            padding-left: 0.85rem;
+            transition: border-color 0.2s ease;
         }
-        .transition-icon {
-            transition: transform 0.3s ease;
+        .notes li:hover {
+            border-left-color: var(--mhs-orange);
         }
-        
-        .cursor-pointer { cursor: pointer; }
+        .notes a { color: var(--mhs-blue) !important; }
+        .notes a:hover { color: var(--mhs-orange) !important; }
+        .notes .bi-check-circle-fill { color: var(--mhs-green) !important; }
+        .notes .bi-info-circle-fill { color: var(--mhs-blue) !important; }
 
-        /* ==========================================
-           DARK MODE STYLING SIKAP
-           ========================================== */
+        /* ==========================================================================
+           6. DARK MODE
+           ========================================================================== */
         [data-bs-theme="dark"] body, 
         [data-bs-theme="dark"] .main-content, 
         [data-bs-theme="dark"] .page {
-            background-color: #0f172a !important; 
-            color: #f8fafc !important;
+            background-color: #091127 !important; 
+            color: var(--mhs-white) !important;
         }
 
         [data-bs-theme="dark"] .panel-modern, 
         [data-bs-theme="dark"] .widget-card {
-            background-color: #1e293b !important;
-            border-color: rgba(255, 255, 255, 0.1) !important;
-            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.2) !important;
+            background-color: var(--mhs-navy) !important;
+            border-color: rgba(2, 132, 199, 0.25) !important;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.25) !important;
         }
 
         [data-bs-theme="dark"] .widget-progress-box {
-            background-color: #0f172a !important;
-            border-color: rgba(255, 255, 255, 0.1) !important;
+            background: linear-gradient(180deg, rgba(9, 17, 39, 0.9) 0%, rgba(22, 163, 74, 0.14) 100%) !important;
+            border-color: rgba(74, 222, 128, 0.45) !important;
         }
 
-        [data-bs-theme="dark"] .widget-header {
-            border-bottom-color: rgba(255, 255, 255, 0.1) !important;
+        [data-bs-theme="dark"] .progress-count,
+        [data-bs-theme="dark"] .progress-count small { color: var(--mhs-white); }
+        [data-bs-theme="dark"] .widget-header { border-bottom-color: rgba(255, 255, 255, 0.1) !important; }
+        [data-bs-theme="dark"] .widget-header h6 { color: var(--mhs-white) !important; }
+        [data-bs-theme="dark"] .page h1,
+        [data-bs-theme="dark"] .page h2,
+        [data-bs-theme="dark"] .page h3,
+        [data-bs-theme="dark"] .page h4,
+        [data-bs-theme="dark"] .page h5,
+        [data-bs-theme="dark"] .page h6,
+        [data-bs-theme="dark"] .page .text-dark { color: var(--mhs-white) !important; }
+        [data-bs-theme="dark"] .page .text-primary { color: var(--mhs-blue-light) !important; }
+        [data-bs-theme="dark"] .page .text-green-accent { color: var(--mhs-green-light) !important; }
+        [data-bs-theme="dark"] .text-orange-accent { color: var(--mhs-orange-light) !important; }
+        [data-bs-theme="dark"] .icon-box-blue {
+            background-color: rgba(2, 132, 199, 0.22) !important;
+            color: var(--mhs-blue-light) !important;
         }
-        
-        [data-bs-theme="dark"] .widget-header h6 {
-            color: #f8fafc !important;
+        [data-bs-theme="dark"] .icon-box-green {
+            background-color: rgba(22, 163, 74, 0.22) !important;
+            color: var(--mhs-green-light) !important;
         }
-
-        [data-bs-theme="dark"] .text-dark { color: #f1f5f9 !important; }
+        [data-bs-theme="dark"] .icon-box-orange {
+            background-color: rgba(217, 84, 30, 0.22) !important;
+            color: var(--mhs-orange-light) !important;
+        }
         [data-bs-theme="dark"] .text-muted,
-        [data-bs-theme="dark"] .text-secondary { color: #94a3b8 !important; }
-        
+        [data-bs-theme="dark"] .text-secondary { color: rgba(255, 255, 255, 0.72) !important; }
         [data-bs-theme="dark"] .border-bottom { border-bottom-color: rgba(255, 255, 255, 0.1) !important; }
-        
-        [data-bs-theme="dark"] .timeline-info strong { color: #f1f5f9 !important; }
-        [data-bs-theme="dark"] .timeline-badge { background: #0c4a6e !important; color: #38bdf8 !important; }
+        [data-bs-theme="dark"] .timeline-info strong { color: var(--mhs-white) !important; }
+        [data-bs-theme="dark"] .timeline-badge { background: rgba(2, 132, 199, 0.25) !important; color: var(--mhs-blue-light) !important; }
+        [data-bs-theme="dark"] .timeline-badge.badge-orange { background: rgba(217, 84, 30, 0.25) !important; color: var(--mhs-orange-light) !important; }
+        [data-bs-theme="dark"] .notes .bi-check-circle-fill { color: var(--mhs-green-light) !important; }
+        [data-bs-theme="dark"] .notes .bi-info-circle-fill,
+        [data-bs-theme="dark"] .notes a { color: var(--mhs-blue-light) !important; }
 
-        /* Animasi Transisi Tema */
         html, body, .panel-modern, .widget-card, .main-content, .widget-progress-box {
             transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
         }
 
-        /* ==========================================
-           DARK MODE KHUSUS JOURNEY STEPPER (FIX UTAMA)
-           ========================================== */
-        /* Memaksa kontainer journey dan elemen list/langkah menjadi gelap */
         [data-bs-theme="dark"] .journey {
-            background-color: #1e293b !important;
-            border-color: rgba(255, 255, 255, 0.1) !important;
-            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.2) !important;
+            background-color: var(--mhs-navy) !important;
+            border-color: rgba(2, 132, 199, 0.25) !important;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.25) !important;
         }
 
-        /* Mengubah latar belakang kotak langkah yang terkunci/belum aktif agar ikut gelap */
         [data-bs-theme="dark"] .journey .step,
         [data-bs-theme="dark"] .journey li .step {
-            background-color: #1e293b !important;
-            color: #f8fafc !important;
+            background-color: var(--mhs-navy) !important;
+            color: var(--mhs-white) !important;
             border-color: rgba(255, 255, 255, 0.1) !important;
         }
 
-        /* Mengatur warna teks judul dan deskripsi di dalam stepper */
-        [data-bs-theme="dark"] .journey .step b {
-            color: #f8fafc !important;
+        [data-bs-theme="dark"] .journey .step b { color: var(--mhs-white) !important; }
+        [data-bs-theme="dark"] .journey .step small { color: rgba(255, 255, 255, 0.68) !important; }
+
+        [data-bs-theme="dark"] .journey .step.done .step-n {
+            background: var(--mhs-green) !important;
+            border-color: var(--mhs-green) !important;
+            color: var(--mhs-white) !important;
         }
 
-        [data-bs-theme="dark"] .journey .step small {
-            color: #94a3b8 !important;
-        }
-
-        /* Warna latar belakang saat langkah sedang aktif ('now') */
         [data-bs-theme="dark"] .journey .step.now {
-            background-color: rgba(245, 158, 11, 0.15) !important; 
-            border-color: rgba(245, 158, 11, 0.3) !important;
+            background: linear-gradient(135deg, rgba(2, 132, 199, 0.18) 0%, rgba(217, 84, 30, 0.22) 100%) !important; 
+            border-color: rgba(217, 84, 30, 0.5) !important;
         }
 
-        /* Warna ikon gembok/locked pada langkah yang belum terbuka */
         [data-bs-theme="dark"] .journey .step.locked .step-n,
         [data-bs-theme="dark"] .journey .step.locked {
-            color: #64748b !important;
+            color: rgba(255, 255, 255, 0.35) !important;
+        }
+        /* Ubah warna tombol di dalam hero banner menjadi Oranye (#D9541E) */
+        .hero-banner .btn-hero-action,
+        .hero-banner-sub .btn-hero-action,
+        [data-bs-theme="dark"] .hero-banner .btn-hero-action,
+        [data-bs-theme="dark"] .hero-banner-sub .btn-hero-action {
+            background: #D9541E !important;
+            border-color: #D9541E !important;
+            color: #FFFFFF !important;
+            box-shadow: 0 4px 14px rgba(217, 84, 30, 0.38) !important;
+        }
+
+        .hero-banner .btn-hero-action:hover,
+        .hero-banner-sub .btn-hero-action:hover,
+        [data-bs-theme="dark"] .hero-banner .btn-hero-action:hover,
+        [data-bs-theme="dark"] .hero-banner-sub .btn-hero-action:hover {
+            background: #b84315 !important;
+            border-color: #b84315 !important;
+            color: #FFFFFF !important;
+            box-shadow: 0 6px 20px rgba(217, 84, 30, 0.52) !important;
+        }
+        /* Perbaiki warna teks brand "SIKAP Mahasiswa" di sidebar */
+        #sidebar.sidebar-mahasiswa .sidebar-brand-box,
+        #sidebar.sidebar-mahasiswa a[href="/"].d-flex {
+            color: #FFFFFF !important;
+            background: none !important;
+            -webkit-background-clip: initial !important;
+            background-clip: initial !important;
+            -webkit-text-fill-color: #FFFFFF !important;
+        }
+
+        #sidebar.sidebar-mahasiswa .sidebar-brand-box span:first-of-type,
+        #sidebar.sidebar-mahasiswa a[href="/"].d-flex > span:first-of-type {
+            color: #FFFFFF !important;
+            background: none !important;
+            -webkit-background-clip: initial !important;
+            background-clip: initial !important;
+            -webkit-text-fill-color: #FFFFFF !important;
+        }
+
+        #sidebar.sidebar-mahasiswa .sidebar-brand-box .text-primary,
+        #sidebar.sidebar-mahasiswa a[href="/"].d-flex .text-primary {
+            color: #38bdf8 !important;
+            background: none !important;
+            -webkit-background-clip: initial !important;
+            background-clip: initial !important;
+            -webkit-text-fill-color: #38bdf8 !important;
         }
     </style>
 </head>
 <body>
-    <button type="button" class="menu-toggle" id="menuToggle" aria-label="Buka menu" aria-controls="sidebar" aria-expanded="false"><i class="bi bi-list"></i></button>
-    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
-
-    <!-- Sidebar Navigation -->
-    <div id="sidebar" class="sidebar shadow-sm vh-100 d-flex flex-column">
+    <!-- DESKTOP SIDEBAR NAVIGATION -->
+    <div id="sidebar" class="sidebar sidebar-mahasiswa shadow-sm vh-100 d-flex flex-column">
         <div class="sidebar-inner d-flex flex-column h-100">
             <!-- 1. HEADER: LOGO & PROFIL -->
             <div class="flex-shrink-0">
                 <a href="/" class="d-flex align-items-center justify-content-center text-decoration-none text-white pt-4 pb-2 gap-2">
-                    <div class="rounded p-1 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px; background-color: #0c1d5374;">
+                    <div class="rounded p-1 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px; background-color: #0F1B3D; border: 1px solid rgba(2, 132, 199, 0.55);">
                         <img src="/static/img/logo_sikap.png" alt="Logo SIKAP" style="width: 130%; height: 130%; object-fit: cover; object-position: center top;">
                     </div>
                     <span class="fw-bold fs-5 tracking-wide">SIKAP <span class="text-primary">Mahasiswa</span></span>
                 </a>
 
-                <!-- PROFIL CENTERED (76px) -->
                 <div class="sidebar-profile-centered text-center py-2 border-bottom border-light border-opacity-10 mb-2">
                     <a href="/profil" class="text-decoration-none d-block user-profile-link" style="transition: transform 0.2s ease;">
                         <div class="position-relative d-inline-block mb-2">
                             {% if user and user.foto_profil %}
-                                <img src="/uploads/profil/{{ user.foto_profil }}" class="rounded-circle shadow-lg border border-2 border-primary border-opacity-75" style="width: 100px; height: 100px; object-fit: cover;">
+                                <img src="/uploads/profil/{{ user.foto_profil }}" class="rounded-circle shadow-lg border border-2 border-primary" style="width: 100px; height: 100px; object-fit: cover;">
                             {% else %}
                                 <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow-lg mx-auto fw-bold fs-3 border border-2 border-white border-opacity-25" style="width: 100px; height: 100px;">
                                     {{ (user.nama if (user and user.nama) else session.nama)[0] | upper }}
@@ -228,33 +698,29 @@
             <!-- 2. MENU TENGAH -->
             <div class="flex-grow-1 overflow-y-auto pb-2" style="scrollbar-width: none;">
                 <nav class="sidebar-menu px-2">
-                    <!-- Menu Dashboard Biasa -->
                     <a href="/dashboard/mahasiswa" class="nav-link-custom active mb-1 rounded-3">
                         <i class="bi bi-house-door me-3 fs-5"></i> Dashboard
                     </a>
 
-                    <!-- MENU DROPDOWN: KERJA PRAKTEK -->
                     <div class="mb-1">
                         <a class="nav-link-custom d-flex align-items-center justify-content-between rounded-3 text-decoration-none" data-bs-toggle="collapse" href="#menuKerjaPraktek" role="button" aria-expanded="false" aria-controls="menuKerjaPraktek">
                             <span><i class="bi bi-briefcase me-3 fs-5"></i> Kerja Praktik</span>
                             <i class="bi bi-chevron-down small transition-icon"></i>
                         </a>
                         
-                        <!-- Sub-menu yang bisa buka-tutup -->
                         <div class="collapse ps-4 mt-1" id="menuKerjaPraktek">
                             <a href="/mahasiswa/pengajuan" class="nav-link-custom sub-menu-link mb-1 rounded-3 py-2 fs-7 d-block">
-                                <i class="bi bi-circle-fill me-2" style="font-size: 0.4rem;"></i> Pengajuan KP
+                                Pengajuan KP
                             </a>
                             <a href="/mahasiswa/logbook" class="nav-link-custom sub-menu-link mb-1 rounded-3 py-2 fs-7 d-block">
-                                <i class="bi bi-circle-fill me-2" style="font-size: 0.4rem;"></i> Logbook KP
+                                Logbook KP
                             </a>
                             <a href="/mahasiswa/sidang" class="nav-link-custom sub-menu-link rounded-3 py-2 fs-7 d-block">
-                                <i class="bi bi-circle-fill me-2" style="font-size: 0.4rem;"></i> Daftar Sidang KP
+                                Daftar Sidang KP
                             </a>
                         </div>
                     </div>
 
-                    <!-- Contoh untuk Tugas Akhir -->
                     <div class="mb-1">
                         <a class="nav-link-custom d-flex align-items-center justify-content-between rounded-3 text-decoration-none" data-bs-toggle="collapse" href="#menuTugasAkhir" role="button" aria-expanded="false" aria-controls="menuTugasAkhir">
                             <span><i class="bi bi-journal-richtext me-3 fs-5"></i> Tugas Akhir</span>
@@ -262,10 +728,10 @@
                         </a>
                         <div class="collapse ps-4 mt-1" id="menuTugasAkhir">
                             <a href="/mahasiswa/ta/pengajuan" class="nav-link-custom sub-menu-link mb-1 rounded-3 py-2 fs-7 d-block">
-                                <i class="bi bi-circle-fill me-2" style="font-size: 0.4rem;"></i> Pengajuan TA
+                                Pengajuan TA
                             </a>
                             <a href="/mahasiswa/ta/logbook" class="nav-link-custom sub-menu-link rounded-3 py-2 fs-7 d-block">
-                                <i class="bi bi-circle-fill me-2" style="font-size: 0.4rem;"></i> Logbook TA
+                                Logbook TA
                             </a>
                         </div>
                     </div>
@@ -274,7 +740,6 @@
             
             <!-- 3. FOOTER (DARK MODE TOGGLE & LOGOUT) -->
             <div class="flex-shrink-0 px-2 pb-3 pt-2 mt-auto border-top border-light border-opacity-10">
-                <!-- Tombol Dark Mode Toggle -->
                 <button class="nav-link-custom mb-1 rounded-3 d-flex align-items-center w-100 bg-transparent border-0 text-start cursor-pointer" id="themeToggle">
                     <i class="bi bi-moon-fill me-3 fs-5" id="themeIcon"></i> <span id="themeText">Dark Mode</span>
                 </button>
@@ -284,6 +749,114 @@
             </div>
         </div>
     </div>
+
+    <!-- MOBILE BOTTOM NAVIGATION BAR & BOTTOM SHEETS (KHUSUS LAYAR HP) -->
+    <div class="mobile-sheet-backdrop" id="mobileSheetBackdrop"></div>
+
+    <!-- Sheet 1: Menu Kerja Praktik -->
+    <div class="mobile-bottom-sheet" id="sheetKP">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title">Menu Kerja Praktik</div>
+        <a href="/mahasiswa/pengajuan" class="sheet-link">
+            <span class="sheet-link-left">
+                <span class="sheet-icon-badge"><i class="bi bi-file-earmark-plus"></i></span>
+                <span>Pengajuan KP</span>
+            </span>
+            <i class="bi bi-chevron-right text-muted small"></i>
+        </a>
+        <a href="/mahasiswa/logbook" class="sheet-link">
+            <span class="sheet-link-left">
+                <span class="sheet-icon-badge"><i class="bi bi-journal-check"></i></span>
+                <span>Logbook KP</span>
+            </span>
+            <i class="bi bi-chevron-right text-muted small"></i>
+        </a>
+        <a href="/mahasiswa/sidang" class="sheet-link mb-0">
+            <span class="sheet-link-left">
+                <span class="sheet-icon-badge orange"><i class="bi bi-mortarboard"></i></span>
+                <span>Daftar Sidang KP</span>
+            </span>
+            <i class="bi bi-chevron-right text-muted small"></i>
+        </a>
+    </div>
+
+    <!-- Sheet 2: Menu Tugas Akhir -->
+    <div class="mobile-bottom-sheet" id="sheetTA">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title">Menu Tugas Akhir</div>
+        <a href="/mahasiswa/ta/pengajuan" class="sheet-link">
+            <span class="sheet-link-left">
+                <span class="sheet-icon-badge"><i class="bi bi-journal-plus"></i></span>
+                <span>Pengajuan TA</span>
+            </span>
+            <i class="bi bi-chevron-right text-muted small"></i>
+        </a>
+        <a href="/mahasiswa/ta/logbook" class="sheet-link mb-0">
+            <span class="sheet-link-left">
+                <span class="sheet-icon-badge orange"><i class="bi bi-journal-bookmark"></i></span>
+                <span>Logbook TA</span>
+            </span>
+            <i class="bi bi-chevron-right text-muted small"></i>
+        </a>
+    </div>
+
+    <!-- Sheet 3: Akun, Tema & Keluar -->
+    <div class="mobile-bottom-sheet" id="sheetAkun">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title">{{ user.nama if user else session.nama }}</div>
+        <a href="/profil" class="sheet-link">
+            <span class="sheet-link-left">
+                <span class="sheet-icon-badge"><i class="bi bi-person-circle"></i></span>
+                <span>Profil Saya</span>
+            </span>
+            <i class="bi bi-chevron-right text-muted small"></i>
+        </a>
+        <button type="button" class="sheet-link" id="mobileThemeToggle">
+            <span class="sheet-link-left">
+                <span class="sheet-icon-badge orange"><i class="bi bi-moon-stars-fill" id="mobileThemeIcon"></i></span>
+                <span id="mobileThemeText">Aktifkan Dark Mode</span>
+            </span>
+            <i class="bi bi-arrow-repeat text-muted small"></i>
+        </button>
+        <a href="/logout" class="sheet-link text-danger mb-0">
+            <span class="sheet-link-left">
+                <span class="sheet-icon-badge danger"><i class="bi bi-box-arrow-right"></i></span>
+                <span>Logout</span>
+            </span>
+            <i class="bi bi-chevron-right text-danger small"></i>
+        </a>
+    </div>
+
+    <!-- Bar Utama 4 Tab Bawah -->
+    <nav class="mobile-bottom-nav" id="mobileBottomNav" aria-label="Navigasi Utama">
+        <div class="m-tab-indicator" id="mTabIndicator"></div>
+
+        <a href="/dashboard/mahasiswa" class="m-tab-item active" data-tab="beranda">
+            <span class="m-tab-icon-wrap"><i class="bi bi-house-door-fill"></i></span>
+            <span>Beranda</span>
+        </a>
+
+        <button type="button" class="m-tab-item" data-tab="kp" data-sheet="sheetKP">
+            <span class="m-tab-icon-wrap"><i class="bi bi-briefcase"></i></span>
+            <span>KP</span>
+        </button>
+
+        <button type="button" class="m-tab-item" data-tab="ta" data-sheet="sheetTA">
+            <span class="m-tab-icon-wrap"><i class="bi bi-journal-richtext"></i></span>
+            <span>TA</span>
+        </button>
+
+        <button type="button" class="m-tab-item" data-tab="akun" data-sheet="sheetAkun">
+            <span class="m-tab-icon-wrap">
+                {% if user and user.foto_profil %}
+                    <img src="/uploads/profil/{{ user.foto_profil }}" alt="Profil" class="m-tab-avatar">
+                {% else %}
+                    <span class="m-tab-avatar-initial">{{ (user.nama if (user and user.nama) else session.nama)[0] | upper }}</span>
+                {% endif %}
+            </span>
+            <span>Akun</span>
+        </button>
+    </nav>
 
     <!-- MAIN CONTENT AREA -->
     <div class="main-content"><div class="page">
@@ -298,8 +871,8 @@
 {% set s4 = 'locked' if not lulus else ('done' if ta_ok else 'now') %}
 
 {% if s1 == 'now' %}
-  {% if not pengajuan %}{% set nxt = ['Pilih dua dosen pembimbing dan unggah proposal KP Anda.', '/mahasiswa/pengajuan', 'Ajukan pembimbing'] %}
-  {% elif pengajuan.status_final == 'unassigned' %}{% set nxt = ['Kedua dosen menolak pengajuan Anda. Ajukan ulang dengan dosen lain.', '/mahasiswa/pengajuan', 'Ajukan ulang'] %}
+  {% if not pengajuan %}{% set nxt = ['Pilih dosen pembimbing dan unggah proposal KP Anda.', '/mahasiswa/pengajuan', 'Ajukan pembimbing'] %}
+  {% elif pengajuan.status_final == 'unassigned' %}{% set nxt = ['Dosen menolak pengajuan Anda. Ajukan ulang dengan dosen lain.', '/mahasiswa/pengajuan', 'Ajukan ulang'] %}
   {% else %}{% set nxt = ['Pengajuan Anda menunggu jawaban dosen pembimbing.', '/mahasiswa/pengajuan', 'Lihat pengajuan'] %}{% endif %}
 {% elif s2 == 'now' %}{% set nxt = ['Catat setiap bimbingan di logbook. Baru ' ~ acc ~ ' dari 6 yang disetujui dosen.', '/mahasiswa/logbook', 'Buka logbook'] %}
 {% elif s3 == 'now' %}
@@ -319,17 +892,20 @@
 
         <!-- 1. HERO BANNER DINAMIS -->
         <div class="hero-banner position-relative overflow-hidden mb-4">
-            <!-- Canvas Animasi Kode Matrix -->
             <canvas id="matrixCanvas" class="matrix-bg"></canvas>
 
-            <!-- Konten Banner (Lapisan Depan / Foreground) -->
             <div class="hero-content d-flex justify-content-between align-items-center w-100">
                 <div>
                     <div class="d-flex align-items-center gap-2 mb-2">
                         <span class="badge-hero-outline">Prodi Informatika</span>
+                        <span class="badge-hero-orange">KP &amp; Tugas Akhir</span>
                     </div>
-                    <h1 class="hero-title">Halo, {{ session['nama'].split(' ')[0] }}!</h1>
-                    <p class="hero-subtitle">{{ nxt[0] }}</p>
+                    <h1 class="hero-title text-white mb-1" style="color: #ffffff !important;">
+                        Selamat Datang di Portal SIKAP
+                    </h1>
+                    <p class="hero-subtitle mb-0" style="color: rgba(255, 255, 255, 0.85) !important;">
+                        {{ nxt[0] }}
+                    </p>
                 </div>
                 <div>
                     <a class="btn-hero-action" href="{{ nxt[1] }}">
@@ -345,7 +921,7 @@
         <!-- 2. JOURNEY STEPPER ALUR -->
         <ol class="journey mb-4">
             {{ step(1, s1, '/mahasiswa/pengajuan', 'Dosen pembimbing',
-                'Pengajuan Anda disetujui' if ok1 else ('Belum ada pengajuan' if not pengajuan else ('Ditolak kedua dosen' if pengajuan.status_final == 'unassigned' else 'Menunggu jawaban dosen'))) }}
+                'Pengajuan Anda disetujui' if ok1 else ('Belum ada pengajuan' if not pengajuan else ('Ditolak dosen' if pengajuan.status_final == 'unassigned' else 'Menunggu jawaban dosen'))) }}
             {{ step(2, s2, '/mahasiswa/logbook', 'Logbook bimbingan',
                 'Terbuka setelah pembimbing disetujui' if s2 == 'locked' else (acc ~ ' dari 6 bimbingan disetujui')) }}
             {{ step(3, s3, '/mahasiswa/sidang', 'Sidang KP',
@@ -356,71 +932,72 @@
 
         <!-- 3. LAYOUT BAWAH (2 KOLOM) -->
         <div class="row g-4">
-            <!-- KOLOM UTAMA (KIRI) -->
             <div class="col-lg-8">
                 <div class="panel-modern">
-                    <div class="d-flex align-items-center gap-3 mb-4">
-                        <div class="bg-primary bg-opacity-10 text-primary p-2 rounded-3 fs-5">
-                            <i class="bi bi-info-circle-fill"></i>
+                    <div class="d-flex align-items-center justify-content-between mb-4">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="icon-box-blue p-2 rounded-3 fs-5 d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
+                                <i class="bi bi-info-circle-fill"></i>
+                            </div>
+                            <h5 class="fw-bold text-dark mb-0">Yang Perlu Anda Ketahui</h5>
                         </div>
-                        <h5 class="fw-bold text-dark mb-0">Yang Perlu Anda Ketahui</h5>
+                        <span class="badge rounded-pill icon-box-orange px-3 py-2 fw-semibold">Panduan Penting</span>
                     </div>
                     
                     <ul class="notes list-unstyled mb-0" style="padding-left: 0;">
                         <li class="d-flex gap-3 mb-3 pb-3 border-bottom">
-                            <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                            <i class="bi bi-info-circle-fill mt-1"></i>
                             <div>
                                 <strong class="d-block text-dark mb-1">Pedoman Penyusunan Laporan</strong>
-                                <span class="text-secondary small">Baca <a href="#" class="text-primary text-decoration-none fw-semibold">Pedoman Penyusunan Laporan KP Prodi Informatika</a> secara cermat sebelum mengajukan proposal kepada dosen pembimbing.</span>
+                                <span class="text-secondary small">Baca <a href="#" class="text-decoration-none fw-semibold">Pedoman Penyusunan Laporan KP Prodi Informatika</a> secara cermat sebelum mengajukan proposal kepada dosen pembimbing.</span>
                             </div>
                         </li>
                         <li class="d-flex gap-3 mb-3 pb-3 border-bottom">
-                            <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                            <i class="bi bi-check-circle-fill mt-1"></i>
                             <div>
-                                <strong class="d-block text-dark mb-1">Syarat Bimbingan Berkala</strong>
+                                <strong class="d-block text-dark mb-1">Syarat Bimbingan Berkala <span class="text-orange-accent">(Min. 6x ACC)</span></strong>
                                 <span class="text-secondary small">Bimbingan wajib dilaksanakan minimal 6 kali dan dicatat di sistem Logbook. Hanya entri bimbingan yang telah disetujui/ACC dosen yang dihitung valid.</span>
                             </div>
                         </li>
                         <li class="d-flex gap-3">
-                            <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                            <i class="bi bi-check-circle-fill mt-1"></i>
                             <div>
                                 <strong class="d-block text-dark mb-1">Integrasi Tugas Akhir</strong>
-                                <span class="text-secondary small">Menu pendaftaran dan logbook Tugas Akhir akan otomatis terbuka di sistem setelah Anda dinyatakan LULUS pada Sidang KP.</span>
+                                <span class="text-secondary small">Menu pendaftaran dan logbook Tugas Akhir akan otomatis terbuka di sistem setelah Anda dinyatakan <strong class="text-orange-accent">LULUS</strong> pada Sidang KP.</span>
                             </div>
                         </li>
                     </ul>
                 </div>
             </div>
 
-            <!-- KOLOM WIDGET (KANAN) -->
             <div class="col-lg-4">
-                
-                <!-- Widget Ringkasan Logbook -->
                 <div class="widget-card">
-                    <div class="widget-header">
-                        <h6><i class="bi bi-journal-check text-primary me-2"></i> Progress Bimbingan</h6>
+                    <div class="widget-header d-flex align-items-center justify-content-between">
+                        <!-- Icon Setuju / ACC Warna Hijau -->
+                        <h6><i class="bi bi-check-circle-fill text-green-accent me-2"></i> Progress Bimbingan</h6>
+                        <span class="badge icon-box-orange">Target 6</span>
                     </div>
                     <div class="widget-progress-box">
+                        <!-- Angka dan teks pada sesi hitam saja -->
                         <div class="progress-count">{{ acc }}<small>/6</small></div>
-                        <span class="text-muted small fw-semibold">Sesi Logbook Disetujui</span>
+                        <span class="text-dark small fw-semibold">Sesi Logbook Disetujui</span>
                     </div>
                 </div>
 
-                <!-- Widget Agenda Akademik -->
                 <div class="widget-card">
                     <div class="widget-header">
-                        <h6><i class="bi bi-calendar-event text-warning me-2"></i> Agenda Akademik</h6>
+                        <h6><i class="bi bi-calendar-event text-orange-accent me-2"></i> Agenda Akademik</h6>
                     </div>
                     <div class="timeline-mini">
                         <div class="timeline-item">
                             <span class="timeline-badge">Tahap 1</span>
                             <div class="timeline-info">
                                 <strong>Pengajuan Pembimbing</strong>
-                                <span>Pilih 2 dosen calon pembimbing</span>
+                                <span>Pilih prioritas dosen calon pembimbing</span>
                             </div>
                         </div>
                         <div class="timeline-item">
-                            <span class="timeline-badge">Tahap 2</span>
+                            <span class="timeline-badge badge-orange">Tahap 2</span>
                             <div class="timeline-info">
                                 <strong>Minimal 6 Sesi ACC</strong>
                                 <span>Syarat kelayakan Sidang KP</span>
@@ -428,46 +1005,130 @@
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
     </div></div>
 
-    <!-- Script JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/layout.js') }}"></script>
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-        /* ==== LOGIKA DARK MODE ==== */
+        const htmlElement = document.documentElement;
         const themeToggleBtn = document.getElementById('themeToggle');
         const themeIcon = document.getElementById('themeIcon');
         const themeText = document.getElementById('themeText');
-        const htmlElement = document.documentElement;
+        const mobileThemeBtn = document.getElementById('mobileThemeToggle');
+        const mobileThemeIcon = document.getElementById('mobileThemeIcon');
+        const mobileThemeText = document.getElementById('mobileThemeText');
 
         function updateToggleUI(theme) {
-            if (!themeIcon || !themeText) return;
             if (theme === 'dark') {
-                themeIcon.className = 'bi bi-sun-fill me-3 fs-5 text-warning';
-                themeText.textContent = 'Light Mode';
+                if (themeIcon) themeIcon.className = 'bi bi-sun-fill me-3 fs-5 text-info';
+                if (themeText) themeText.textContent = 'Light Mode';
+                if (mobileThemeIcon) mobileThemeIcon.className = 'bi bi-sun-fill';
+                if (mobileThemeText) mobileThemeText.textContent = 'Ganti ke Light Mode';
             } else {
-                themeIcon.className = 'bi bi-moon-fill me-3 fs-5';
-                themeText.textContent = 'Dark Mode';
+                if (themeIcon) themeIcon.className = 'bi bi-moon-fill me-3 fs-5';
+                if (themeText) themeText.textContent = 'Dark Mode';
+                if (mobileThemeIcon) mobileThemeIcon.className = 'bi bi-moon-stars-fill';
+                if (mobileThemeText) mobileThemeText.textContent = 'Ganti ke Dark Mode';
             }
         }
 
-        const currentTheme = htmlElement.getAttribute('data-bs-theme');
-        updateToggleUI(currentTheme);
-
-        if (themeToggleBtn) {
-            themeToggleBtn.addEventListener('click', () => {
-                const activeTheme = htmlElement.getAttribute('data-bs-theme');
-                const newTheme = activeTheme === 'light' ? 'dark' : 'light';
-                
-                htmlElement.setAttribute('data-bs-theme', newTheme);
-                localStorage.setItem('theme', newTheme);
-                updateToggleUI(newTheme);
-            });
+        function toggleTheme() {
+            const activeTheme = htmlElement.getAttribute('data-bs-theme');
+            const newTheme = activeTheme === 'light' ? 'dark' : 'light';
+            htmlElement.setAttribute('data-bs-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateToggleUI(newTheme);
         }
+
+        updateToggleUI(htmlElement.getAttribute('data-bs-theme'));
+        if (themeToggleBtn) themeToggleBtn.addEventListener('click', toggleTheme);
+        if (mobileThemeBtn) mobileThemeBtn.addEventListener('click', toggleTheme);
+
+        // =====================================================================
+        // LOGIKA MOBILE BOTTOM BAR & BOTTOM SHEET NATIVE
+        // =====================================================================
+        const bottomNav = document.getElementById('mobileBottomNav');
+        const indicator = document.getElementById('mTabIndicator');
+        const backdrop = document.getElementById('mobileSheetBackdrop');
+        const sheets = document.querySelectorAll('.mobile-bottom-sheet');
+        const tabItems = bottomNav ? bottomNav.querySelectorAll('.m-tab-item') : [];
+
+        function getDefaultTab() {
+            const path = window.location.pathname;
+            if (path.includes('/mahasiswa/ta')) return bottomNav.querySelector('[data-tab="ta"]');
+            if (path.includes('/mahasiswa/')) return bottomNav.querySelector('[data-tab="kp"]');
+            if (path.includes('/profil')) return bottomNav.querySelector('[data-tab="akun"]');
+            return bottomNav.querySelector('[data-tab="beranda"]');
+        }
+
+        function moveIndicator(tabEl, instant = false) {
+            if (!tabEl || !indicator || !bottomNav) return;
+            const navRect = bottomNav.getBoundingClientRect();
+            const tabRect = tabEl.getBoundingClientRect();
+            if (tabRect.width === 0) return;
+
+            const left = (tabRect.left - navRect.left) + (tabRect.width - 28) / 2;
+            if (instant) indicator.style.transition = 'none';
+            indicator.style.transform = `translateX(${left}px)`;
+            if (instant) {
+                indicator.offsetHeight;
+                indicator.style.transition = '';
+            }
+        }
+
+        function setActiveTab(tabEl, instant = false) {
+            tabItems.forEach(t => t.classList.remove('active'));
+            if (tabEl) {
+                tabEl.classList.add('active');
+                moveIndicator(tabEl, instant);
+            }
+        }
+
+        function closeAllSheets(restoreDefaultTab = true) {
+            sheets.forEach(s => s.classList.remove('show'));
+            if (backdrop) backdrop.classList.remove('show');
+            if (restoreDefaultTab) {
+                setActiveTab(getDefaultTab(), false);
+            }
+        }
+
+        tabItems.forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                const targetSheetId = tab.getAttribute('data-sheet');
+                if (!targetSheetId) {
+                    closeAllSheets(false);
+                    setActiveTab(tab, false);
+                    return;
+                }
+
+                e.preventDefault();
+                const targetSheet = document.getElementById(targetSheetId);
+                const isAlreadyOpen = targetSheet && targetSheet.classList.contains('show');
+
+                closeAllSheets(false);
+                if (!isAlreadyOpen && targetSheet) {
+                    targetSheet.classList.add('show');
+                    if (backdrop) backdrop.classList.add('show');
+                    setActiveTab(tab, false);
+                } else {
+                    setActiveTab(getDefaultTab(), false);
+                }
+            });
+        });
+
+        if (backdrop) {
+            backdrop.addEventListener('click', () => closeAllSheets(true));
+        }
+
+        const initialTab = getDefaultTab();
+        setActiveTab(initialTab, true);
+        window.addEventListener('resize', () => {
+            const currentActive = bottomNav ? bottomNav.querySelector('.m-tab-item.active') : null;
+            moveIndicator(currentActive || getDefaultTab(), true);
+        });
     });
     </script>
 </body>
