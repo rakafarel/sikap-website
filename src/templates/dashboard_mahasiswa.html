@@ -4,25 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Beranda - SIKAP</title>
-    
-    <!-- Script untuk mencegah FOUC saat reload di Dark Mode -->
+
+    <!-- Cegah FOUC Tema & Status Collapse Sidebar sebelum render -->
     <script>
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        document.documentElement.setAttribute('data-bs-theme', savedTheme);
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-bs-theme', savedTheme);
+            if (localStorage.getItem('mhsSidebarCollapsed') === 'true') {
+                document.documentElement.classList.add('sidebar-is-collapsed');
+            }
+        })();
     </script>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
     <style>
         /* ==========================================================================
-           PALET WARNA MAHASISWA: #0284C7 (BIRU UTAMA) + #D9541E (AKSEN ORANYE) + #0F1B3D + #FFFFFF
+           PALET WARNA MAHASISWA: #0284C7 (BIRU UTAMA) + #D9541E (ORANYE) + #0F1B3D
            ========================================================================== */
         :root {
             --mhs-blue: #0284C7;
             --mhs-blue-hover: #0369a1;
             --mhs-blue-light: #38bdf8;
             --mhs-orange: #D9541E;
+            --mhs-orange-hover: #b84315;
             --mhs-orange-light: #ff8c5a;
             --mhs-navy: #0F1B3D;
             --mhs-white: #FFFFFF;
@@ -31,24 +38,122 @@
             --mhs-green-light: #4ade80;
             --mhs-red: #dc2626;
             --mhs-red-light: #f87171;
+            --bento-bg: #F4F7FA;
+            --sidebar-w: 260px;
+            --sidebar-w-mini: 82px;
         }
 
-        /* 1. SIDEBAR DESKTOP (#0F1B3D + Utama #0284C7) */
+        body, .main-content, .page {
+            background-color: var(--bento-bg) !important;
+        }
+
+        /* ==========================================================================
+           1. COLLAPSIBLE SIDEBAR DESKTOP (#0F1B3D)
+           ========================================================================== */
         #sidebar.sidebar-mahasiswa {
+            width: var(--sidebar-w) !important;
             background: var(--mhs-navy) !important;
             border-right: 1px solid rgba(2, 132, 199, 0.25) !important;
+            transition: width 0.36s cubic-bezier(0.22, 1, 0.36, 1) !important;
+            overflow-x: hidden !important;
         }
-        #sidebar.sidebar-mahasiswa .fw-bold.fs-5 {
-            color: var(--mhs-white) !important;
+
+        .main-content {
+            margin-left: var(--sidebar-w) !important;
+            width: calc(100% - var(--sidebar-w)) !important;
+            padding: 0 !important;
+            transition: margin-left 0.36s cubic-bezier(0.22, 1, 0.36, 1), width 0.36s cubic-bezier(0.22, 1, 0.36, 1) !important;
         }
-        #sidebar.sidebar-mahasiswa .fw-bold .text-primary {
+
+        .sidebar-top-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.25rem 0.9rem 0.75rem 1.1rem;
+            gap: 0.5rem;
+        }
+        .sidebar-brand-link {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            text-decoration: none;
+            min-width: 0;
+            background: none !important;
+            -webkit-background-clip: border-box !important;
+            background-clip: border-box !important;
+        }
+        .sidebar-brand-text {
+            color: #FFFFFF !important;
+            -webkit-text-fill-color: #FFFFFF !important;
+            font-weight: 800;
+            font-size: 1.08rem;
+            white-space: nowrap;
+        }
+        .sidebar-brand-text span {
             color: var(--mhs-blue-light) !important;
+            -webkit-text-fill-color: var(--mhs-blue-light) !important;
         }
-        #sidebar.sidebar-mahasiswa .bg-primary {
-            background-color: var(--mhs-blue) !important;
+
+        .btn-sidebar-collapse {
+            width: 32px;
+            height: 32px;
+            border-radius: 9px;
+            border: 1px solid rgba(56, 189, 248, 0.28);
+            background: rgba(255, 255, 255, 0.06);
+            color: rgba(255, 255, 255, 0.85);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
         }
-        #sidebar.sidebar-mahasiswa .border-primary {
-            border-color: var(--mhs-blue) !important;
+        .btn-sidebar-collapse:hover {
+            background: rgba(2, 132, 199, 0.28);
+            color: #FFFFFF;
+            border-color: var(--mhs-blue-light);
+        }
+
+        @media (min-width: 768px) {
+            html.sidebar-is-collapsed #sidebar.sidebar-mahasiswa {
+                width: var(--sidebar-w-mini) !important;
+            }
+            html.sidebar-is-collapsed .main-content {
+                margin-left: var(--sidebar-w-mini) !important;
+                width: calc(100% - var(--sidebar-w-mini)) !important;
+            }
+            html.sidebar-is-collapsed .sidebar-top-row {
+                flex-direction: column;
+                padding: 1rem 0.5rem 0.6rem;
+                gap: 0.6rem;
+            }
+            html.sidebar-is-collapsed .sidebar-brand-text,
+            html.sidebar-is-collapsed .sidebar-hide-mini,
+            html.sidebar-is-collapsed .transition-icon {
+                display: none !important;
+            }
+            html.sidebar-is-collapsed .sidebar-avatar-img,
+            html.sidebar-is-collapsed .sidebar-avatar-initial {
+                width: 44px !important;
+                height: 44px !important;
+                font-size: 1rem !important;
+            }
+            html.sidebar-is-collapsed .nav-link-custom {
+                justify-content: center !important;
+                padding-left: 0 !important;
+                padding-right: 0 !important;
+            }
+            html.sidebar-is-collapsed .nav-link-custom i {
+                margin-right: 0 !important;
+            }
+            html.sidebar-is-collapsed .sidebar-menu .collapse {
+                padding-left: 0 !important;
+            }
+            html.sidebar-is-collapsed .sub-menu-link {
+                text-align: center;
+                font-size: 0.72rem !important;
+                padding: 0.45rem 0.2rem !important;
+            }
         }
 
         #sidebar.sidebar-mahasiswa .nav-link-custom {
@@ -58,9 +163,8 @@
             background-color: rgba(2, 132, 199, 0.18) !important;
             color: var(--mhs-white) !important;
         }
-
         #sidebar.sidebar-mahasiswa .nav-link-custom.active {
-            background: linear-gradient(90deg, rgba(2, 132, 199, 0.28) 0%, rgba(2, 132, 199, 0.04) 100%) !important;
+            background: linear-gradient(90deg, rgba(2, 132, 199, 0.3) 0%, rgba(2, 132, 199, 0.05) 100%) !important;
             color: var(--mhs-white) !important;
             font-weight: 700 !important;
         }
@@ -69,28 +173,199 @@
         }
         #sidebar.sidebar-mahasiswa .sidebar-sliding-sideline {
             background: linear-gradient(180deg, var(--mhs-blue-light) 0%, var(--mhs-blue) 100%) !important;
-            box-shadow: 0 0 14px rgba(2, 132, 199, 0.95), 0 0 4px var(--mhs-blue-light) !important;
+            box-shadow: 0 0 14px rgba(2, 132, 199, 0.95) !important;
         }
-
         .sidebar-menu .collapse .nav-link-custom {
             color: rgba(255, 255, 255, 0.78) !important;
             font-size: 0.88rem;
         }
-        .sidebar-menu .collapse .nav-link-custom:hover {
-            color: var(--mhs-white) !important;
-            background: rgba(2, 132, 199, 0.18) !important;
-        }
-
         [data-bs-toggle="collapse"][aria-expanded="true"] .transition-icon {
             transform: rotate(180deg);
         }
-        .transition-icon {
-            transition: transform 0.3s ease;
-        }
-        .cursor-pointer { cursor: pointer; }
+        .transition-icon { transition: transform 0.3s ease; }
 
         /* ==========================================================================
-           2. MOBILE BOTTOM BAR PROFESIONAL (4 TAB SEJAJAR + BOTTOM SHEET)
+           2. PERSISTENT TOPBAR (TETAP DI ATAS SAAT PINDAH FITUR)
+           ========================================================================== */
+        .mhs-topbar {
+            position: sticky;
+            top: 0;
+            z-index: 1020;
+            background: rgba(244, 247, 250, 0.88);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border-bottom: 1px solid rgba(15, 27, 61, 0.07);
+            padding: 0.85rem 1.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .topbar-search-box {
+            position: relative;
+            width: 100%;
+            max-width: 340px;
+        }
+        .topbar-search-input {
+            width: 100%;
+            background: var(--mhs-white);
+            border: 1px solid #e2e8f0;
+            border-radius: 999px;
+            padding: 0.52rem 3.2rem 0.52rem 2.45rem;
+            font-size: 0.85rem;
+            color: var(--mhs-navy);
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .topbar-search-input:focus {
+            border-color: var(--mhs-blue);
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.14);
+        }
+        .topbar-search-icon {
+            position: absolute;
+            left: 0.9rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            font-size: 0.92rem;
+            pointer-events: none;
+        }
+        .topbar-kbd {
+            position: absolute;
+            right: 0.65rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 1px 6px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #64748b;
+            pointer-events: none;
+        }
+
+        .topbar-search-results {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            right: 0;
+            background: var(--mhs-white);
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            box-shadow: 0 12px 30px rgba(15, 27, 61, 0.12);
+            padding: 0.45rem;
+            display: none;
+            z-index: 1050;
+        }
+        .topbar-search-results.show {
+            display: block;
+        }
+        .search-result-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.55rem 0.75rem;
+            border-radius: 10px;
+            text-decoration: none;
+            color: var(--mhs-navy);
+            font-size: 0.84rem;
+            font-weight: 600;
+        }
+        .search-result-item:hover {
+            background: rgba(2, 132, 199, 0.1);
+            color: var(--mhs-blue);
+        }
+
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .topbar-icon-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--mhs-white);
+            border: 1px solid #e2e8f0;
+            color: var(--mhs-navy);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 1rem;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+        .topbar-icon-btn:hover {
+            border-color: var(--mhs-blue);
+            color: var(--mhs-blue);
+            transform: translateY(-1px);
+        }
+        .topbar-dot-badge {
+            position: absolute;
+            top: 7px;
+            right: 8px;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--mhs-orange);
+            border: 1.5px solid var(--mhs-white);
+        }
+
+        .topbar-profile-pill {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            padding: 0.3rem 0.75rem 0.3rem 0.35rem;
+            border-radius: 999px;
+            background: var(--mhs-white);
+            border: 1px solid #e2e8f0;
+            text-decoration: none;
+            transition: border-color 0.2s ease;
+        }
+        .topbar-profile-pill:hover {
+            border-color: var(--mhs-blue);
+        }
+        .topbar-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .topbar-avatar-initial {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--mhs-navy), var(--mhs-blue));
+            color: #FFFFFF;
+            font-weight: 700;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .topbar-user-name {
+            font-size: 0.83rem;
+            font-weight: 700;
+            color: var(--mhs-navy);
+            line-height: 1.15;
+            max-width: 150px;
+        }
+        .topbar-user-sub {
+            font-size: 0.7rem;
+            color: #64748b;
+            line-height: 1.1;
+        }
+
+        .mhs-content-inner {
+            padding: 1.4rem 1.75rem 2.25rem;
+        }
+
+        /* ==========================================================================
+           3. MOBILE BOTTOM BAR PROFESIONAL (4 TAB SEJAJAR + BOTTOM SHEET)
            ========================================================================== */
         @media (min-width: 768px) {
             .mobile-bottom-nav,
@@ -101,24 +376,32 @@
         }
 
         @media (max-width: 767.98px) {
-            #sidebar.sidebar-mahasiswa {
-                display: none !important;
-            }
-
-            body {
-                padding-bottom: calc(74px + env(safe-area-inset-bottom, 0px)) !important;
-            }
+            #sidebar.sidebar-mahasiswa { display: none !important; }
+            body { padding-bottom: calc(74px + env(safe-area-inset-bottom, 0px)) !important; }
             .main-content {
                 margin-left: 0 !important;
                 width: 100% !important;
-                padding: 1rem 0.9rem 1.5rem !important;
+            }
+            .mhs-topbar {
+                padding: 0.7rem 0.9rem;
+            }
+            .topbar-search-box {
+                max-width: 195px;
+            }
+            .topbar-kbd,
+            .topbar-user-info {
+                display: none !important;
+            }
+            .topbar-profile-pill {
+                padding: 0.2rem;
+            }
+            .mhs-content-inner {
+                padding: 1rem 0.9rem 1.5rem;
             }
 
             .mobile-bottom-nav {
                 position: fixed;
-                left: 0;
-                right: 0;
-                bottom: 0;
+                left: 0; right: 0; bottom: 0;
                 height: calc(66px + env(safe-area-inset-bottom, 0px));
                 padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
                 background: rgba(15, 27, 61, 0.96);
@@ -131,7 +414,6 @@
                 align-items: center;
                 z-index: 1045;
             }
-
             .m-tab-item {
                 position: relative;
                 display: flex;
@@ -146,18 +428,11 @@
                 text-decoration: none;
                 font-size: 0.7rem;
                 font-weight: 500;
-                letter-spacing: 0.1px;
                 border-radius: 12px;
-                padding: 0 4px;
                 cursor: pointer;
-                transition: color 0.2s ease, transform 0.15s ease;
                 -webkit-tap-highlight-color: transparent;
             }
-            .m-tab-item:active {
-                transform: scale(0.94);
-            }
             .m-tab-icon-wrap {
-                position: relative;
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -166,548 +441,349 @@
                 border-radius: 999px;
                 transition: background-color 0.25s ease, color 0.25s ease;
             }
-            .m-tab-item i {
-                font-size: 1.2rem;
-                line-height: 1;
-            }
+            .m-tab-item i { font-size: 1.2rem; line-height: 1; }
             .m-tab-avatar {
-                width: 22px;
-                height: 22px;
-                border-radius: 50%;
-                object-fit: cover;
+                width: 22px; height: 22px; border-radius: 50%; object-fit: cover;
                 border: 1.5px solid rgba(255, 255, 255, 0.55);
             }
             .m-tab-avatar-initial {
-                width: 22px;
-                height: 22px;
-                border-radius: 50%;
-                background: var(--mhs-blue);
-                color: var(--mhs-white);
-                font-size: 0.68rem;
-                font-weight: 700;
-                display: flex;
-                align-items: center;
-                justify-content: center;
+                width: 22px; height: 22px; border-radius: 50%;
+                background: var(--mhs-blue); color: #FFFFFF;
+                font-size: 0.68rem; font-weight: 700;
+                display: flex; align-items: center; justify-content: center;
             }
-
-            .m-tab-item.active {
-                color: var(--mhs-white);
-                font-weight: 700;
-            }
+            .m-tab-item.active { color: #FFFFFF; font-weight: 700; }
             .m-tab-item.active .m-tab-icon-wrap {
                 background: rgba(2, 132, 199, 0.28);
                 color: var(--mhs-blue-light);
                 box-shadow: inset 0 0 0 1px rgba(56, 189, 248, 0.35);
             }
-            .m-tab-item.active .m-tab-avatar {
-                border-color: var(--mhs-blue-light);
-            }
-
             .m-tab-indicator {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 28px;
-                height: 3px;
+                position: absolute; top: 0; left: 0; width: 28px; height: 3px;
                 border-radius: 0 0 4px 4px;
                 background: linear-gradient(90deg, var(--mhs-blue-light), var(--mhs-blue));
                 box-shadow: 0 2px 10px rgba(56, 189, 248, 0.85);
                 transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
                 pointer-events: none;
             }
-
             .mobile-sheet-backdrop {
-                position: fixed;
-                inset: 0;
+                position: fixed; inset: 0;
                 background: rgba(9, 17, 39, 0.55);
                 backdrop-filter: blur(3px);
-                opacity: 0;
-                visibility: hidden;
+                opacity: 0; visibility: hidden;
                 transition: opacity 0.25s ease, visibility 0.25s ease;
                 z-index: 1042;
             }
-            .mobile-sheet-backdrop.show {
-                opacity: 1;
-                visibility: visible;
-            }
-
+            .mobile-sheet-backdrop.show { opacity: 1; visibility: visible; }
             .mobile-bottom-sheet {
-                position: fixed;
-                left: 0;
-                right: 0;
+                position: fixed; left: 0; right: 0;
                 bottom: calc(66px + env(safe-area-inset-bottom, 0px));
                 background: var(--mhs-white);
-                border-top-left-radius: 22px;
-                border-top-right-radius: 22px;
+                border-top-left-radius: 22px; border-top-right-radius: 22px;
                 padding: 10px 16px 18px;
                 box-shadow: 0 -10px 35px rgba(15, 27, 61, 0.22);
-                border-top: 1px solid rgba(2, 132, 199, 0.16);
                 transform: translateY(105%);
                 transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
                 z-index: 1044;
             }
-            .mobile-bottom-sheet.show {
-                transform: translateY(0);
-            }
-            [data-bs-theme="dark"] .mobile-bottom-sheet {
-                background: var(--mhs-navy);
-                border-top-color: rgba(56, 189, 248, 0.28);
-            }
-
-            .sheet-handle {
-                width: 38px;
-                height: 4px;
-                border-radius: 99px;
-                background: #cbd5e1;
-                margin: 0 auto 12px;
-            }
-            [data-bs-theme="dark"] .sheet-handle {
-                background: rgba(255, 255, 255, 0.25);
-            }
-
+            .mobile-bottom-sheet.show { transform: translateY(0); }
+            [data-bs-theme="dark"] .mobile-bottom-sheet { background: var(--mhs-navy); }
+            .sheet-handle { width: 38px; height: 4px; border-radius: 99px; background: #cbd5e1; margin: 0 auto 12px; }
             .sheet-title {
-                font-size: 0.8rem;
-                font-weight: 700;
-                text-transform: uppercase;
-                letter-spacing: 0.6px;
-                color: #64748b;
-                padding: 0 6px 10px;
-                border-bottom: 1px solid rgba(15, 27, 61, 0.08);
-                margin-bottom: 10px;
+                font-size: 0.8rem; font-weight: 700; text-transform: uppercase;
+                letter-spacing: 0.6px; color: #64748b; padding: 0 6px 10px;
+                border-bottom: 1px solid rgba(15, 27, 61, 0.08); margin-bottom: 10px;
             }
-            [data-bs-theme="dark"] .sheet-title {
-                color: rgba(255, 255, 255, 0.65);
-                border-bottom-color: rgba(255, 255, 255, 0.1);
-            }
-
             .sheet-link {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                width: 100%;
-                padding: 12px 12px;
-                border-radius: 12px;
-                text-decoration: none;
-                background: transparent;
-                border: none;
-                color: var(--mhs-navy);
-                font-weight: 600;
-                font-size: 0.92rem;
-                margin-bottom: 4px;
-                transition: background-color 0.2s ease;
+                display: flex; align-items: center; justify-content: space-between;
+                width: 100%; padding: 12px; border-radius: 12px; text-decoration: none;
+                background: transparent; border: none; color: var(--mhs-navy);
+                font-weight: 600; font-size: 0.92rem; margin-bottom: 4px;
             }
-            .sheet-link:hover, .sheet-link:active, .sheet-link.active-sheet-item {
-                background: rgba(2, 132, 199, 0.12);
-                color: var(--mhs-blue);
-            }
-            [data-bs-theme="dark"] .sheet-link {
-                color: var(--mhs-white);
-            }
-            [data-bs-theme="dark"] .sheet-link:hover,
-            [data-bs-theme="dark"] .sheet-link.active-sheet-item {
-                background: rgba(2, 132, 199, 0.24);
-                color: var(--mhs-blue-light);
-            }
-            .sheet-link-left {
-                display: flex;
-                align-items: center;
-                gap: 12px;
-            }
+            [data-bs-theme="dark"] .sheet-link { color: #FFFFFF; }
+            .sheet-link-left { display: flex; align-items: center; gap: 12px; }
             .sheet-icon-badge {
-                width: 36px;
-                height: 36px;
-                border-radius: 10px;
-                background: rgba(2, 132, 199, 0.12);
-                color: var(--mhs-blue);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 1.05rem;
+                width: 36px; height: 36px; border-radius: 10px;
+                background: rgba(2, 132, 199, 0.12); color: var(--mhs-blue);
+                display: flex; align-items: center; justify-content: center;
             }
-            .sheet-icon-badge.orange {
-                background: rgba(217, 84, 30, 0.12);
-                color: var(--mhs-orange);
-            }
-            .sheet-icon-badge.danger {
-                background: rgba(220, 38, 38, 0.12);
-                color: #ef4444;
-            }
+            .sheet-icon-badge.orange { background: rgba(217, 84, 30, 0.12); color: var(--mhs-orange); }
+            .sheet-icon-badge.danger { background: rgba(220, 38, 38, 0.12); color: #ef4444; }
         }
 
         /* ==========================================================================
-           3. HERO BANNER (#0F1B3D + Tombol Utama #0284C7 + Aksen Glow Oranye #D9541E)
+           4. BENTO GRID DASHBOARD CARDS & WIDGETS
            ========================================================================== */
-        .hero-banner, .hero-banner-sub {
-            background: linear-gradient(135deg, var(--mhs-navy) 0%, #15285b 100%) !important;
-            border: 1px solid rgba(2, 132, 199, 0.35) !important;
-            box-shadow: 0 12px 28px -6px rgba(15, 27, 61, 0.32) !important;
+        .bento-header-title {
+            font-size: 1.95rem;
+            font-weight: 800;
+            letter-spacing: -0.6px;
+            color: var(--mhs-navy);
+            line-height: 1.15;
         }
-        .hero-banner::after, .hero-banner-sub::after {
-            background: radial-gradient(circle, rgba(217, 84, 30, 0.25) 0%, rgba(2, 132, 199, 0.18) 45%, transparent 72%) !important;
+        .bento-header-sub {
+            color: #64748b;
+            font-size: 0.94rem;
         }
-        .badge-hero-outline {
-            background: rgba(2, 132, 199, 0.22) !important;
-            border: 1px solid rgba(56, 189, 248, 0.5) !important;
-            color: var(--mhs-white) !important;
-            font-size: 0.72rem;
-            font-weight: 700;
-            padding: 0.25rem 0.65rem;
+
+        .btn-bento-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--mhs-blue);
+            color: #FFFFFF !important;
+            border: 1px solid var(--mhs-blue);
             border-radius: 999px;
-            letter-spacing: 0.3px;
+            padding: 0.62rem 1.3rem;
+            font-size: 0.87rem;
+            font-weight: 600;
+            text-decoration: none;
+            box-shadow: 0 6px 18px rgba(2, 132, 199, 0.28);
+            transition: all 0.2s ease;
         }
-        .badge-hero-orange {
-            background: rgba(217, 84, 30, 0.22);
-            border: 1px solid rgba(217, 84, 30, 0.6);
-            color: #ffbfa3;
-            font-size: 0.72rem;
-            font-weight: 700;
-            padding: 0.25rem 0.65rem;
+        .btn-bento-primary:hover {
+            background: var(--mhs-blue-hover);
+            border-color: var(--mhs-blue-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-bento-outline {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--mhs-white);
+            color: var(--mhs-navy) !important;
+            border: 1px solid #cbd5e1;
             border-radius: 999px;
-            letter-spacing: 0.3px;
+            padding: 0.62rem 1.25rem;
+            font-size: 0.87rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
         }
-        .btn-hero-action,
-        .page .btn-primary {
-            background: var(--mhs-blue) !important;
-            border-color: var(--mhs-blue) !important;
-            color: var(--mhs-white) !important;
-            box-shadow: 0 4px 14px rgba(2, 132, 199, 0.38) !important;
-        }
-        .btn-hero-action:hover,
-        .page .btn-primary:hover {
-            background: var(--mhs-blue-hover) !important;
-            border-color: var(--mhs-blue-hover) !important;
-            color: var(--mhs-white) !important;
-            box-shadow: 0 6px 20px rgba(2, 132, 199, 0.52) !important;
-        }
-
-        /* ==========================================================================
-           4. JOURNEY STEPPER
-           ========================================================================== */
-        .journey {
-            background: var(--mhs-white) !important;
-            border: 1px solid #e2e8f0 !important;
-        }
-        .step b {
-            color: var(--mhs-navy) !important;
-        }
-        .step.done .step-n {
-            background: var(--mhs-green) !important;
-            border-color: var(--mhs-green) !important;
-            color: var(--mhs-white) !important;
-        }
-        .step.now {
-            background: linear-gradient(135deg, rgba(2, 132, 199, 0.07) 0%, rgba(217, 84, 30, 0.08) 100%) !important;
-            border: 1px solid rgba(217, 84, 30, 0.28) !important;
-        }
-        .step.now .step-n {
-            background: var(--mhs-orange) !important;
-            border-color: var(--mhs-orange) !important;
-            color: var(--mhs-white) !important;
-            box-shadow: 0 0 0 6px rgba(217, 84, 30, 0.2) !important;
-        }
-
-        /* ==========================================================================
-           5. PANEL, WIDGET & IKON SEMANTIK (SERAGAM LOGBOOK)
-           ========================================================================== */
-        .panel-modern {
-            background: var(--mhs-white);
-            border-radius: 16px;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 4px 20px -2px rgba(15, 27, 61, 0.04);
-            padding: 1.75rem;
-            height: 100%;
-        }
-
-        .widget-card {
-            background: var(--mhs-white);
-            border-radius: 16px;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 4px 20px -2px rgba(15, 27, 61, 0.04);
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .widget-header {
-            border-bottom: 1px solid rgba(15, 27, 61, 0.08);
-            padding-bottom: 1rem;
-            margin-bottom: 1.25rem;
-        }
-
-        .widget-header h6 { margin: 0; font-weight: 700; color: var(--mhs-navy); }
-
-        .page h1, .page h2, .page h3, .page h4, .page h5, .page h6,
-        .page .text-dark {
-            color: var(--mhs-navy) !important;
-        }
-        .page .text-primary {
+        .btn-bento-outline:hover {
+            border-color: var(--mhs-blue);
             color: var(--mhs-blue) !important;
         }
-        .page .text-green-accent {
-            color: var(--mhs-green) !important;
-        }
-        .icon-box-blue {
-            background-color: rgba(2, 132, 199, 0.12);
-            color: var(--mhs-blue);
-        }
-        .icon-box-green {
-            background-color: rgba(22, 163, 74, 0.12);
-            color: var(--mhs-green);
-        }
-        .icon-box-orange {
-            background-color: rgba(217, 84, 30, 0.12);
-            color: var(--mhs-orange);
-        }
-        .text-orange-accent {
-            color: var(--mhs-orange) !important;
-        }
 
-        .widget-progress-box {
-            text-align: center;
-            padding: 1.5rem;
-            background: linear-gradient(180deg, rgba(22, 163, 74, 0.05) 0%, rgba(2, 132, 199, 0.05) 100%);
-            border-radius: 12px;
-            border: 1.5px dashed rgba(22, 163, 74, 0.42);
-        }
-        .progress-count {
-            font-size: 2.6rem;
-            font-weight: 800;
-            color: var(--mhs-navy);
-            line-height: 1;
-            margin-bottom: 0.5rem;
-        }
-        .progress-count small {
-            font-size: 1.4rem;
-            color: var(--mhs-navy);
-            font-weight: 800;
-        }
-
-        .timeline-mini {
+        .bento-kpi-card {
+            background: var(--mhs-white);
+            border: 1px solid #e2e8f0;
+            border-radius: 22px;
+            padding: 1.35rem 1.4rem;
+            height: 100%;
             display: flex;
             flex-direction: column;
-            gap: 1.25rem;
+            justify-content: space-between;
+            box-shadow: 0 4px 20px -4px rgba(15, 27, 61, 0.04);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+            text-decoration: none;
+            color: inherit;
         }
-        .timeline-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 1rem;
+        .bento-kpi-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 26px -6px rgba(15, 27, 61, 0.09);
+            border-color: rgba(2, 132, 199, 0.35);
         }
-        .timeline-badge {
-            background: rgba(2, 132, 199, 0.12);
-            color: var(--mhs-blue);
-            font-size: 0.75rem;
-            font-weight: 700;
-            padding: 0.35rem 0.65rem;
-            border-radius: 6px;
-            white-space: nowrap;
+        .bento-kpi-card.is-featured {
+            background: linear-gradient(145deg, var(--mhs-navy) 0%, #16376b 52%, var(--mhs-blue) 100%);
+            border-color: rgba(56, 189, 248, 0.35);
+            color: #FFFFFF;
+            box-shadow: 0 12px 28px -6px rgba(2, 132, 199, 0.35);
         }
-        .timeline-badge.badge-orange {
-            background: rgba(217, 84, 30, 0.14);
-            color: var(--mhs-orange);
-        }
-        .timeline-info strong { display: block; font-size: 0.9rem; color: var(--mhs-navy); margin-bottom: 0.2rem; }
-        .timeline-info span { display: block; font-size: 0.8rem; color: #64748b; }
 
-        .notes li {
-            border-left: 3px solid rgba(2, 132, 199, 0.35);
-            padding-left: 0.85rem;
-            transition: border-color 0.2s ease;
+        .bento-kpi-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
         }
-        .notes li:hover {
-            border-left-color: var(--mhs-orange);
+        .bento-kpi-label { font-size: 0.92rem; font-weight: 600; color: var(--mhs-navy); }
+        .bento-kpi-card.is-featured .bento-kpi-label { color: rgba(255, 255, 255, 0.92); }
+
+        .bento-arrow-circle {
+            width: 34px; height: 34px; border-radius: 50%;
+            display: inline-flex; align-items: center; justify-content: center;
+            border: 1px solid #cbd5e1; background: var(--mhs-white); color: var(--mhs-navy);
+            font-size: 0.95rem; flex-shrink: 0;
+            transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
         }
-        .notes a { color: var(--mhs-blue) !important; }
-        .notes a:hover { color: var(--mhs-orange) !important; }
-        .notes .bi-check-circle-fill { color: var(--mhs-green) !important; }
-        .notes .bi-info-circle-fill { color: var(--mhs-blue) !important; }
+        .bento-kpi-card:hover .bento-arrow-circle {
+            transform: translate(2px, -2px);
+            background: var(--mhs-blue); border-color: var(--mhs-blue); color: #FFFFFF;
+        }
+        .bento-kpi-card.is-featured .bento-arrow-circle {
+            background: #FFFFFF; border-color: #FFFFFF; color: var(--mhs-navy);
+        }
+
+        .bento-kpi-value {
+            font-size: 2.35rem; font-weight: 800; letter-spacing: -1px;
+            line-height: 1.05; color: var(--mhs-navy); margin-bottom: 0.85rem;
+        }
+        .bento-kpi-value.is-text-value { font-size: 1.45rem; letter-spacing: -0.4px; line-height: 1.25; margin-top: 0.35rem; }
+        .bento-kpi-card.is-featured .bento-kpi-value { color: #FFFFFF; }
+
+        .bento-kpi-footer { display: flex; align-items: center; gap: 0.45rem; font-size: 0.78rem; color: #64748b; font-weight: 500; }
+        .bento-kpi-card.is-featured .bento-kpi-footer { color: rgba(255, 255, 255, 0.86); }
+
+        .bento-pill-tag {
+            display: inline-flex; align-items: center; gap: 3px;
+            padding: 0.15rem 0.5rem; border-radius: 6px; font-size: 0.72rem; font-weight: 700;
+            border: 1px solid rgba(22, 163, 74, 0.3); background: rgba(22, 163, 74, 0.12); color: var(--mhs-green);
+        }
+        .bento-pill-tag.orange { border-color: rgba(217, 84, 30, 0.35); background: rgba(217, 84, 30, 0.12); color: var(--mhs-orange); }
+        .bento-pill-tag.blue { border-color: rgba(2, 132, 199, 0.3); background: rgba(2, 132, 199, 0.12); color: var(--mhs-blue); }
+        .bento-kpi-card.is-featured .bento-pill-tag { background: rgba(255, 255, 255, 0.18); border-color: rgba(255, 255, 255, 0.35); color: #FFFFFF; }
+
+        .bento-widget-card {
+            background: var(--mhs-white); border: 1px solid #e2e8f0; border-radius: 22px;
+            padding: 1.5rem; height: 100%; display: flex; flex-direction: column;
+            box-shadow: 0 4px 20px -4px rgba(15, 27, 61, 0.04);
+        }
+        .bento-widget-title { font-size: 1.05rem; font-weight: 700; color: var(--mhs-navy); margin-bottom: 0.2rem; }
+        .bento-widget-sub { font-size: 0.8rem; color: #64748b; }
+
+        .pill-chart-wrap {
+            display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.85rem;
+            align-items: end; padding-top: 2rem; margin-top: auto;
+        }
+        .pill-col { display: flex; flex-direction: column; align-items: center; gap: 0.55rem; }
+        .pill-bar-shell { position: relative; width: 100%; max-width: 48px; height: 146px; border-radius: 999px; display: flex; align-items: flex-end; justify-content: center; }
+        .pill-bar-fill { width: 100%; height: var(--bar-h, 45%); border-radius: 999px; position: relative; transition: height 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
+        .pill-bar-fill.is-striped {
+            background-color: #f8fafc;
+            background-image: repeating-linear-gradient(-45deg, #cbd5e1, #cbd5e1 4px, transparent 4px, transparent 9px);
+            border: 1.5px solid #cbd5e1;
+        }
+        .pill-bar-fill.is-navy { background: var(--mhs-navy); }
+        .pill-bar-fill.is-blue { background: var(--mhs-blue); }
+        .pill-bar-fill.is-green { background: var(--mhs-green); }
+        .pill-bar-fill.is-orange { background: var(--mhs-orange); }
+        .pill-bar-badge {
+            position: absolute; top: -30px; left: 50%; transform: translateX(-50%);
+            background: var(--mhs-white); border: 1px solid #cbd5e1; color: var(--mhs-navy);
+            font-size: 0.68rem; font-weight: 700; padding: 2px 7px; border-radius: 999px; white-space: nowrap;
+        }
+        .pill-bar-label { font-size: 0.76rem; font-weight: 700; color: #64748b; }
+
+        .reminder-headline { font-size: 1.22rem; font-weight: 800; color: var(--mhs-navy); line-height: 1.3; margin-bottom: 0.45rem; }
+        .reminder-meta { font-size: 0.83rem; color: #64748b; line-height: 1.55; }
+        .btn-reminder-cta {
+            display: flex; align-items: center; justify-content: center; gap: 0.55rem;
+            width: 100%; padding: 0.78rem 1.2rem; border-radius: 999px;
+            background: linear-gradient(135deg, var(--mhs-navy) 0%, #1a356e 100%);
+            color: #FFFFFF !important; font-weight: 600; font-size: 0.9rem; text-decoration: none;
+            margin-top: auto; transition: all 0.2s ease;
+        }
+        .btn-reminder-cta:hover { background: linear-gradient(135deg, var(--mhs-blue) 0%, var(--mhs-blue-hover) 100%); }
+
+        .btn-mini-pill {
+            display: inline-flex; align-items: center; gap: 4px; padding: 0.28rem 0.75rem;
+            border-radius: 999px; border: 1px solid #cbd5e1; background: var(--mhs-white);
+            color: var(--mhs-navy); font-size: 0.76rem; font-weight: 700; text-decoration: none;
+        }
+        .bento-task-list { display: flex; flex-direction: column; gap: 0.85rem; margin-top: 0.5rem; }
+        .bento-task-item { display: flex; align-items: center; gap: 0.8rem; text-decoration: none; padding: 0.45rem 0.55rem; border-radius: 14px; }
+        .bento-task-item:hover { background: rgba(2, 132, 199, 0.06); }
+        .bento-task-icon { width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.05rem; flex-shrink: 0; }
+        .bento-task-icon.done { background: rgba(22, 163, 74, 0.13); color: var(--mhs-green); }
+        .bento-task-icon.now { background: rgba(217, 84, 30, 0.13); color: var(--mhs-orange); }
+        .bento-task-icon.locked { background: rgba(100, 116, 139, 0.12); color: #64748b; }
+        .bento-task-title { font-size: 0.86rem; font-weight: 700; color: var(--mhs-navy); line-height: 1.25; }
+        .bento-task-sub { font-size: 0.74rem; color: #64748b; }
 
         /* ==========================================================================
-           6. DARK MODE
+           5. DARK MODE
            ========================================================================== */
-        [data-bs-theme="dark"] body, 
-        [data-bs-theme="dark"] .main-content, 
+        [data-bs-theme="dark"] body,
+        [data-bs-theme="dark"] .main-content,
         [data-bs-theme="dark"] .page {
-            background-color: #091127 !important; 
-            color: var(--mhs-white) !important;
-        }
-
-        [data-bs-theme="dark"] .panel-modern, 
-        [data-bs-theme="dark"] .widget-card {
-            background-color: var(--mhs-navy) !important;
-            border-color: rgba(2, 132, 199, 0.25) !important;
-            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.25) !important;
-        }
-
-        [data-bs-theme="dark"] .widget-progress-box {
-            background: linear-gradient(180deg, rgba(9, 17, 39, 0.9) 0%, rgba(22, 163, 74, 0.14) 100%) !important;
-            border-color: rgba(74, 222, 128, 0.45) !important;
-        }
-
-        [data-bs-theme="dark"] .progress-count,
-        [data-bs-theme="dark"] .progress-count small { color: var(--mhs-white); }
-        [data-bs-theme="dark"] .widget-header { border-bottom-color: rgba(255, 255, 255, 0.1) !important; }
-        [data-bs-theme="dark"] .widget-header h6 { color: var(--mhs-white) !important; }
-        [data-bs-theme="dark"] .page h1,
-        [data-bs-theme="dark"] .page h2,
-        [data-bs-theme="dark"] .page h3,
-        [data-bs-theme="dark"] .page h4,
-        [data-bs-theme="dark"] .page h5,
-        [data-bs-theme="dark"] .page h6,
-        [data-bs-theme="dark"] .page .text-dark { color: var(--mhs-white) !important; }
-        [data-bs-theme="dark"] .page .text-primary { color: var(--mhs-blue-light) !important; }
-        [data-bs-theme="dark"] .page .text-green-accent { color: var(--mhs-green-light) !important; }
-        [data-bs-theme="dark"] .text-orange-accent { color: var(--mhs-orange-light) !important; }
-        [data-bs-theme="dark"] .icon-box-blue {
-            background-color: rgba(2, 132, 199, 0.22) !important;
-            color: var(--mhs-blue-light) !important;
-        }
-        [data-bs-theme="dark"] .icon-box-green {
-            background-color: rgba(22, 163, 74, 0.22) !important;
-            color: var(--mhs-green-light) !important;
-        }
-        [data-bs-theme="dark"] .icon-box-orange {
-            background-color: rgba(217, 84, 30, 0.22) !important;
-            color: var(--mhs-orange-light) !important;
-        }
-        [data-bs-theme="dark"] .text-muted,
-        [data-bs-theme="dark"] .text-secondary { color: rgba(255, 255, 255, 0.72) !important; }
-        [data-bs-theme="dark"] .border-bottom { border-bottom-color: rgba(255, 255, 255, 0.1) !important; }
-        [data-bs-theme="dark"] .timeline-info strong { color: var(--mhs-white) !important; }
-        [data-bs-theme="dark"] .timeline-badge { background: rgba(2, 132, 199, 0.25) !important; color: var(--mhs-blue-light) !important; }
-        [data-bs-theme="dark"] .timeline-badge.badge-orange { background: rgba(217, 84, 30, 0.25) !important; color: var(--mhs-orange-light) !important; }
-        [data-bs-theme="dark"] .notes .bi-check-circle-fill { color: var(--mhs-green-light) !important; }
-        [data-bs-theme="dark"] .notes .bi-info-circle-fill,
-        [data-bs-theme="dark"] .notes a { color: var(--mhs-blue-light) !important; }
-
-        html, body, .panel-modern, .widget-card, .main-content, .widget-progress-box {
-            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-        }
-
-        [data-bs-theme="dark"] .journey {
-            background-color: var(--mhs-navy) !important;
-            border-color: rgba(2, 132, 199, 0.25) !important;
-            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.25) !important;
-        }
-
-        [data-bs-theme="dark"] .journey .step,
-        [data-bs-theme="dark"] .journey li .step {
-            background-color: var(--mhs-navy) !important;
-            color: var(--mhs-white) !important;
-            border-color: rgba(255, 255, 255, 0.1) !important;
-        }
-
-        [data-bs-theme="dark"] .journey .step b { color: var(--mhs-white) !important; }
-        [data-bs-theme="dark"] .journey .step small { color: rgba(255, 255, 255, 0.68) !important; }
-
-        [data-bs-theme="dark"] .journey .step.done .step-n {
-            background: var(--mhs-green) !important;
-            border-color: var(--mhs-green) !important;
-            color: var(--mhs-white) !important;
-        }
-
-        [data-bs-theme="dark"] .journey .step.now {
-            background: linear-gradient(135deg, rgba(2, 132, 199, 0.18) 0%, rgba(217, 84, 30, 0.22) 100%) !important; 
-            border-color: rgba(217, 84, 30, 0.5) !important;
-        }
-
-        [data-bs-theme="dark"] .journey .step.locked .step-n,
-        [data-bs-theme="dark"] .journey .step.locked {
-            color: rgba(255, 255, 255, 0.35) !important;
-        }
-        /* Ubah warna tombol di dalam hero banner menjadi Oranye (#D9541E) */
-        .hero-banner .btn-hero-action,
-        .hero-banner-sub .btn-hero-action,
-        [data-bs-theme="dark"] .hero-banner .btn-hero-action,
-        [data-bs-theme="dark"] .hero-banner-sub .btn-hero-action {
-            background: #D9541E !important;
-            border-color: #D9541E !important;
+            background-color: #091127 !important;
             color: #FFFFFF !important;
-            box-shadow: 0 4px 14px rgba(217, 84, 30, 0.38) !important;
         }
-
-        .hero-banner .btn-hero-action:hover,
-        .hero-banner-sub .btn-hero-action:hover,
-        [data-bs-theme="dark"] .hero-banner .btn-hero-action:hover,
-        [data-bs-theme="dark"] .hero-banner-sub .btn-hero-action:hover {
-            background: #b84315 !important;
-            border-color: #b84315 !important;
+        [data-bs-theme="dark"] .mhs-topbar {
+            background: rgba(9, 17, 39, 0.85);
+            border-bottom-color: rgba(56, 189, 248, 0.15);
+        }
+        [data-bs-theme="dark"] .topbar-search-input,
+        [data-bs-theme="dark"] .topbar-icon-btn,
+        [data-bs-theme="dark"] .topbar-profile-pill,
+        [data-bs-theme="dark"] .topbar-search-results {
+            background: var(--mhs-navy) !important;
+            border-color: rgba(56, 189, 248, 0.25) !important;
             color: #FFFFFF !important;
-            box-shadow: 0 6px 20px rgba(217, 84, 30, 0.52) !important;
         }
-        /* Perbaiki warna teks brand "SIKAP Mahasiswa" di sidebar */
-        #sidebar.sidebar-mahasiswa .sidebar-brand-box,
-        #sidebar.sidebar-mahasiswa a[href="/"].d-flex {
-            color: #FFFFFF !important;
-            background: none !important;
-            -webkit-background-clip: initial !important;
-            background-clip: initial !important;
-            -webkit-text-fill-color: #FFFFFF !important;
+        [data-bs-theme="dark"] .topbar-user-name,
+        [data-bs-theme="dark"] .search-result-item,
+        [data-bs-theme="dark"] .bento-header-title,
+        [data-bs-theme="dark"] .bento-kpi-label,
+        [data-bs-theme="dark"] .bento-kpi-value,
+        [data-bs-theme="dark"] .bento-widget-title,
+        [data-bs-theme="dark"] .reminder-headline,
+        [data-bs-theme="dark"] .bento-task-title { color: #FFFFFF !important; }
+        [data-bs-theme="dark"] .topbar-user-sub,
+        [data-bs-theme="dark"] .topbar-search-icon,
+        [data-bs-theme="dark"] .bento-header-sub,
+        [data-bs-theme="dark"] .bento-kpi-footer,
+        [data-bs-theme="dark"] .bento-widget-sub,
+        [data-bs-theme="dark"] .reminder-meta,
+        [data-bs-theme="dark"] .bento-task-sub,
+        [data-bs-theme="dark"] .pill-bar-label { color: rgba(255, 255, 255, 0.7) !important; }
+        [data-bs-theme="dark"] .topbar-kbd {
+            background: #091127;
+            border-color: rgba(255, 255, 255, 0.18);
+            color: rgba(255, 255, 255, 0.7);
         }
-
-        #sidebar.sidebar-mahasiswa .sidebar-brand-box span:first-of-type,
-        #sidebar.sidebar-mahasiswa a[href="/"].d-flex > span:first-of-type {
-            color: #FFFFFF !important;
-            background: none !important;
-            -webkit-background-clip: initial !important;
-            background-clip: initial !important;
-            -webkit-text-fill-color: #FFFFFF !important;
-        }
-
-        #sidebar.sidebar-mahasiswa .sidebar-brand-box .text-primary,
-        #sidebar.sidebar-mahasiswa a[href="/"].d-flex .text-primary {
-            color: #38bdf8 !important;
-            background: none !important;
-            -webkit-background-clip: initial !important;
-            background-clip: initial !important;
-            -webkit-text-fill-color: #38bdf8 !important;
+        [data-bs-theme="dark"] .bento-kpi-card:not(.is-featured),
+        [data-bs-theme="dark"] .bento-widget-card { background-color: var(--mhs-navy) !important; border-color: rgba(2, 132, 199, 0.25) !important; }
+        [data-bs-theme="dark"] .btn-bento-outline,
+        [data-bs-theme="dark"] .btn-mini-pill,
+        [data-bs-theme="dark"] .bento-kpi-card:not(.is-featured) .bento-arrow-circle,
+        [data-bs-theme="dark"] .pill-bar-badge { background-color: #091127 !important; border-color: rgba(56, 189, 248, 0.3) !important; color: #FFFFFF !important; }
+        [data-bs-theme="dark"] .pill-bar-fill.is-striped {
+            background-color: #091127 !important;
+            background-image: repeating-linear-gradient(-45deg, rgba(255,255,255,0.16), rgba(255,255,255,0.16) 4px, transparent 4px, transparent 9px) !important;
+            border-color: rgba(255,255,255,0.2) !important;
         }
     </style>
 </head>
 <body>
-    <!-- DESKTOP SIDEBAR NAVIGATION -->
+    <!-- 1. COLLAPSIBLE SIDEBAR DESKTOP -->
     <div id="sidebar" class="sidebar sidebar-mahasiswa shadow-sm vh-100 d-flex flex-column">
         <div class="sidebar-inner d-flex flex-column h-100">
-            <!-- 1. HEADER: LOGO & PROFIL -->
+            <!-- Header Brand + Tombol Toggle Collapse -->
             <div class="flex-shrink-0">
-                <a href="/" class="d-flex align-items-center justify-content-center text-decoration-none text-white pt-4 pb-2 gap-2">
-                    <div class="rounded p-1 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px; background-color: #0F1B3D; border: 1px solid rgba(2, 132, 199, 0.55);">
-                        <img src="/static/img/logo_sikap.png" alt="Logo SIKAP" style="width: 130%; height: 130%; object-fit: cover; object-position: center top;">
-                    </div>
-                    <span class="fw-bold fs-5 tracking-wide">SIKAP <span class="text-primary">Mahasiswa</span></span>
-                </a>
-
-                <div class="sidebar-profile-centered text-center py-2 border-bottom border-light border-opacity-10 mb-2">
-                    <a href="/profil" class="text-decoration-none d-block user-profile-link" style="transition: transform 0.2s ease;">
-                        <div class="position-relative d-inline-block mb-2">
-                            {% if user and user.foto_profil %}
-                                <img src="/uploads/profil/{{ user.foto_profil }}" class="rounded-circle shadow-lg border border-2 border-primary" style="width: 100px; height: 100px; object-fit: cover;">
-                            {% else %}
-                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow-lg mx-auto fw-bold fs-3 border border-2 border-white border-opacity-25" style="width: 100px; height: 100px;">
-                                    {{ (user.nama if (user and user.nama) else session.nama)[0] | upper }}
-                                </div>
-                            {% endif %}
-                            <span class="position-absolute bottom-0 end-0 p-1 bg-success border border-2 border-dark rounded-circle" style="transform: translate(-10%, -10%); width: 15px; height: 15px;" title="Online"></span>
+                <div class="sidebar-top-row">
+                    <a href="/dashboard/mahasiswa" class="sidebar-brand-link">
+                        <div class="rounded p-1 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 36px; height: 36px; background-color: #0F1B3D; border: 1px solid rgba(2, 132, 199, 0.55);">
+                            <img src="/static/img/logo_sikap.png" alt="Logo SIKAP" style="width: 130%; height: 130%; object-fit: cover; object-position: center top;">
                         </div>
-                        <h6 class="text-white fw-bold mb-0 text-truncate px-3" style="font-size: 0.9rem;">
-                            {{ user.nama if user else session.nama }}
-                        </h6>
-                        <small class="text-white-50 text-capitalize" style="font-size: 0.75rem;">{{ session.role }}</small>
+                        <span class="sidebar-brand-text">SIKAP <span>Mahasiswa</span></span>
                     </a>
+                    <button type="button" class="btn-sidebar-collapse" id="sidebarCollapseBtn" title="Perkecil / Perbesar Sidebar">
+                        <i class="bi bi-layout-sidebar-inset" id="sidebarCollapseIcon"></i>
+                    </button>
+                </div>
+
+                <!-- Profil Ringkas Sidebar -->
+                <div class="sidebar-profile-centered text-center py-2 border-bottom border-light border-opacity-10 mb-2"> 
+                    <small class="sidebar-hide-mini text-white-50 text-capitalize" style="font-size: 0.72rem;"></small>
                 </div>
             </div>
 
-            <!-- 2. MENU TENGAH -->
+            <!-- Menu Navigasi Tengah -->
             <div class="flex-grow-1 overflow-y-auto pb-2" style="scrollbar-width: none;">
                 <nav class="sidebar-menu px-2">
                     <a href="/dashboard/mahasiswa" class="nav-link-custom active mb-1 rounded-3">
-                        <i class="bi bi-house-door me-3 fs-5"></i> Dashboard
+                        <i class="bi bi-grid-1x2-fill me-3 fs-5"></i> <span class="sidebar-hide-mini">Dashboard</span>
                     </a>
 
                     <div class="mb-1">
                         <a class="nav-link-custom d-flex align-items-center justify-content-between rounded-3 text-decoration-none" data-bs-toggle="collapse" href="#menuKerjaPraktek" role="button" aria-expanded="false" aria-controls="menuKerjaPraktek">
-                            <span><i class="bi bi-briefcase me-3 fs-5"></i> Kerja Praktik</span>
+                            <span class="d-flex align-items-center"><i class="bi bi-briefcase-fill me-3 fs-5"></i> <span class="sidebar-hide-mini">Kerja Praktik</span></span>
                             <i class="bi bi-chevron-down small transition-icon"></i>
                         </a>
-                        
                         <div class="collapse ps-4 mt-1" id="menuKerjaPraktek">
                             <a href="/mahasiswa/pengajuan" class="nav-link-custom sub-menu-link mb-1 rounded-3 py-2 fs-7 d-block">
                                 Pengajuan KP
@@ -723,7 +799,7 @@
 
                     <div class="mb-1">
                         <a class="nav-link-custom d-flex align-items-center justify-content-between rounded-3 text-decoration-none" data-bs-toggle="collapse" href="#menuTugasAkhir" role="button" aria-expanded="false" aria-controls="menuTugasAkhir">
-                            <span><i class="bi bi-journal-richtext me-3 fs-5"></i> Tugas Akhir</span>
+                            <span class="d-flex align-items-center"><i class="bi bi-journal-richtext me-3 fs-5"></i> <span class="sidebar-hide-mini">Tugas Akhir</span></span>
                             <i class="bi bi-chevron-down small transition-icon"></i>
                         </a>
                         <div class="collapse ps-4 mt-1" id="menuTugasAkhir">
@@ -737,115 +813,46 @@
                     </div>
                 </nav>
             </div>
-            
-            <!-- 3. FOOTER (DARK MODE TOGGLE & LOGOUT) -->
+
+            <!-- Footer Sidebar -->
             <div class="flex-shrink-0 px-2 pb-3 pt-2 mt-auto border-top border-light border-opacity-10">
-                <button class="nav-link-custom mb-1 rounded-3 d-flex align-items-center w-100 bg-transparent border-0 text-start cursor-pointer" id="themeToggle">
-                    <i class="bi bi-moon-fill me-3 fs-5" id="themeIcon"></i> <span id="themeText">Dark Mode</span>
-                </button>
+                <a href="/profil" class="nav-link-custom mb-1 rounded-3">
+                    <i class="bi bi-person-gear me-3 fs-5"></i> <span class="sidebar-hide-mini">Profil Saya</span>
+                </a>
                 <a href="/logout" class="nav-link-custom text-danger rounded-3 m-0 w-100 d-flex align-items-center">
-                    <i class="bi bi-box-arrow-right me-3 fs-5"></i> Logout
+                    <i class="bi bi-box-arrow-right me-3 fs-5"></i> <span class="sidebar-hide-mini">Logout</span>
                 </a>
             </div>
         </div>
     </div>
 
-    <!-- MOBILE BOTTOM NAVIGATION BAR & BOTTOM SHEETS (KHUSUS LAYAR HP) -->
+    <!-- MOBILE BOTTOM BAR & SHEETS (KHUSUS LAYAR HP) -->
     <div class="mobile-sheet-backdrop" id="mobileSheetBackdrop"></div>
-
-    <!-- Sheet 1: Menu Kerja Praktik -->
     <div class="mobile-bottom-sheet" id="sheetKP">
         <div class="sheet-handle"></div>
         <div class="sheet-title">Menu Kerja Praktik</div>
-        <a href="/mahasiswa/pengajuan" class="sheet-link">
-            <span class="sheet-link-left">
-                <span class="sheet-icon-badge"><i class="bi bi-file-earmark-plus"></i></span>
-                <span>Pengajuan KP</span>
-            </span>
-            <i class="bi bi-chevron-right text-muted small"></i>
-        </a>
-        <a href="/mahasiswa/logbook" class="sheet-link">
-            <span class="sheet-link-left">
-                <span class="sheet-icon-badge"><i class="bi bi-journal-check"></i></span>
-                <span>Logbook KP</span>
-            </span>
-            <i class="bi bi-chevron-right text-muted small"></i>
-        </a>
-        <a href="/mahasiswa/sidang" class="sheet-link mb-0">
-            <span class="sheet-link-left">
-                <span class="sheet-icon-badge orange"><i class="bi bi-mortarboard"></i></span>
-                <span>Daftar Sidang KP</span>
-            </span>
-            <i class="bi bi-chevron-right text-muted small"></i>
-        </a>
+        <a href="/mahasiswa/pengajuan" class="sheet-link"><span class="sheet-link-left"><span class="sheet-icon-badge"><i class="bi bi-file-earmark-plus"></i></span><span>Pengajuan KP</span></span><i class="bi bi-chevron-right text-muted small"></i></a>
+        <a href="/mahasiswa/logbook" class="sheet-link"><span class="sheet-link-left"><span class="sheet-icon-badge"><i class="bi bi-journal-check"></i></span><span>Logbook KP</span></span><i class="bi bi-chevron-right text-muted small"></i></a>
+        <a href="/mahasiswa/sidang" class="sheet-link mb-0"><span class="sheet-link-left"><span class="sheet-icon-badge orange"><i class="bi bi-mortarboard"></i></span><span>Daftar Sidang KP</span></span><i class="bi bi-chevron-right text-muted small"></i></a>
     </div>
-
-    <!-- Sheet 2: Menu Tugas Akhir -->
     <div class="mobile-bottom-sheet" id="sheetTA">
         <div class="sheet-handle"></div>
         <div class="sheet-title">Menu Tugas Akhir</div>
-        <a href="/mahasiswa/ta/pengajuan" class="sheet-link">
-            <span class="sheet-link-left">
-                <span class="sheet-icon-badge"><i class="bi bi-journal-plus"></i></span>
-                <span>Pengajuan TA</span>
-            </span>
-            <i class="bi bi-chevron-right text-muted small"></i>
-        </a>
-        <a href="/mahasiswa/ta/logbook" class="sheet-link mb-0">
-            <span class="sheet-link-left">
-                <span class="sheet-icon-badge orange"><i class="bi bi-journal-bookmark"></i></span>
-                <span>Logbook TA</span>
-            </span>
-            <i class="bi bi-chevron-right text-muted small"></i>
-        </a>
+        <a href="/mahasiswa/ta/pengajuan" class="sheet-link"><span class="sheet-link-left"><span class="sheet-icon-badge"><i class="bi bi-journal-plus"></i></span><span>Pengajuan TA</span></span><i class="bi bi-chevron-right text-muted small"></i></a>
+        <a href="/mahasiswa/ta/logbook" class="sheet-link mb-0"><span class="sheet-link-left"><span class="sheet-icon-badge orange"><i class="bi bi-journal-bookmark"></i></span><span>Logbook TA</span></span><i class="bi bi-chevron-right text-muted small"></i></a>
     </div>
-
-    <!-- Sheet 3: Akun, Tema & Keluar -->
     <div class="mobile-bottom-sheet" id="sheetAkun">
         <div class="sheet-handle"></div>
         <div class="sheet-title">{{ user.nama if user else session.nama }}</div>
-        <a href="/profil" class="sheet-link">
-            <span class="sheet-link-left">
-                <span class="sheet-icon-badge"><i class="bi bi-person-circle"></i></span>
-                <span>Profil Saya</span>
-            </span>
-            <i class="bi bi-chevron-right text-muted small"></i>
-        </a>
-        <button type="button" class="sheet-link" id="mobileThemeToggle">
-            <span class="sheet-link-left">
-                <span class="sheet-icon-badge orange"><i class="bi bi-moon-stars-fill" id="mobileThemeIcon"></i></span>
-                <span id="mobileThemeText">Aktifkan Dark Mode</span>
-            </span>
-            <i class="bi bi-arrow-repeat text-muted small"></i>
-        </button>
-        <a href="/logout" class="sheet-link text-danger mb-0">
-            <span class="sheet-link-left">
-                <span class="sheet-icon-badge danger"><i class="bi bi-box-arrow-right"></i></span>
-                <span>Logout</span>
-            </span>
-            <i class="bi bi-chevron-right text-danger small"></i>
-        </a>
+        <a href="/profil" class="sheet-link"><span class="sheet-link-left"><span class="sheet-icon-badge"><i class="bi bi-person-circle"></i></span><span>Profil Saya</span></span><i class="bi bi-chevron-right text-muted small"></i></a>
+        <button type="button" class="sheet-link" id="mobileThemeToggle"><span class="sheet-link-left"><span class="sheet-icon-badge orange"><i class="bi bi-moon-stars-fill" id="mobileThemeIcon"></i></span><span id="mobileThemeText">Aktifkan Dark Mode</span></span><i class="bi bi-arrow-repeat text-muted small"></i></button>
+        <a href="/logout" class="sheet-link text-danger mb-0"><span class="sheet-link-left"><span class="sheet-icon-badge danger"><i class="bi bi-box-arrow-right"></i></span><span>Logout</span></span><i class="bi bi-chevron-right text-danger small"></i></a>
     </div>
-
-    <!-- Bar Utama 4 Tab Bawah -->
     <nav class="mobile-bottom-nav" id="mobileBottomNav" aria-label="Navigasi Utama">
         <div class="m-tab-indicator" id="mTabIndicator"></div>
-
-        <a href="/dashboard/mahasiswa" class="m-tab-item active" data-tab="beranda">
-            <span class="m-tab-icon-wrap"><i class="bi bi-house-door-fill"></i></span>
-            <span>Beranda</span>
-        </a>
-
-        <button type="button" class="m-tab-item" data-tab="kp" data-sheet="sheetKP">
-            <span class="m-tab-icon-wrap"><i class="bi bi-briefcase"></i></span>
-            <span>KP</span>
-        </button>
-
-        <button type="button" class="m-tab-item" data-tab="ta" data-sheet="sheetTA">
-            <span class="m-tab-icon-wrap"><i class="bi bi-journal-richtext"></i></span>
-            <span>TA</span>
-        </button>
-
+        <a href="/dashboard/mahasiswa" class="m-tab-item active" data-tab="beranda"><span class="m-tab-icon-wrap"><i class="bi bi-house-door-fill"></i></span><span>Beranda</span></a>
+        <button type="button" class="m-tab-item" data-tab="kp" data-sheet="sheetKP"><span class="m-tab-icon-wrap"><i class="bi bi-briefcase"></i></span><span>KP</span></button>
+        <button type="button" class="m-tab-item" data-tab="ta" data-sheet="sheetTA"><span class="m-tab-icon-wrap"><i class="bi bi-journal-richtext"></i></span><span>TA</span></button>
         <button type="button" class="m-tab-item" data-tab="akun" data-sheet="sheetAkun">
             <span class="m-tab-icon-wrap">
                 {% if user and user.foto_profil %}
@@ -858,198 +865,444 @@
         </button>
     </nav>
 
-    <!-- MAIN CONTENT AREA -->
-    <div class="main-content"><div class="page">
-{% set acc = logbook_stat.total_acc if logbook_stat else 0 %}
-{% set ok1 = pengajuan and pengajuan.status_final == 'accepted' %}
-{% set sid = sidang %}
-{% set lulus = sid and sid.nilai_akhir is not none %}
-{% set ta_ok = pengajuan_ta and pengajuan_ta.status_final == 'accepted' %}
-{% set s1 = 'done' if ok1 else 'now' %}
-{% set s2 = 'locked' if not ok1 else ('done' if acc >= 6 else 'now') %}
-{% set s3 = 'locked' if (not ok1 or acc < 6) else ('done' if lulus else 'now') %}
-{% set s4 = 'locked' if not lulus else ('done' if ta_ok else 'now') %}
+    <!-- 2. AREA UTAMA + PERSISTENT TOPBAR -->
+    <div class="main-content">
+        <!-- Topbar Tetap di Semua Halaman Mahasiswa -->
+        <header class="mhs-topbar">
+            <!-- Pencarian Fitur Cepat -->
+            <div class="topbar-search-box">
+                <i class="bi bi-search topbar-search-icon"></i>
+                <input type="text" id="topbarQuickSearch" class="topbar-search-input" placeholder="Cari fitur KP / TA..." autocomplete="off">
+                <span class="topbar-kbd">Ctrl K</span>
+                <div class="topbar-search-results" id="topbarSearchResults"></div>
+            </div>
 
-{% if s1 == 'now' %}
-  {% if not pengajuan %}{% set nxt = ['Pilih dosen pembimbing dan unggah proposal KP Anda.', '/mahasiswa/pengajuan', 'Ajukan pembimbing'] %}
-  {% elif pengajuan.status_final == 'unassigned' %}{% set nxt = ['Dosen menolak pengajuan Anda. Ajukan ulang dengan dosen lain.', '/mahasiswa/pengajuan', 'Ajukan ulang'] %}
-  {% else %}{% set nxt = ['Pengajuan Anda menunggu jawaban dosen pembimbing.', '/mahasiswa/pengajuan', 'Lihat pengajuan'] %}{% endif %}
-{% elif s2 == 'now' %}{% set nxt = ['Catat setiap bimbingan di logbook. Baru ' ~ acc ~ ' dari 6 yang disetujui dosen.', '/mahasiswa/logbook', 'Buka logbook'] %}
-{% elif s3 == 'now' %}
-  {% if not sid %}{% set nxt = ['Bimbingan Anda sudah lengkap. Unggah berkas untuk mendaftar sidang KP.', '/mahasiswa/sidang', 'Daftar sidang'] %}
-  {% elif sid.status_verifikasi == 'rejected' %}{% set nxt = ['Berkas sidang Anda ditolak admin. Perbaiki lalu kirim ulang.', '/mahasiswa/sidang', 'Perbaiki berkas'] %}
-  {% elif sid.status_verifikasi == 'verified' %}{% set nxt = ['Sidang KP Anda sudah dijadwalkan. Cek tanggal dan ruangannya.', '/mahasiswa/sidang', 'Lihat jadwal'] %}
-  {% else %}{% set nxt = ['Admin sedang memeriksa berkas sidang Anda.', '/mahasiswa/sidang', 'Lihat status'] %}{% endif %}
-{% elif s4 == 'now' %}
-  {% if not pengajuan_ta %}{% set nxt = ['Anda lulus Sidang KP. Sekarang ajukan dosen pembimbing Tugas Akhir.', '/mahasiswa/ta/pengajuan', 'Ajukan TA'] %}
-  {% else %}{% set nxt = ['Pengajuan TA Anda menunggu jawaban dosen.', '/mahasiswa/ta/pengajuan', 'Lihat pengajuan'] %}{% endif %}
-{% else %}{% set nxt = ['Semua tahap sudah selesai. Lanjutkan bimbingan TA di logbook.', '/mahasiswa/ta/logbook', 'Buka logbook TA'] %}
-{% endif %}
+            <!-- Kanan: Theme Toggle, Pintasan Logbook, dan Kartu Profil -->
+            <div class="topbar-actions">
+                <button type="button" class="topbar-icon-btn" id="themeToggle" title="Ganti Tema (Light / Dark Mode)">
+                    <i class="bi bi-moon-fill" id="themeIcon"></i>
+                </button>
 
-{% macro step(n, state, url, title, text) %}
-<li><a class="step {{ state }}" href="{{ url }}" style="--i: {{ n - 1 }}"><span class="step-n">{% if state == 'done' %}<i class="bi bi-check-lg"></i>{% elif state == 'locked' %}<i class="bi bi-lock-fill"></i>{% else %}{{ n }}{% endif %}</span><b>{{ title }}</b><small>{{ text }}</small></a></li>
-{% endmacro %}
+                <a href="/mahasiswa/logbook" class="topbar-icon-btn" title="Logbook Bimbingan KP">
+                    <i class="bi bi-journal-check"></i>
+                    <span class="topbar-dot-badge"></span>
+                </a>
 
-        <!-- 1. HERO BANNER DINAMIS -->
-        <div class="hero-banner position-relative overflow-hidden mb-4">
-            <canvas id="matrixCanvas" class="matrix-bg"></canvas>
-
-            <div class="hero-content d-flex justify-content-between align-items-center w-100">
-                <div>
-                    <div class="d-flex align-items-center gap-2 mb-2">
-                        <span class="badge-hero-outline">Prodi Informatika</span>
-                        <span class="badge-hero-orange">KP &amp; Tugas Akhir</span>
+                <a href="/profil" class="topbar-profile-pill">
+                    {% if user and user.foto_profil %}
+                        <img src="/uploads/profil/{{ user.foto_profil }}" alt="Profil" class="topbar-avatar">
+                    {% else %}
+                        <span class="topbar-avatar-initial">{{ (user.nama if (user and user.nama) else session.nama)[0] | upper }}</span>
+                    {% endif %}
+                    <div class="topbar-user-info">
+                        <div class="topbar-user-name text-truncate">{{ user.nama if user else session.nama }}</div>
+                        <div class="topbar-user-sub">{{ user.npm if (user and user.npm) else 'Prodi Informatika' }}</div>
                     </div>
-                    <h1 class="hero-title text-white mb-1" style="color: #ffffff !important;">
-                        Selamat Datang di Portal SIKAP
-                    </h1>
-                    <p class="hero-subtitle mb-0" style="color: rgba(255, 255, 255, 0.85) !important;">
-                        {{ nxt[0] }}
-                    </p>
-                </div>
+                </a>
+            </div>
+        </header>
+
+        <!-- Konten Bento Grid Dashboard -->
+        <div class="page mhs-content-inner">
+            {% include '_flash.html' %}
+
+            {% set acc = logbook_stat.total_acc if logbook_stat else 0 %}
+            {% set ok1 = pengajuan and pengajuan.status_final == 'accepted' %}
+            {% set sid = sidang %}
+            {% set lulus = sid and sid.nilai_akhir is not none %}
+            {% set ta_ok = pengajuan_ta and pengajuan_ta.status_final == 'accepted' %}
+            {% set s1 = 'done' if ok1 else 'now' %}
+            {% set s2 = 'locked' if not ok1 else ('done' if acc >= 6 else 'now') %}
+            {% set s3 = 'locked' if (not ok1 or acc < 6) else ('done' if lulus else 'now') %}
+            {% set s4 = 'locked' if not lulus else ('done' if ta_ok else 'now') %}
+
+            {% set done_count = (1 if s1 == 'done' else 0) + (1 if s2 == 'done' else 0) + (1 if s3 == 'done' else 0) + (1 if s4 == 'done' else 0) %}
+            {% set overall_pct = ((done_count / 4) * 100) | round | int %}
+            {% set acc_pct = (((acc if acc < 6 else 6) / 6) * 100) | round | int %}
+
+            {% if s1 == 'now' %}
+              {% if not pengajuan %}{% set nxt = ['Pilih dosen pembimbing dan unggah proposal KP Anda.', '/mahasiswa/pengajuan', 'Ajukan Pembimbing', 'Pengajuan Pembimbing KP'] %}
+              {% elif pengajuan.status_final == 'unassigned' %}{% set nxt = ['Dosen menolak pengajuan Anda. Ajukan ulang dengan dosen lain.', '/mahasiswa/pengajuan', 'Ajukan Ulang', 'Ajukan Ulang Pembimbing'] %}
+              {% else %}{% set nxt = ['Pengajuan Anda menunggu jawaban dosen pembimbing.', '/mahasiswa/pengajuan', 'Lihat Pengajuan', 'Menunggu Respon Dosen'] %}{% endif %}
+            {% elif s2 == 'now' %}{% set nxt = ['Catat setiap bimbingan di logbook. Baru ' ~ acc ~ ' dari 6 sesi disetujui dosen.', '/mahasiswa/logbook', 'Isi Logbook', 'Bimbingan KP (' ~ acc ~ '/6 Sesi)'] %}
+            {% elif s3 == 'now' %}
+              {% if not sid %}{% set nxt = ['Bimbingan Anda sudah lengkap. Unggah berkas untuk mendaftar sidang KP.', '/mahasiswa/sidang', 'Daftar Sidang', 'Pendaftaran Sidang KP'] %}
+              {% elif sid.status_verifikasi == 'rejected' %}{% set nxt = ['Berkas sidang Anda ditolak admin. Perbaiki lalu kirim ulang.', '/mahasiswa/sidang', 'Perbaiki Berkas', 'Perbaikan Berkas Sidang'] %}
+              {% elif sid.status_verifikasi == 'verified' %}{% set nxt = ['Sidang KP Anda sudah dijadwalkan. Cek tanggal dan ruangannya.', '/mahasiswa/sidang', 'Lihat Jadwal', 'Sidang KP Terjadwal'] %}
+              {% else %}{% set nxt = ['Admin sedang memeriksa berkas sidang Anda.', '/mahasiswa/sidang', 'Lihat Status', 'Verifikasi Berkas Sidang'] %}{% endif %}
+            {% elif s4 == 'now' %}
+              {% if not pengajuan_ta %}{% set nxt = ['Anda lulus Sidang KP. Sekarang ajukan dosen pembimbing Tugas Akhir.', '/mahasiswa/ta/pengajuan', 'Ajukan TA', 'Pengajuan Pembimbing TA'] %}
+              {% else %}{% set nxt = ['Pengajuan TA Anda menunggu jawaban dosen.', '/mahasiswa/ta/pengajuan', 'Lihat Pengajuan', 'Menunggu Respon Dosen TA'] %}{% endif %}
+            {% else %}{% set nxt = ['Semua tahap sudah selesai. Lanjutkan bimbingan TA di logbook.', '/mahasiswa/ta/logbook', 'Buka Logbook TA', 'Bimbingan Tugas Akhir'] %}
+            {% endif %}
+
+            <!-- 1. HEADER BENTO -->
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
                 <div>
-                    <a class="btn-hero-action" href="{{ nxt[1] }}">
+                    <h1 class="bento-header-title mb-1">Dashboard</h1>
+                    <p class="bento-header-sub mb-0">{{ nxt[0] }}</p>
+                </div>
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <a href="{{ nxt[1] }}" class="btn-bento-primary">
+                        <i class="bi bi-plus-lg"></i>
                         <span>{{ nxt[2] }}</span>
-                        <i class="bi bi-arrow-right fs-5"></i>
+                    </a>
+                    <a href="/mahasiswa/logbook" class="btn-bento-outline">
+                        <i class="bi bi-journal-check"></i>
+                        <span>Logbook KP</span>
                     </a>
                 </div>
             </div>
-        </div>
 
-        {% include '_flash.html' %}
-
-        <!-- 2. JOURNEY STEPPER ALUR -->
-        <ol class="journey mb-4">
-            {{ step(1, s1, '/mahasiswa/pengajuan', 'Dosen pembimbing',
-                'Pengajuan Anda disetujui' if ok1 else ('Belum ada pengajuan' if not pengajuan else ('Ditolak dosen' if pengajuan.status_final == 'unassigned' else 'Menunggu jawaban dosen'))) }}
-            {{ step(2, s2, '/mahasiswa/logbook', 'Logbook bimbingan',
-                'Terbuka setelah pembimbing disetujui' if s2 == 'locked' else (acc ~ ' dari 6 bimbingan disetujui')) }}
-            {{ step(3, s3, '/mahasiswa/sidang', 'Sidang KP',
-                'Terbuka setelah 6 bimbingan disetujui' if s3 == 'locked' else ('Belum mendaftar' if not sid else ('Nilai akhir: ' ~ sid.nilai_akhir if lulus else ('Dijadwalkan ' ~ sid.tanggal_sidang if sid.status_verifikasi == 'verified' else ('Berkas ditolak, kirim ulang' if sid.status_verifikasi == 'rejected' else 'Berkas sedang diperiksa'))))) }}
-            {{ step(4, s4, '/mahasiswa/ta/pengajuan', 'Tugas Akhir',
-                'Terbuka setelah lulus Sidang KP' if s4 == 'locked' else ('Pembimbing TA disetujui' if ta_ok else ('Belum ada pengajuan' if not pengajuan_ta else 'Menunggu jawaban dosen'))) }}
-        </ol>
-
-        <!-- 3. LAYOUT BAWAH (2 KOLOM) -->
-        <div class="row g-4">
-            <div class="col-lg-8">
-                <div class="panel-modern">
-                    <div class="d-flex align-items-center justify-content-between mb-4">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="icon-box-blue p-2 rounded-3 fs-5 d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
-                                <i class="bi bi-info-circle-fill"></i>
+            <!-- 2. BARIS 1: 4 KARTU METRIK UTAMA -->
+            <div class="row g-3 mb-4">
+                <div class="col-xl-3 col-sm-6">
+                    <a href="/mahasiswa/logbook" class="bento-kpi-card is-featured">
+                        <div>
+                            <div class="bento-kpi-top">
+                                <span class="bento-kpi-label">Bimbingan Disetujui</span>
+                                <span class="bento-arrow-circle"><i class="bi bi-arrow-up-right"></i></span>
                             </div>
-                            <h5 class="fw-bold text-dark mb-0">Yang Perlu Anda Ketahui</h5>
+                            <div class="bento-kpi-value">{{ acc }}<span style="font-size: 1.45rem; opacity: 0.78;">/6</span></div>
                         </div>
-                        <span class="badge rounded-pill icon-box-orange px-3 py-2 fw-semibold">Panduan Penting</span>
-                    </div>
-                    
-                    <ul class="notes list-unstyled mb-0" style="padding-left: 0;">
-                        <li class="d-flex gap-3 mb-3 pb-3 border-bottom">
-                            <i class="bi bi-info-circle-fill mt-1"></i>
-                            <div>
-                                <strong class="d-block text-dark mb-1">Pedoman Penyusunan Laporan</strong>
-                                <span class="text-secondary small">Baca <a href="#" class="text-decoration-none fw-semibold">Pedoman Penyusunan Laporan KP Prodi Informatika</a> secara cermat sebelum mengajukan proposal kepada dosen pembimbing.</span>
+                        <div class="bento-kpi-footer">
+                            <span class="bento-pill-tag"><i class="bi bi-check-lg"></i> {{ acc_pct }}%</span>
+                            <span>{{ 'Syarat sidang terpenuhi' if acc >= 6 else 'Sesi ACC dosen pembimbing' }}</span>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-xl-3 col-sm-6">
+                    <a href="/mahasiswa/pengajuan" class="bento-kpi-card">
+                        <div>
+                            <div class="bento-kpi-top">
+                                <span class="bento-kpi-label">Tahap Selesai</span>
+                                <span class="bento-arrow-circle"><i class="bi bi-arrow-up-right"></i></span>
                             </div>
-                        </li>
-                        <li class="d-flex gap-3 mb-3 pb-3 border-bottom">
-                            <i class="bi bi-check-circle-fill mt-1"></i>
-                            <div>
-                                <strong class="d-block text-dark mb-1">Syarat Bimbingan Berkala <span class="text-orange-accent">(Min. 6x ACC)</span></strong>
-                                <span class="text-secondary small">Bimbingan wajib dilaksanakan minimal 6 kali dan dicatat di sistem Logbook. Hanya entri bimbingan yang telah disetujui/ACC dosen yang dihitung valid.</span>
+                            <div class="bento-kpi-value">{{ done_count }}<span style="font-size: 1.45rem; opacity: 0.55;">/4</span></div>
+                        </div>
+                        <div class="bento-kpi-footer">
+                            <span class="bento-pill-tag"><i class="bi bi-check-circle-fill"></i> {{ overall_pct }}%</span>
+                            <span>Alur akademik KP &amp; TA</span>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-xl-3 col-sm-6">
+                    <a href="/mahasiswa/sidang" class="bento-kpi-card">
+                        <div>
+                            <div class="bento-kpi-top">
+                                <span class="bento-kpi-label">Status Sidang KP</span>
+                                <span class="bento-arrow-circle"><i class="bi bi-arrow-up-right"></i></span>
                             </div>
-                        </li>
-                        <li class="d-flex gap-3">
-                            <i class="bi bi-check-circle-fill mt-1"></i>
-                            <div>
-                                <strong class="d-block text-dark mb-1">Integrasi Tugas Akhir</strong>
-                                <span class="text-secondary small">Menu pendaftaran dan logbook Tugas Akhir akan otomatis terbuka di sistem setelah Anda dinyatakan <strong class="text-orange-accent">LULUS</strong> pada Sidang KP.</span>
+                            {% if lulus %}
+                                <div class="bento-kpi-value">{{ sid.nilai_akhir }}</div>
+                            {% elif sid and sid.status_verifikasi == 'verified' %}
+                                <div class="bento-kpi-value is-text-value">Terjadwal</div>
+                            {% elif sid and sid.status_verifikasi == 'rejected' %}
+                                <div class="bento-kpi-value is-text-value">Perbaikan</div>
+                            {% elif sid %}
+                                <div class="bento-kpi-value is-text-value">Verifikasi</div>
+                            {% else %}
+                                <div class="bento-kpi-value is-text-value">Belum Daftar</div>
+                            {% endif %}
+                        </div>
+                        <div class="bento-kpi-footer">
+                            {% if lulus %}
+                                <span class="bento-pill-tag"><i class="bi bi-award-fill"></i> Lulus</span>
+                                <span>Nilai akhir sidang KP</span>
+                            {% elif sid and sid.status_verifikasi == 'verified' %}
+                                <span class="bento-pill-tag blue"><i class="bi bi-calendar-check"></i> ACC</span>
+                                <span>{{ sid.tanggal_sidang or 'Cek jadwal ruangan' }}</span>
+                            {% elif sid %}
+                                <span class="bento-pill-tag orange"><i class="bi bi-hourglass-split"></i> Proses</span>
+                                <span>Pemeriksaan admin prodi</span>
+                            {% else %}
+                                <span class="bento-pill-tag orange">Tahap 3</span>
+                                <span>Syarat min. 6x ACC logbook</span>
+                            {% endif %}
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-xl-3 col-sm-6">
+                    <a href="/mahasiswa/ta/pengajuan" class="bento-kpi-card">
+                        <div>
+                            <div class="bento-kpi-top">
+                                <span class="bento-kpi-label">Tugas Akhir</span>
+                                <span class="bento-arrow-circle"><i class="bi bi-arrow-up-right"></i></span>
                             </div>
-                        </li>
-                    </ul>
+                            {% if ta_ok %}
+                                <div class="bento-kpi-value is-text-value">Aktif</div>
+                            {% elif pengajuan_ta %}
+                                <div class="bento-kpi-value is-text-value">Menunggu</div>
+                            {% elif lulus %}
+                                <div class="bento-kpi-value is-text-value">Terbuka</div>
+                            {% else %}
+                                <div class="bento-kpi-value is-text-value">Terkunci</div>
+                            {% endif %}
+                        </div>
+                        <div class="bento-kpi-footer">
+                            {% if ta_ok %}
+                                <span class="bento-pill-tag"><i class="bi bi-check-lg"></i> ACC</span>
+                                <span>Pembimbing TA disetujui</span>
+                            {% elif lulus %}
+                                <span class="bento-pill-tag blue">Siap</span>
+                                <span>Silakan ajukan pembimbing</span>
+                            {% else %}
+                                <span class="bento-pill-tag orange">Tahap 4</span>
+                                <span>Terbuka setelah lulus KP</span>
+                            {% endif %}
+                        </div>
+                    </a>
                 </div>
             </div>
 
-            <div class="col-lg-4">
-                <div class="widget-card">
-                    <div class="widget-header d-flex align-items-center justify-content-between">
-                        <!-- Icon Setuju / ACC Warna Hijau -->
-                        <h6><i class="bi bi-check-circle-fill text-green-accent me-2"></i> Progress Bimbingan</h6>
-                        <span class="badge icon-box-orange">Target 6</span>
-                    </div>
-                    <div class="widget-progress-box">
-                        <!-- Angka dan teks pada sesi hitam saja -->
-                        <div class="progress-count">{{ acc }}<small>/6</small></div>
-                        <span class="text-dark small fw-semibold">Sesi Logbook Disetujui</span>
+            <!-- 3. BARIS 2: 3 WIDGET BENTO BAWAH -->
+            <div class="row g-3">
+                <div class="col-lg-5">
+                    <div class="bento-widget-card">
+                        <div class="d-flex align-items-start justify-content-between gap-2">
+                            <div>
+                                <h5 class="bento-widget-title">Progres Tahapan Akademik</h5>
+                                <p class="bento-widget-sub mb-0">Capaian alur KP hingga Tugas Akhir ({{ overall_pct }}%)</p>
+                            </div>
+                            <span class="bento-pill-tag blue">{{ done_count }}/4 Tahap</span>
+                        </div>
+
+                        <div class="pill-chart-wrap">
+                            <div class="pill-col">
+                                <div class="pill-bar-shell">
+                                    <div class="pill-bar-fill {{ 'is-green' if s1 == 'done' else 'is-orange' }}" style="--bar-h: {{ '92%' if s1 == 'done' else '55%' }};">
+                                        {% if s1 == 'now' %}<span class="pill-bar-badge">Aktif</span>{% endif %}
+                                    </div>
+                                </div>
+                                <span class="pill-bar-label">KP</span>
+                            </div>
+                            <div class="pill-col">
+                                <div class="pill-bar-shell">
+                                    {% set h2 = 32 if s2 == 'locked' else (28 + (acc_pct * 0.68)) | round | int %}
+                                    <div class="pill-bar-fill {{ 'is-green' if s2 == 'done' else ('is-blue' if s2 == 'now' else 'is-striped') }}" style="--bar-h: {{ h2 }}%;">
+                                        {% if s2 == 'now' %}<span class="pill-bar-badge">{{ acc_pct }}%</span>{% endif %}
+                                    </div>
+                                </div>
+                                <span class="pill-bar-label">Logbook</span>
+                            </div>
+                            <div class="pill-col">
+                                <div class="pill-bar-shell">
+                                    <div class="pill-bar-fill {{ 'is-green' if s3 == 'done' else ('is-orange' if s3 == 'now' else 'is-striped') }}" style="--bar-h: {{ '96%' if s3 == 'done' else ('62%' if s3 == 'now' else '42%') }};">
+                                        {% if s3 == 'now' %}<span class="pill-bar-badge">Aktif</span>{% endif %}
+                                    </div>
+                                </div>
+                                <span class="pill-bar-label">Sidang</span>
+                            </div>
+                            <div class="pill-col">
+                                <div class="pill-bar-shell">
+                                    <div class="pill-bar-fill {{ 'is-green' if s4 == 'done' else ('is-navy' if s4 == 'now' else 'is-striped') }}" style="--bar-h: {{ '100%' if s4 == 'done' else ('58%' if s4 == 'now' else '38%') }};">
+                                        {% if s4 == 'now' %}<span class="pill-bar-badge">Aktif</span>{% endif %}
+                                    </div>
+                                </div>
+                                <span class="pill-bar-label">TA</span>
+                            </div>
+                            <div class="pill-col">
+                                <div class="pill-bar-shell">
+                                    <div class="pill-bar-fill {{ 'is-green' if ta_ok else 'is-striped' }}" style="--bar-h: {{ '100%' if ta_ok else '34%' }};">
+                                        {% if ta_ok %}<span class="pill-bar-badge">100%</span>{% endif %}
+                                    </div>
+                                </div>
+                                <span class="pill-bar-label">Lulus</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="widget-card">
-                    <div class="widget-header">
-                        <h6><i class="bi bi-calendar-event text-orange-accent me-2"></i> Agenda Akademik</h6>
-                    </div>
-                    <div class="timeline-mini">
-                        <div class="timeline-item">
-                            <span class="timeline-badge">Tahap 1</span>
-                            <div class="timeline-info">
-                                <strong>Pengajuan Pembimbing</strong>
-                                <span>Pilih prioritas dosen calon pembimbing</span>
-                            </div>
+                <div class="col-lg-4 col-md-6">
+                    <div class="bento-widget-card">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <h5 class="bento-widget-title mb-0">Agenda &amp; Fokus</h5>
+                            <span class="bento-pill-tag orange">Prioritas</span>
                         </div>
-                        <div class="timeline-item">
-                            <span class="timeline-badge badge-orange">Tahap 2</span>
-                            <div class="timeline-info">
-                                <strong>Minimal 6 Sesi ACC</strong>
-                                <span>Syarat kelayakan Sidang KP</span>
-                            </div>
+
+                        {% if sid and sid.status_verifikasi == 'verified' and not lulus %}
+                            <div class="reminder-headline">Jadwal Sidang KP Anda</div>
+                            <p class="reminder-meta mb-3">
+                                <i class="bi bi-calendar-event text-primary me-1"></i> Tanggal: <strong>{{ sid.tanggal_sidang or 'Terjadwal' }}</strong><br>
+                                <i class="bi bi-geo-alt-fill text-orange-accent me-1"></i> Ruangan: <strong>{{ sid.ruangan or 'Lihat detail sidang' }}</strong>
+                            </p>
+                        {% elif s2 == 'now' %}
+                            <div class="reminder-headline">{{ nxt[3] }}</div>
+                            <p class="reminder-meta mb-3">
+                                Target minimal <strong>6 kali bimbingan disetujui</strong> untuk membuka pendaftaran Sidang KP. Sisa target Anda: <strong>{{ (6 - acc) if acc < 6 else 0 }} sesi lagi</strong>.
+                            </p>
+                        {% else %}
+                            <div class="reminder-headline">{{ nxt[3] }}</div>
+                            <p class="reminder-meta mb-3">{{ nxt[0] }}</p>
+                        {% endif %}
+
+                        <a href="{{ nxt[1] }}" class="btn-reminder-cta">
+                            <i class="bi bi-arrow-right-circle-fill"></i>
+                            <span>{{ nxt[2] }}</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <div class="bento-widget-card">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <h5 class="bento-widget-title mb-0">Alur SIKAP</h5>
+                            <a href="{{ nxt[1] }}" class="btn-mini-pill"><i class="bi bi-plus"></i> Aksi</a>
+                        </div>
+
+                        <div class="bento-task-list">
+                            <a href="/mahasiswa/pengajuan" class="bento-task-item">
+                                <div class="bento-task-icon {{ s1 }}">
+                                    <i class="bi {{ 'bi-check-circle-fill' if s1 == 'done' else 'bi-person-check-fill' }}"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="bento-task-title text-truncate">1. Dosen Pembimbing</div>
+                                    <div class="bento-task-sub text-truncate">{{ 'Disetujui' if ok1 else ('Belum ada pengajuan' if not pengajuan else ('Ditolak dosen' if pengajuan.status_final == 'unassigned' else 'Menunggu respon')) }}</div>
+                                </div>
+                            </a>
+
+                            <a href="/mahasiswa/logbook" class="bento-task-item">
+                                <div class="bento-task-icon {{ s2 }}">
+                                    <i class="bi {{ 'bi-check-circle-fill' if s2 == 'done' else ('bi-journal-text' if s2 == 'now' else 'bi-lock-fill') }}"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="bento-task-title text-truncate">2. Logbook Bimbingan</div>
+                                    <div class="bento-task-sub text-truncate">{{ 'Terkunci' if s2 == 'locked' else (acc ~ ' dari 6 sesi ACC') }}</div>
+                                </div>
+                            </a>
+
+                            <a href="/mahasiswa/sidang" class="bento-task-item">
+                                <div class="bento-task-icon {{ s3 }}">
+                                    <i class="bi {{ 'bi-check-circle-fill' if s3 == 'done' else ('bi-mortarboard-fill' if s3 == 'now' else 'bi-lock-fill') }}"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="bento-task-title text-truncate">3. Sidang KP</div>
+                                    <div class="bento-task-sub text-truncate">{{ 'Terkunci' if s3 == 'locked' else ('Lulus (' ~ sid.nilai_akhir ~ ')' if lulus else ('Terjadwal' if sid and sid.status_verifikasi == 'verified' else 'Daftar / Verifikasi')) }}</div>
+                                </div>
+                            </a>
+
+                            <a href="/mahasiswa/ta/pengajuan" class="bento-task-item">
+                                <div class="bento-task-icon {{ s4 }}">
+                                    <i class="bi {{ 'bi-check-circle-fill' if s4 == 'done' else ('bi-journal-richtext' if s4 == 'now' else 'bi-lock-fill') }}"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="bento-task-title text-truncate">4. Tugas Akhir</div>
+                                    <div class="bento-task-sub text-truncate">{{ 'Terkunci' if s4 == 'locked' else ('Pembimbing ACC' if ta_ok else 'Pengajuan & Bimbingan') }}</div>
+                                </div>
+                            </a>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div></div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ url_for('static', filename='js/layout.js') }}"></script>
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const htmlElement = document.documentElement;
+        const htmlEl = document.documentElement;
+
+        // 1. COLLAPSIBLE SIDEBAR (FLIP / CLIP TRANSITION + PERSISTENCE)
+        const sidebarEl = document.getElementById('sidebar');
+        const collapseBtn = document.getElementById('sidebarCollapseBtn');
+        if (collapseBtn && sidebarEl) {
+            collapseBtn.addEventListener('click', () => {
+                const startW = sidebarEl.getBoundingClientRect().width;
+                htmlEl.classList.toggle('sidebar-is-collapsed');
+                const isCollapsed = htmlEl.classList.contains('sidebar-is-collapsed');
+                localStorage.setItem('mhsSidebarCollapsed', isCollapsed ? 'true' : 'false');
+                const endW = sidebarEl.getBoundingClientRect().width;
+
+                sidebarEl.animate(
+                    [
+                        { width: startW + 'px', clipPath: 'inset(0 0 0 0)' },
+                        { width: endW + 'px', clipPath: 'inset(0 0 0 0)' }
+                    ],
+                    { duration: 360, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' }
+                );
+            });
+        }
+
+        // 2. THEME TOGGLE (TOPBAR & MOBILE)
         const themeToggleBtn = document.getElementById('themeToggle');
         const themeIcon = document.getElementById('themeIcon');
-        const themeText = document.getElementById('themeText');
         const mobileThemeBtn = document.getElementById('mobileThemeToggle');
         const mobileThemeIcon = document.getElementById('mobileThemeIcon');
         const mobileThemeText = document.getElementById('mobileThemeText');
 
-        function updateToggleUI(theme) {
+        function updateThemeUI(theme) {
             if (theme === 'dark') {
-                if (themeIcon) themeIcon.className = 'bi bi-sun-fill me-3 fs-5 text-info';
-                if (themeText) themeText.textContent = 'Light Mode';
+                if (themeIcon) themeIcon.className = 'bi bi-sun-fill text-warning';
                 if (mobileThemeIcon) mobileThemeIcon.className = 'bi bi-sun-fill';
                 if (mobileThemeText) mobileThemeText.textContent = 'Ganti ke Light Mode';
             } else {
-                if (themeIcon) themeIcon.className = 'bi bi-moon-fill me-3 fs-5';
-                if (themeText) themeText.textContent = 'Dark Mode';
+                if (themeIcon) themeIcon.className = 'bi bi-moon-fill';
                 if (mobileThemeIcon) mobileThemeIcon.className = 'bi bi-moon-stars-fill';
-                if (mobileThemeText) mobileThemeText.textContent = 'Ganti ke Dark Mode';
+                if (mobileThemeText) mobileThemeText.textContent = 'Aktifkan Dark Mode';
             }
         }
 
         function toggleTheme() {
-            const activeTheme = htmlElement.getAttribute('data-bs-theme');
-            const newTheme = activeTheme === 'light' ? 'dark' : 'light';
-            htmlElement.setAttribute('data-bs-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            updateToggleUI(newTheme);
+            const nextTheme = htmlEl.getAttribute('data-bs-theme') === 'light' ? 'dark' : 'light';
+            htmlEl.setAttribute('data-bs-theme', nextTheme);
+            localStorage.setItem('theme', nextTheme);
+            updateThemeUI(nextTheme);
         }
 
-        updateToggleUI(htmlElement.getAttribute('data-bs-theme'));
+        updateThemeUI(htmlEl.getAttribute('data-bs-theme'));
         if (themeToggleBtn) themeToggleBtn.addEventListener('click', toggleTheme);
         if (mobileThemeBtn) mobileThemeBtn.addEventListener('click', toggleTheme);
 
-        // =====================================================================
-        // LOGIKA MOBILE BOTTOM BAR & BOTTOM SHEET NATIVE
-        // =====================================================================
+        // 3. PENCARIAN CEPAT FITUR MAHASISWA DI TOPBAR (Ctrl + K)
+        const quickMenus = [
+            { label: 'Dashboard Beranda', url: '/dashboard/mahasiswa', tag: 'Utama' },
+            { label: 'Pengajuan Pembimbing KP', url: '/mahasiswa/pengajuan', tag: 'KP' },
+            { label: 'Logbook Bimbingan KP', url: '/mahasiswa/logbook', tag: 'KP' },
+            { label: 'Pendaftaran Sidang KP', url: '/mahasiswa/sidang', tag: 'KP' },
+            { label: 'Pengajuan Tugas Akhir (TA)', url: '/mahasiswa/ta/pengajuan', tag: 'TA' },
+            { label: 'Logbook Bimbingan TA', url: '/mahasiswa/ta/logbook', tag: 'TA' },
+            { label: 'Profil & Pengaturan Akun', url: '/profil', tag: 'Akun' }
+        ];
+        const searchInput = document.getElementById('topbarQuickSearch');
+        const searchResults = document.getElementById('topbarSearchResults');
+
+        function renderQuickResults(keyword) {
+            if (!searchResults) return;
+            const q = keyword.trim().toLowerCase();
+            const filtered = quickMenus.filter(m => m.label.toLowerCase().includes(q) || m.tag.toLowerCase().includes(q));
+            if (filtered.length === 0) {
+                searchResults.innerHTML = '<div class="px-3 py-2 small text-muted">Menu tidak ditemukan</div>';
+            } else {
+                searchResults.innerHTML = filtered.map(m =>
+                    `<a href="${m.url}" class="search-result-item">
+                        <span>${m.label}</span>
+                        <span class="badge bg-primary bg-opacity-10 text-primary">${m.tag}</span>
+                    </a>`
+                ).join('');
+            }
+            searchResults.classList.add('show');
+        }
+
+        if (searchInput) {
+            searchInput.addEventListener('focus', () => renderQuickResults(searchInput.value));
+            searchInput.addEventListener('input', () => renderQuickResults(searchInput.value));
+            document.addEventListener('click', (e) => {
+                if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                    searchResults.classList.remove('show');
+                }
+            });
+            document.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+                    e.preventDefault();
+                    searchInput.focus();
+                }
+            });
+        }
+
+        // 4. MOBILE BOTTOM BAR & BOTTOM SHEET
         const bottomNav = document.getElementById('mobileBottomNav');
         const indicator = document.getElementById('mTabIndicator');
         const backdrop = document.getElementById('mobileSheetBackdrop');
@@ -1069,7 +1322,6 @@
             const navRect = bottomNav.getBoundingClientRect();
             const tabRect = tabEl.getBoundingClientRect();
             if (tabRect.width === 0) return;
-
             const left = (tabRect.left - navRect.left) + (tabRect.width - 28) / 2;
             if (instant) indicator.style.transition = 'none';
             indicator.style.transform = `translateX(${left}px)`;
@@ -1087,12 +1339,10 @@
             }
         }
 
-        function closeAllSheets(restoreDefaultTab = true) {
+        function closeAllSheets(restoreDefault = true) {
             sheets.forEach(s => s.classList.remove('show'));
             if (backdrop) backdrop.classList.remove('show');
-            if (restoreDefaultTab) {
-                setActiveTab(getDefaultTab(), false);
-            }
+            if (restoreDefault) setActiveTab(getDefaultTab(), false);
         }
 
         tabItems.forEach(tab => {
@@ -1103,13 +1353,11 @@
                     setActiveTab(tab, false);
                     return;
                 }
-
                 e.preventDefault();
                 const targetSheet = document.getElementById(targetSheetId);
-                const isAlreadyOpen = targetSheet && targetSheet.classList.contains('show');
-
+                const isOpen = targetSheet && targetSheet.classList.contains('show');
                 closeAllSheets(false);
-                if (!isAlreadyOpen && targetSheet) {
+                if (!isOpen && targetSheet) {
                     targetSheet.classList.add('show');
                     if (backdrop) backdrop.classList.add('show');
                     setActiveTab(tab, false);
@@ -1119,15 +1367,11 @@
             });
         });
 
-        if (backdrop) {
-            backdrop.addEventListener('click', () => closeAllSheets(true));
-        }
-
-        const initialTab = getDefaultTab();
-        setActiveTab(initialTab, true);
+        if (backdrop) backdrop.addEventListener('click', () => closeAllSheets(true));
+        setActiveTab(getDefaultTab(), true);
         window.addEventListener('resize', () => {
-            const currentActive = bottomNav ? bottomNav.querySelector('.m-tab-item.active') : null;
-            moveIndicator(currentActive || getDefaultTab(), true);
+            const active = bottomNav ? bottomNav.querySelector('.m-tab-item.active') : null;
+            moveIndicator(active || getDefaultTab(), true);
         });
     });
     </script>
